@@ -31,17 +31,25 @@ namespace Take.BlipCLI
 
                 var pingHandler = new PingHandler();
                 var pingCommand = app.Command("ping");
-                pingHandler.Node = pingCommand.Parameter<string>("n").Alias("node").Alias("identifier").HelpText("Bot identifier");
+                pingHandler.Node = pingCommand.Parameter<string>("n").Alias("node").HelpText("Node to ping");
                 pingCommand.HelpText("Ping a specific bot (node)");
                 pingCommand.Handler(pingHandler.Run);
 
+                var formatKeyHandler = new FormatKeyHandler();
+                var formatKeyCommand = app.Command("formatKey").Alias("fk");
+                formatKeyHandler.Identifier = formatKeyCommand.Parameter<string>("i").Alias("identifier").HelpText("Bot identifier").Required();
+                formatKeyHandler.AccessKey = formatKeyCommand.Parameter<string>("k").Alias("accessKey").HelpText("Bot accessKey");
+                formatKeyHandler.Authorization = formatKeyCommand.Parameter<string>("a").Alias("authorization").HelpText("Bot authoriaztion header");
+                formatKeyCommand.HelpText("Show all valid keys for a bot");
+                formatKeyCommand.Handler(formatKeyHandler.Run);
+
                 var nlpAnalyseHandler = new NLPAnalyseHandler();
                 var nlpAnalyseCommand = app.Command("nlp-analyse").Alias("analyse");
-                nlpAnalyseHandler.Text = pingCommand.Parameter<string>("t").Alias("text").HelpText("Text to be analysed");
-                nlpAnalyseHandler.Node = pingCommand.Parameter<string>("n").Alias("node").Alias("identifier").HelpText("Bot identifier");
-                nlpAnalyseHandler.Node = pingCommand.Parameter<string>("a").Alias("accessKey").HelpText("Bot access key");
-                pingCommand.HelpText("Analyse some text using a bot IA model");
-                pingCommand.Handler(nlpAnalyseHandler.Run);
+                nlpAnalyseHandler.Text = nlpAnalyseCommand.Parameter<string>("t").Alias("text").HelpText("Text to be analysed");
+                nlpAnalyseHandler.Node = nlpAnalyseCommand.Parameter<string>("n").Alias("node").Alias("identifier").HelpText("Bot identifier");
+                nlpAnalyseHandler.Node = nlpAnalyseCommand.Parameter<string>("a").Alias("accessKey").HelpText("Bot access key");
+                nlpAnalyseCommand.HelpText("Analyse some text using a bot IA model");
+                nlpAnalyseCommand.Handler(nlpAnalyseHandler.Run);
 
                 var tableCmd = app.Command("table");
                 _count = tableCmd.Parameter<int>("n").DefaultValue(2).HelpText("Row count");

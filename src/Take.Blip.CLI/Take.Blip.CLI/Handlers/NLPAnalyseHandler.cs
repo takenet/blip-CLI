@@ -16,7 +16,23 @@ namespace Take.BlipCLI.Handlers
         public override async Task<int> RunAsync(string[] args)
         {
             var client = new BlipHttpClientAsync(AccessKey.Value);
-            await client.AnalyseForMetrics(Text.Value);
+            var result = await client.AnalyseForMetrics(Text.Value);
+
+            using (CLI.WithForeground(ConsoleColor.Red))
+            {
+                Console.WriteLine("This text will be written in RED font on default background");
+
+                using (CLI.WithForeground(ConsoleColor.White))
+                {
+                    using (CLI.WithBackground(ConsoleColor.Red))
+                    {
+                        Console.WriteLine("This text will be written in WHITE font on RED background");
+                    }
+
+                    Console.WriteLine("And this text will be written in WHITE font on default background");
+                }
+            }
+
             return 0;
         }
     }   
