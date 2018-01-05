@@ -1,24 +1,19 @@
 ﻿using ITGlobal.CommandLine;
-using Lime.Protocol.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
-using Take.BlipCLI.Handlers;
-using Takenet.Iris.Messaging.Resources.ArtificialIntelligence;
 
 namespace Take.BlipCLI
 {
-    public class Program
+    public class ProgramCLI
     {
         private static ISwitch _verbose;
         private static INamedParameter<int> _count;
         private static ISwitch _paged;
 
-        public static int Main(string[] args)
+        public int MainCLI(string[] args)
         {
-            RegisterBlipTypes();
-
             return CLI.HandleErrors(() =>
             {
                 var app = CLI.Parser();
@@ -27,21 +22,7 @@ namespace Take.BlipCLI
                 app.FromAssembly(typeof(Program).GetTypeInfo().Assembly);
                 app.HelpText("BLiP Command Line Interface");
 
-                _verbose = app.Switch("v").Alias("verbose").HelpText("Enable verbose output.");
-
-                var pingHandler = new PingHandler();
-                var pingCommand = app.Command("ping");
-                pingHandler.Node = pingCommand.Parameter<string>("n").Alias("node").Alias("identifier").HelpText("Bot identifier");
-                pingCommand.HelpText("Ping a specific bot (node)");
-                pingCommand.Handler(pingHandler.Run);
-
-                var nlpAnalyseHandler = new NLPAnalyseHandler();
-                var nlpAnalyseCommand = app.Command("nlp-analyse").Alias("analyse");
-                nlpAnalyseHandler.Text = pingCommand.Parameter<string>("t").Alias("text").HelpText("Text to be analysed");
-                nlpAnalyseHandler.Node = pingCommand.Parameter<string>("n").Alias("node").Alias("identifier").HelpText("Bot identifier");
-                nlpAnalyseHandler.Node = pingCommand.Parameter<string>("a").Alias("accessKey").HelpText("Bot access key");
-                pingCommand.HelpText("Analyse some text using a bot IA model");
-                pingCommand.Handler(nlpAnalyseHandler.Run);
+                _verbose = app.Switch("v").Alias("verbose").HelpText("Enable verbose output. This is a global switch");
 
                 var tableCmd = app.Command("table");
                 _count = tableCmd.Parameter<int>("n").DefaultValue(2).HelpText("Row count");
@@ -65,13 +46,6 @@ namespace Take.BlipCLI
 
                 return app.Parse(args).Run();
             });
-        }
-
-        private static void RegisterBlipTypes()
-        {
-            TypeUtil.RegisterDocument<AnalysisResponse>();
-            TypeUtil.RegisterDocument<Intention>();
-            TypeUtil.RegisterDocument<Entity>();
         }
 
         struct Xyz
