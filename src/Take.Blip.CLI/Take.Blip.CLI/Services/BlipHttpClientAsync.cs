@@ -67,7 +67,7 @@ namespace Take.BlipCLI.Services
 
         public async Task<bool> PingAsync(string node)
         {
-            string validNode = "";
+            string validNode = node;
 
             if (!node.Contains("@"))
             {
@@ -93,7 +93,7 @@ namespace Take.BlipCLI.Services
 
             var envelopeResult = (Command)envelopeSerializer.Deserialize(responseBody);
 
-            return Ping.MediaType.Equals(envelopeResult.Type);
+            return Ping.MediaType.Equals(envelopeResult.Type) && envelopeResult.Status == CommandStatus.Success;
         }
     }
 
