@@ -1,4 +1,5 @@
-﻿using Lime.Protocol;
+﻿using Lime.Messaging.Resources;
+using Lime.Protocol;
 using Lime.Protocol.Serialization.Newtonsoft;
 using System;
 using System.Collections.Generic;
@@ -23,7 +24,7 @@ namespace Take.BlipCLI.Services
             _client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Key", authorizationKey);
         }
-        
+
         public async Task<AnalysisResponse> AnalyseForMetrics(string analysisRequest)
         {
             if (analysisRequest == null) throw new ArgumentNullException(nameof(analysisRequest));
@@ -62,6 +63,37 @@ namespace Take.BlipCLI.Services
                 Console.WriteLine("Message :{0} ", e.Message);
                 return null;
             }
+        }
+
+        public async Task<bool> PingAsync(string node)
+        {
+            string validNode = "";
+
+            if (!node.Contains("@"))
+            {
+                validNode = $"{node}@msging.net";
+            }
+            
+            var command = new Command
+            {
+                Id = EnvelopeId.NewId(),
+                To = Node.Parse(validNode),
+                Uri = new LimeUri("/ping"),
+                Method = CommandMethod.Get,
+            };
+
+            var envelopeSerializer = new JsonNetSerializer();
+            var commandString = envelopeSerializer.Serialize(command);
+
+            var httpContent = new StringContent(commandString, Encoding.UTF8, "application/json");
+
+            HttpResponseMessage response = await _client.PostAsync("/commands", httpContent);
+            response.EnsureSuccessStatusCode();
+            string responseBody = await response.Content.ReadAsStringAsync();
+
+            var envelopeResult = (Command)envelopeSerializer.Deserialize(responseBody);
+
+            return Ping.MediaType.Equals(envelopeResult.Type);
         }
     }
 

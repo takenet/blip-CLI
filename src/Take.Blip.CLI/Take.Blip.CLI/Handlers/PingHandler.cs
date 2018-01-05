@@ -3,15 +3,31 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using Take.BlipCLI.Services;
 
 namespace Take.BlipCLI.Handlers
 {
     public class PingHandler : HandlerAsync
     {
+        private string VALID_AUTHORIZATION = "dGVzdGVodHRwcG9zdDpzQ3Q4RkEwT3ZMQ1J0UVlHaGd4SA==";
         public INamedParameter<string> Node { get; set; }
         
         public override async Task<int> RunAsync(string[] args)
         {
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+
+            var client = new BlipHttpClientAsync(VALID_AUTHORIZATION);
+
+            using (var spinner = CLI.Spinner("Sending..."))
+            {
+                var result = await client.PingAsync(Node.Value);
+            }
+
+            watch.Stop();
+            var elapsedMilli = watch.ElapsedMilliseconds;
+
+            Console.WriteLine($"Response from {Node.Value}: time={elapsedMilli}ms");
+
             return 0;
         }
     }
