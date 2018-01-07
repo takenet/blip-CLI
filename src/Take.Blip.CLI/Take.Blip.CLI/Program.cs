@@ -40,7 +40,7 @@ namespace Take.BlipCLI
                 var copyCommand = app.Command("copy");
                 copyHandler.From = copyCommand.Parameter<string>("f").Alias("from").HelpText("Node (bot) source");
                 copyHandler.To = copyCommand.Parameter<string>("t").Alias("to").HelpText("Node (bot) target");
-                copyHandler.Contents = copyCommand.Parameter<List<ContentType>>("c").Alias("contents").HelpText("Define which contents will be copied").ParseUsing(copyHandler.CustomParser);
+                copyHandler.Contents = copyCommand.Parameter<List<BucketNamespace>>("c").Alias("contents").HelpText("Define which contents will be copied").ParseUsing(copyHandler.CustomParser);
                 copyCommand.HelpText("Copy data from source bot (node) to target bot (node)");
                 copyCommand.Handler(copyHandler.Run);
 
