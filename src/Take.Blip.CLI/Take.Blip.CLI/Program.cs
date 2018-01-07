@@ -36,6 +36,14 @@ namespace Take.BlipCLI
                 pingCommand.HelpText("Ping a specific bot (node)");
                 pingCommand.Handler(pingHandler.Run);
 
+                var copyHandler = new CopyHandler();
+                var copyCommand = app.Command("copy");
+                copyHandler.From = copyCommand.Parameter<string>("f").Alias("from").HelpText("Node (bot) source");
+                copyHandler.To = copyCommand.Parameter<string>("t").Alias("to").HelpText("Node (bot) target");
+                copyHandler.Contents = copyCommand.Parameter<List<ContentType>>("c").Alias("contents").HelpText("Define which contents will be copied").ParseUsing(copyHandler.CustomParser);
+                copyCommand.HelpText("Copy data from source bot (node) to target bot (node)");
+                copyCommand.Handler(copyHandler.Run);
+
                 var saveNodeHandler = new SaveNodeHandler();
                 var saveNodeCommand = app.Command("saveNode");
                 saveNodeHandler.Node = saveNodeCommand.Parameter<string>("n").Alias("node").HelpText("Node (bot) to be saved");
