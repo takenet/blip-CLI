@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
 using Take.BlipCLI.Handlers;
+using Take.BlipCLI.Services;
 using Takenet.Iris.Messaging.Resources.ArtificialIntelligence;
 
 namespace Take.BlipCLI
@@ -34,6 +35,14 @@ namespace Take.BlipCLI
                 pingHandler.Node = pingCommand.Parameter<string>("n").Alias("node").HelpText("Node to ping");
                 pingCommand.HelpText("Ping a specific bot (node)");
                 pingCommand.Handler(pingHandler.Run);
+
+                var saveNodeHandler = new SaveNodeHandler();
+                var saveNodeCommand = app.Command("saveNode");
+                saveNodeHandler.Node = saveNodeCommand.Parameter<string>("n").Alias("node").HelpText("Node (bot) to be saved");
+                saveNodeHandler.AccessKey = saveNodeCommand.Parameter<string>("k").Alias("accessKey").HelpText("Node accessKey");
+                saveNodeHandler.Authorization = saveNodeCommand.Parameter<string>("a").Alias("authorization").HelpText("Node authoriaztion header");
+                saveNodeCommand.HelpText("Save a node (bot) to be used next");
+                saveNodeCommand.Handler(saveNodeHandler.Run);
 
                 var formatKeyHandler = new FormatKeyHandler();
                 var formatKeyCommand = app.Command("formatKey").Alias("fk");
