@@ -14,7 +14,7 @@ using Takenet.Iris.Messaging.Resources.ArtificialIntelligence;
 
 namespace Take.BlipCLI.Services
 {
-    public class BlipHttpClientAsync : IBlipBucketClient
+    public class BlipHttpClientAsync : IBlipBucketClient, IBlipAIClient
     {
         private string _authorizationKey;
         private HttpClient _client = new HttpClient();
@@ -153,11 +153,6 @@ namespace Take.BlipCLI.Services
             }
         }
 
-        public void Dispose()
-        {
-            _client.Dispose();
-        }
-
         public async Task<DocumentCollection> GetAllDocumentKeysAsync(BucketNamespace bucketNamespace = BucketNamespace.Document)
         {
             string @namespace;
@@ -278,6 +273,114 @@ namespace Take.BlipCLI.Services
             }
         }
 
+        public async Task DeleteIntent(string intentId)
+        {
+            try
+            {
+                var command = new Command
+                {
+                    Id = EnvelopeId.NewId(),
+                    To = Node.Parse("postmaster@ai.msging.net"),
+                    Uri = new LimeUri($"/intentions/{intentId}"),
+                    Method = CommandMethod.Delete,
+                };
+
+                var envelopeSerializer = new JsonNetSerializer();
+                var commandString = envelopeSerializer.Serialize(command);
+
+                var httpContent = new StringContent(commandString, Encoding.UTF8, "application/json");
+
+                HttpResponseMessage response = await _client.PostAsync("/commands", httpContent);
+                response.EnsureSuccessStatusCode();
+            }
+            catch (HttpRequestException e)
+            {
+                Console.WriteLine("\nException Caught!");
+                Console.WriteLine("Message :{0} ", e.Message);
+            }
+        }
+
+        public async Task<string> AddIntent(string intentName)
+        {
+            try
+            {
+                var command = new Command
+                {
+                    Id = EnvelopeId.NewId(),
+                    To = Node.Parse("postmaster@ai.msging.net"),
+                    Uri = new LimeUri("/intentions"),
+                    Method = CommandMethod.Set,
+                    Resource = new Intention
+                    {
+                        Name = intentName,
+                    }
+                };
+
+                var envelopeSerializer = new JsonNetSerializer();
+                var commandString = envelopeSerializer.Serialize(command);
+
+                var httpContent = new StringContent(commandString, Encoding.UTF8, "application/json");
+
+                HttpResponseMessage response = await _client.PostAsync("/commands", httpContent);
+                response.EnsureSuccessStatusCode();
+                string responseBody = await response.Content.ReadAsStringAsync();
+
+                var envelopeResult = (Command)envelopeSerializer.Deserialize(responseBody);
+                var createdIntention = envelopeResult.Resource as Intention;
+
+                return createdIntention.Id;
+            }
+            catch (HttpRequestException e)
+            {
+                Console.WriteLine("\nException Caught!");
+                Console.WriteLine("Message :{0} ", e.Message);
+                return null;
+            }
+        }
+
+        public async Task AddQuestions(string intentId, Question[] questions)
+        {
+            if (questions == null) throw new ArgumentNullException(nameof(questions));
+
+            try
+            {
+                var command = new Command
+                {
+                    Id = EnvelopeId.NewId(),
+                    To = Node.Parse("postmaster@ai.msging.net"),
+                    Uri = new LimeUri($"/intentions/{intentId}/questions"),
+                    Method = CommandMethod.Set,
+                    Resource = new DocumentCollection
+                    {
+                        ItemType = Question.MediaType,
+                        Items = questions
+                    }
+                };
+
+                var envelopeSerializer = new JsonNetSerializer();
+                var commandString = envelopeSerializer.Serialize(command);
+
+                var httpContent = new StringContent(commandString, Encoding.UTF8, "application/json");
+
+                HttpResponseMessage response = await _client.PostAsync("/commands", httpContent);
+                response.EnsureSuccessStatusCode();
+            }
+            catch (HttpRequestException e)
+            {
+                Console.WriteLine("\nException Caught!");
+                Console.WriteLine("Message :{0} ", e.Message);
+            }
+        }
+
+        public Task AddEntity(Entity entity)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Dispose()
+        {
+            _client.Dispose();
+        }
     }
 
 }

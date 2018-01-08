@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="ChilkatDnCore" Version="9.5.0.70" />
     <PackageReference Include="ITGlobal.CLI" Version="1.0.23" />
     <PackageReference Include="Lime.Messaging" Version="0.7.255" />
     <PackageReference Include="Lime.Protocol" Version="0.7.255" />
