@@ -47,16 +47,39 @@ namespace Take.BlipCLI.Handlers
             IBlipBucketClient sourceBlipBucketClient = new BlipHttpClientAsync(fromAuthorization);
             IBlipBucketClient targetBlipBucketClient = new BlipHttpClientAsync(toAuthorization);
 
+            IBlipAIClient sourceBlipAIClient = new BlipHttpClientAsync(fromAuthorization);
+            IBlipAIClient targetBlipAIClient = new BlipHttpClientAsync(toAuthorization);
+
             foreach (var content in Contents.Value)
             {
-                var documentKeysToCopy = await sourceBlipBucketClient.GetAllDocumentKeysAsync(content) ?? new DocumentCollection();
-                var documentPairsToCopy = await sourceBlipBucketClient.GetAllDocumentsAsync(documentKeysToCopy, content);
-
-                if (documentPairsToCopy != null)
+                //if IAModel handle in a different way
+                if (content.Equals(BucketNamespace.AIModel))
                 {
-                    foreach (var resourcePair in documentPairsToCopy)
+                    var entities = await sourceBlipAIClient.GetAllEntities();
+                    var intents = await sourceBlipAIClient.GetAllIntents();
+
+                    foreach (var entity in entities)
                     {
-                        await targetBlipBucketClient.AddDocumentAsync(resourcePair.Key, resourcePair.Value, content);
+                        await targetBlipAIClient.AddEntity(entity);
+                    }
+
+                    foreach (var intent in intents)
+                    {
+                        var id = await targetBlipAIClient.AddIntent(intent.Name);
+                        await targetBlipAIClient.AddQuestions(id, intent.Questions);
+                    }
+                }
+                else
+                {
+                    var documentKeysToCopy = await sourceBlipBucketClient.GetAllDocumentKeysAsync(content) ?? new DocumentCollection();
+                    var documentPairsToCopy = await sourceBlipBucketClient.GetAllDocumentsAsync(documentKeysToCopy, content);
+
+                    if (documentPairsToCopy != null)
+                    {
+                        foreach (var resourcePair in documentPairsToCopy)
+                        {
+                            await targetBlipBucketClient.AddDocumentAsync(resourcePair.Key, resourcePair.Value, content);
+                        }
                     }
                 }
             }
@@ -109,6 +132,7 @@ namespace Take.BlipCLI.Handlers
         Resource,
         Document,
         Profile,
-        AIModel
+        AIModel,
+        Builder
     }
 }

@@ -372,6 +372,90 @@ namespace Take.BlipCLI.Services
             }
         }
 
+        public async Task<List<Entity>> GetAllEntities()
+        {
+            var entitiesList = new List<Entity>();
+
+            try
+            {
+                var command = new Command
+                {
+                    Id = EnvelopeId.NewId(),
+                    To = Node.Parse("postmaster@ai.msging.net"),
+                    Uri = new LimeUri($"/entities"),
+                    Method = CommandMethod.Get,
+                };
+
+                var envelopeSerializer = new JsonNetSerializer();
+                var commandString = envelopeSerializer.Serialize(command);
+
+                var httpContent = new StringContent(commandString, Encoding.UTF8, "application/json");
+
+                HttpResponseMessage response = await _client.PostAsync("/commands", httpContent);
+                response.EnsureSuccessStatusCode();
+
+                string responseBody = await response.Content.ReadAsStringAsync();
+
+                var envelopeResult = (Command)envelopeSerializer.Deserialize(responseBody);
+                var entities = envelopeResult.Resource as DocumentCollection;
+
+                foreach (var entity in entities)
+                {
+                    entitiesList.Add(entity as Entity);
+                }
+
+                return entitiesList;
+            }
+            catch (HttpRequestException e)
+            {
+                Console.WriteLine("\nException Caught!");
+                Console.WriteLine("Message :{0} ", e.Message);
+                return null;
+            }
+        }
+
+        public async Task<List<Intention>> GetAllIntents()
+        {
+            var intentsList = new List<Intention>();
+
+            try
+            {
+                var command = new Command
+                {
+                    Id = EnvelopeId.NewId(),
+                    To = Node.Parse("postmaster@ai.msging.net"),
+                    Uri = new LimeUri($"/intentions"),
+                    Method = CommandMethod.Get,
+                };
+
+                var envelopeSerializer = new JsonNetSerializer();
+                var commandString = envelopeSerializer.Serialize(command);
+
+                var httpContent = new StringContent(commandString, Encoding.UTF8, "application/json");
+
+                HttpResponseMessage response = await _client.PostAsync("/commands", httpContent);
+                response.EnsureSuccessStatusCode();
+
+                string responseBody = await response.Content.ReadAsStringAsync();
+
+                var envelopeResult = (Command)envelopeSerializer.Deserialize(responseBody);
+                var intents = envelopeResult.Resource as DocumentCollection;
+
+                foreach (var intent in intents)
+                {
+                    intentsList.Add(intent as Intention);
+                }
+
+                return intentsList;
+            }
+            catch (HttpRequestException e)
+            {
+                Console.WriteLine("\nException Caught!");
+                Console.WriteLine("Message :{0} ", e.Message);
+                return null;
+            }
+        }
+
         public Task AddEntity(Entity entity)
         {
             throw new NotImplementedException();
@@ -381,6 +465,8 @@ namespace Take.BlipCLI.Services
         {
             _client.Dispose();
         }
+
+        
     }
 
 }
