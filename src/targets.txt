@@ -1,0 +1,7 @@
+dotnet publish --framework netcoreapp2.0 --runtime win10-x64
+dotnet publish --framework netcoreapp2.0 --runtime win10-x86
+
+win81-x64
+win81-x86
+
+ubuntu-x64

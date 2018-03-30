@@ -14,6 +14,11 @@
     <PackageReference Include="Lime.Protocol" Version="0.7.255" />
     <PackageReference Include="Lime.Protocol.Serialization" Version="0.7.255" />
     <PackageReference Include="Takenet.Iris.Messaging" Version="2.17.111" />
+    <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
+    <PackageReference Include="System.IO.FileSystem.Primitives" Version="4.3.0" />
+    <PackageReference Include="System.Text.Encoding.Extensions" Version="4.3.0" />
+    
+
   </ItemGroup>
 
   <ItemGroup>

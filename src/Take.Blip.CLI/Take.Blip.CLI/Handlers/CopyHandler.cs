@@ -34,12 +34,12 @@ namespace Take.BlipCLI.Handlers
             string fromAuthorization = FromAuthorization.Value;
             string toAuthorization = ToAuthorization.Value;
 
-            if (From.IsSet)
+            if (From.IsSet && string.IsNullOrEmpty(fromAuthorization))
             {
                 fromAuthorization = _settingsFile.GetNodeCredentials(Node.Parse(From.Value)).Authorization;
             }
 
-            if (To.IsSet)
+            if (To.IsSet && string.IsNullOrEmpty(toAuthorization))
             {
                 toAuthorization = _settingsFile.GetNodeCredentials(Node.Parse(To.Value)).Authorization;
             }
@@ -132,7 +132,6 @@ namespace Take.BlipCLI.Handlers
         Resource,
         Document,
         Profile,
-        AIModel,
-        Builder
+        AIModel
     }
 }

@@ -169,7 +169,6 @@ namespace Take.BlipCLI.Services
                 case BucketNamespace.Profile:
                     @namespace = "profile";
                     break;
-
                 default:
                     @namespace = "buckets";
                     break;
