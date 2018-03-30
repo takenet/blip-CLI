@@ -24,9 +24,9 @@ You can download the BLiP CLI as a zip file. The zip file contains both the .NET
 
 | Platform | Latest Build <br>*master*<br> |
 | -------- | :----------------------------: |
-| **Windows x64** | [zip](win-x64-installer) |
-| **Windows x86** | [zip](win-x86-installer) |
-| **Linux x64** | [Ubuntu zip](linux-DEB-installer) |
+| **Windows x64** | [zip](https://github.com/takenet/blip-CLI/releases/tag/0.0.1) |
+| **Windows x86** | [zip](https://github.com/takenet/blip-CLI/releases/tag/0.0.1) |
+| **Linux x64** | [Ubuntu zip](https://github.com/takenet/blip-CLI/releases/tag/0.0.1) |
 | **macOS** | *comming soon* |
 
 
