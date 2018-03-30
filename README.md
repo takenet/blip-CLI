@@ -1,31 +1,56 @@
 # BLiP CLI
 
-BLiP CLI is a cross-platform command line interface that help developers to make useful tasks on BLiP APIs easily.
+BLiP command-line (CLI) tool, used for managing data of BLiP's bots. The blip-cli is a cross-platform command line interface helps to make easy and quickly your development flow and the execution of some repetitive tasks BLiP's API.
 
 ---
 
-### Main features
+Basic usage
+-----------
 
-* [Android](#android)
+After download and unzip blip-cli, you can try it out using some of the [available commands](#main-features).
 
----
+For instance, you can `ping` a bot using using:
 
-### How to install
+`blip ping -n papagaio@msging.net`
+
+where `-n` parameter represents the bot node
+
+--video
+
+Installers and Binaries
+-----------------------
+
+You can download the BLiP CLI as a zip file. The zip file contains both the .NET Core runtime and BLiP CLI binaries.
+
+| Platform | Latest Build <br>*master*<br> |
+| -------- | :----------------------------: |
+| **Windows x64** | [zip](win-x64-installer) |
+| **Windows x86** | [zip](win-x86-installer) |
+| **Linux x64** | [Ubuntu zip](linux-DEB-installer) |
+| **macOS** | *comming soon* |
 
 
-### Basic usage
+Main features
+-------------
+| Command | Description | Sample |
+| -------- | -------- | :---------------------------- |
+| **ping** | Ping some node and show elapsed time | `blip ping -n papagaio@msging.net` |
+| **formatKey** | Returns authorization key (or access key) from an access key (authorization key)  | `formatKey -i testehttppost -a some-authorization-key` |
+| **saveNode** | Save nodes informations to reuse on next requests. (Saved only locally) | `saveNode -n papagaio@msging.net -a some-authorization-key` |
+| **copy**   | Copy data (like documents, bucket, IA) from a bot to another | `copy -f papagaio --fromAuthorization some-authorization-key -t papagaio --toAuthorization some-authorization-key -c document` |
 
-When you have the BLiP Command Line Interface installed on your OS of choice, you can try it out using some of the available commands.
+Building from source
+--------------------
 
-For instance, you can `change to do something` using:
+In order to run BLiP CLI code you must have .NET Core 2.0 (or greater) installed on machine. To download the .NET Core runtime **without** the SDK, visit https://github.com/dotnet/core-setup#daily-builds.
 
-`blip some-command`
+Is recommended use Visual Studio 2017 (version 15.5) or greater.
 
+Questions & Comments
+--------------------
 
----
+For all feedback, use the Issues on this repository.
 
-### Android
-
-- [How to include a deep link in your Android App](/android/how-to-include-deep-link.md)
-
----
+License
+-------
+[Apache 2.0 License](https://github.com/takenet/blip-sdk-csharp/blob/master/LICENSE)
