@@ -4,6 +4,7 @@ using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -18,9 +19,11 @@ namespace Take.BlipCLI.Services
     {
         private string _authorizationKey;
         private HttpClient _client = new HttpClient();
+        private JsonNetSerializer _envelopeSerializer;
 
         public BlipHttpClientAsync(string authorizationKey)
         {
+            _envelopeSerializer = new JsonNetSerializer();
             _authorizationKey = authorizationKey;
             _client.BaseAddress = new Uri("https://msging.net");
             _client.DefaultRequestHeaders.Accept.Clear();
@@ -314,9 +317,8 @@ namespace Take.BlipCLI.Services
                         Name = intentName,
                     }
                 };
-
-                var envelopeSerializer = new JsonNetSerializer();
-                var commandString = envelopeSerializer.Serialize(command);
+                
+                var commandString = _envelopeSerializer.Serialize(command);
 
                 var httpContent = new StringContent(commandString, Encoding.UTF8, "application/json");
 
@@ -324,7 +326,7 @@ namespace Take.BlipCLI.Services
                 response.EnsureSuccessStatusCode();
                 string responseBody = await response.Content.ReadAsStringAsync();
 
-                var envelopeResult = (Command)envelopeSerializer.Deserialize(responseBody);
+                var envelopeResult = (Command)_envelopeSerializer.Deserialize(responseBody);
                 var createdIntention = envelopeResult.Resource as Intention;
 
                 return createdIntention.Id;
@@ -371,7 +373,7 @@ namespace Take.BlipCLI.Services
             }
         }
 
-        public async Task<List<Entity>> GetAllEntities()
+        public async Task<List<Entity>> GetAllEntities(bool verbose = false)
         {
             var entitiesList = new List<Entity>();
 
@@ -390,6 +392,8 @@ namespace Take.BlipCLI.Services
 
                 var httpContent = new StringContent(commandString, Encoding.UTF8, "application/json");
 
+                if (verbose) Console.Write("Entities: ");
+
                 HttpResponseMessage response = await _client.PostAsync("/commands", httpContent);
                 response.EnsureSuccessStatusCode();
 
@@ -400,9 +404,11 @@ namespace Take.BlipCLI.Services
 
                 foreach (var entity in entities)
                 {
+                    if (verbose) Console.Write("*");
                     entitiesList.Add(entity as Entity);
                 }
 
+                if (verbose) Console.WriteLine("|");
                 return entitiesList;
             }
             catch (HttpRequestException e)
@@ -413,7 +419,7 @@ namespace Take.BlipCLI.Services
             }
         }
 
-        public async Task<List<Intention>> GetAllIntents()
+        public async Task<List<Intention>> GetAllIntents(bool verbose = false)
         {
             var intentsList = new List<Intention>();
 
@@ -427,10 +433,19 @@ namespace Take.BlipCLI.Services
                     Method = CommandMethod.Get,
                 };
 
+                var commandBase = new Command
+                {
+                    To = Node.Parse("postmaster@ai.msging.net"),
+                    Method = CommandMethod.Get,
+                };
+                
+
                 var envelopeSerializer = new JsonNetSerializer();
                 var commandString = envelopeSerializer.Serialize(command);
 
                 var httpContent = new StringContent(commandString, Encoding.UTF8, "application/json");
+
+                if (verbose) Console.Write("Intents: ");
 
                 HttpResponseMessage response = await _client.PostAsync("/commands", httpContent);
                 response.EnsureSuccessStatusCode();
@@ -442,9 +457,33 @@ namespace Take.BlipCLI.Services
 
                 foreach (var intent in intents)
                 {
-                    intentsList.Add(intent as Intention);
+                    if (verbose) Console.Write("*");
+                    var intention = intent as Intention;
+
+                    //Answers
+                    var uri = Uri.EscapeUriString($"/intentions/{intention.Id}/answers");
+                    commandBase.Uri = new LimeUri(uri);
+                    envelopeResult = await GetCommandResultAsync(commandBase);
+                    if(envelopeResult.Status != CommandStatus.Failure)
+                    {
+                        var answers = envelopeResult.Resource as DocumentCollection;
+                        intention.Answers = answers.Items.Select(i => i as Answer).ToArray();
+                    }
+
+                    //Questions
+                    uri = Uri.EscapeUriString($"/intentions/{intention.Id}/questions");
+                    commandBase.Uri = new LimeUri(uri);
+                    envelopeResult = await GetCommandResultAsync(commandBase);
+                    if (envelopeResult.Status != CommandStatus.Failure)
+                    {
+                        var questions = envelopeResult.Resource as DocumentCollection;
+                        intention.Questions = questions.Items.Select(i => i as Question).ToArray();
+                    }
+
+                    intentsList.Add(intention);
                 }
 
+                if (verbose) Console.WriteLine("|");
                 return intentsList;
             }
             catch (HttpRequestException e)
@@ -465,7 +504,18 @@ namespace Take.BlipCLI.Services
             _client.Dispose();
         }
 
-        
+        private async Task<Command> GetCommandResultAsync(Command command)
+        {
+            command.Id = EnvelopeId.NewId();
+            var commandString = _envelopeSerializer.Serialize(command);
+            var httpContent = new StringContent(commandString, Encoding.UTF8, "application/json");
+            var response = await _client.PostAsync("/commands", httpContent);
+            response.EnsureSuccessStatusCode();
+            var responseBody = await response.Content.ReadAsStringAsync();
+            return (Command)_envelopeSerializer.Deserialize(responseBody);
+        }
+
+
     }
 
 }

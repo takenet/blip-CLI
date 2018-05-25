@@ -71,6 +71,16 @@ namespace Take.BlipCLI
                 nlpAnalyseCommand.HelpText("Analyse some text using a bot IA model");
                 nlpAnalyseCommand.Handler(nlpAnalyseHandler.Run);
 
+                var exportHandler = new ExportHandler();
+                var exportCommand = app.Command("export").Alias("get");
+                exportHandler.Node = exportCommand.Parameter<string>("n").Alias("node").HelpText("Node (bot) source");
+                exportHandler.Authorization = exportCommand.Parameter<string>("a").Alias("authorization").HelpText("Authorization key of source bot");
+                exportHandler.OutputFilePath = exportCommand.Parameter<string>("o").Alias("output").Alias("path").HelpText("Output file path");
+                exportHandler.Model = exportCommand.Parameter<ExportModel>("m").Alias("model").HelpText("Model to be exported").ParseUsing(exportHandler.CustomParser);
+                exportCommand.HelpText("Export some BLiP model");
+                exportCommand.Handler(exportHandler.Run);
+
+
                 app.HelpCommand();
 
                 return app.Parse(args).Run();
@@ -82,6 +92,9 @@ namespace Take.BlipCLI
             TypeUtil.RegisterDocument<AnalysisResponse>();
             TypeUtil.RegisterDocument<Intention>();
             TypeUtil.RegisterDocument<Entity>();
+            TypeUtil.RegisterDocument<Answer>();
+            TypeUtil.RegisterDocument<Question>();
+            TypeUtil.RegisterDocument<Intention>();
         }
         
     }
