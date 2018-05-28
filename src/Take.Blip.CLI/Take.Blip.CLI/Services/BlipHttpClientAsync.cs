@@ -317,7 +317,7 @@ namespace Take.BlipCLI.Services
                         Name = intentName,
                     }
                 };
-                
+
                 var commandString = _envelopeSerializer.Serialize(command);
 
                 var httpContent = new StringContent(commandString, Encoding.UTF8, "application/json");
@@ -355,6 +355,41 @@ namespace Take.BlipCLI.Services
                     {
                         ItemType = Question.MediaType,
                         Items = questions
+                    }
+                };
+
+                var envelopeSerializer = new JsonNetSerializer();
+                var commandString = envelopeSerializer.Serialize(command);
+
+                var httpContent = new StringContent(commandString, Encoding.UTF8, "application/json");
+
+                HttpResponseMessage response = await _client.PostAsync("/commands", httpContent);
+                response.EnsureSuccessStatusCode();
+            }
+            catch (HttpRequestException e)
+            {
+                Console.WriteLine("\nException Caught!");
+                Console.WriteLine("Message :{0} ", e.Message);
+            }
+        }
+
+
+        public async Task AddAnswers(string intentId, Answer[] answers)
+        {
+            if (answers == null) throw new ArgumentNullException(nameof(answers));
+
+            try
+            {
+                var command = new Command
+                {
+                    Id = EnvelopeId.NewId(),
+                    To = Node.Parse("postmaster@ai.msging.net"),
+                    Uri = new LimeUri($"/intentions/{intentId}/answers"),
+                    Method = CommandMethod.Set,
+                    Resource = new DocumentCollection
+                    {
+                        ItemType = Answer.MediaType,
+                        Items = answers
                     }
                 };
 
@@ -440,7 +475,7 @@ namespace Take.BlipCLI.Services
                     To = Node.Parse("postmaster@ai.msging.net"),
                     Method = CommandMethod.Get,
                 };
-                
+
 
                 var envelopeSerializer = new JsonNetSerializer();
                 var commandString = envelopeSerializer.Serialize(command);
@@ -468,7 +503,7 @@ namespace Take.BlipCLI.Services
                     var uri = Uri.EscapeUriString($"/intentions/{intention.Id}/answers");
                     commandBase.Uri = new LimeUri(uri);
                     envelopeResult = await GetCommandResultAsync(commandBase);
-                    if(envelopeResult.Status != CommandStatus.Failure)
+                    if (envelopeResult.Status != CommandStatus.Failure)
                     {
                         var answers = envelopeResult.Resource as DocumentCollection;
                         intention.Answers = answers.Items.Select(i => i as Answer).ToArray();

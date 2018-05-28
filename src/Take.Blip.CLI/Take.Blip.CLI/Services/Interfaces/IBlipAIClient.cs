@@ -11,6 +11,7 @@ namespace Take.BlipCLI.Services.Interfaces
         Task<string> AddIntent(string intentName);
         Task DeleteIntent(string intentId);
         Task AddQuestions(string intentId, Question[] questions);
+        Task AddAnswers(string intentId, Answer[] answers);
         Task AddEntity(Entity entity);
         Task<List<Entity>> GetAllEntities(bool verbose = false);
         Task<List<Intention>> GetAllIntents(bool verbose = false);
