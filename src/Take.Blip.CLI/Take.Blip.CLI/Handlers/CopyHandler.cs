@@ -57,6 +57,21 @@ namespace Take.BlipCLI.Handlers
                 //if IAModel handle in a different way
                 if (content.Equals(BucketNamespace.AIModel))
                 {
+                    if (Force.IsSet)
+                    {
+                        var tEntities = await targetBlipAIClient.GetAllEntities();
+                        var tIntents = await targetBlipAIClient.GetAllIntents(justIds: true);
+                        foreach (var entity in tEntities)
+                        {
+                            await targetBlipAIClient.DeleteEntity(entity.Id);
+                        }
+
+                        foreach (var intent in tIntents)
+                        {
+                            await targetBlipAIClient.DeleteIntent(intent.Id);
+                        }
+                    }
+
                     var entities = await sourceBlipAIClient.GetAllEntities();
                     var intents = await sourceBlipAIClient.GetAllIntents();
 
@@ -70,8 +85,8 @@ namespace Take.BlipCLI.Handlers
                         var id = await targetBlipAIClient.AddIntent(intent.Name, verbose: Verbose.IsSet);
                         if (!string.IsNullOrEmpty(id))
                         {
-                            await targetBlipAIClient.AddQuestions(id, intent.Questions);
-                            await targetBlipAIClient.AddAnswers(id, intent.Answers);
+                            if (intent.Questions != null) await targetBlipAIClient.AddQuestions(id, intent.Questions);
+                            if (intent.Answers != null) await targetBlipAIClient.AddAnswers(id, intent.Answers);
                         }
                     }
                 }

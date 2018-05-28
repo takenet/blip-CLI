@@ -302,6 +302,33 @@ namespace Take.BlipCLI.Services
             }
         }
 
+        public async Task DeleteEntity(string entityId)
+        {
+            try
+            {
+                var command = new Command
+                {
+                    Id = EnvelopeId.NewId(),
+                    To = Node.Parse("postmaster@ai.msging.net"),
+                    Uri = new LimeUri($"/entities/{entityId}"),
+                    Method = CommandMethod.Delete,
+                };
+
+                var envelopeSerializer = new JsonNetSerializer();
+                var commandString = envelopeSerializer.Serialize(command);
+
+                var httpContent = new StringContent(commandString, Encoding.UTF8, "application/json");
+
+                HttpResponseMessage response = await _client.PostAsync("/commands", httpContent);
+                response.EnsureSuccessStatusCode();
+            }
+            catch (HttpRequestException e)
+            {
+                Console.WriteLine("\nException Caught!");
+                Console.WriteLine("Message :{0} ", e.Message);
+            }
+        }
+
         public async Task<string> AddIntent(string intentName, bool verbose = false)
         {
             try
@@ -465,7 +492,7 @@ namespace Take.BlipCLI.Services
             }
         }
 
-        public async Task<List<Intention>> GetAllIntents(bool verbose = false)
+        public async Task<List<Intention>> GetAllIntents(bool verbose = false, bool justIds = false)
         {
             var intentsList = new List<Intention>();
 
@@ -508,24 +535,27 @@ namespace Take.BlipCLI.Services
                     if (verbose) Console.Write("*");
                     var intention = intent as Intention;
 
-                    //Answers
-                    var uri = Uri.EscapeUriString($"/intentions/{intention.Id}/answers");
-                    commandBase.Uri = new LimeUri(uri);
-                    envelopeResult = await GetCommandResultAsync(commandBase);
-                    if (envelopeResult.Status != CommandStatus.Failure)
+                    if(!justIds)
                     {
-                        var answers = envelopeResult.Resource as DocumentCollection;
-                        intention.Answers = answers.Items.Select(i => i as Answer).ToArray();
-                    }
+                        //Answers
+                        var uri = Uri.EscapeUriString($"/intentions/{intention.Id}/answers");
+                        commandBase.Uri = new LimeUri(uri);
+                        envelopeResult = await GetCommandResultAsync(commandBase);
+                        if (envelopeResult.Status != CommandStatus.Failure)
+                        {
+                            var answers = envelopeResult.Resource as DocumentCollection;
+                            intention.Answers = answers.Items.Select(i => i as Answer).ToArray();
+                        }
 
-                    //Questions
-                    uri = Uri.EscapeUriString($"/intentions/{intention.Id}/questions");
-                    commandBase.Uri = new LimeUri(uri);
-                    envelopeResult = await GetCommandResultAsync(commandBase);
-                    if (envelopeResult.Status != CommandStatus.Failure)
-                    {
-                        var questions = envelopeResult.Resource as DocumentCollection;
-                        intention.Questions = questions.Items.Select(i => i as Question).ToArray();
+                        //Questions
+                        uri = Uri.EscapeUriString($"/intentions/{intention.Id}/questions");
+                        commandBase.Uri = new LimeUri(uri);
+                        envelopeResult = await GetCommandResultAsync(commandBase);
+                        if (envelopeResult.Status != CommandStatus.Failure)
+                        {
+                            var questions = envelopeResult.Resource as DocumentCollection;
+                            intention.Questions = questions.Items.Select(i => i as Question).ToArray();
+                        }
                     }
 
                     intentsList.Add(intention);
