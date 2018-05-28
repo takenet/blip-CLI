@@ -402,6 +402,8 @@ namespace Take.BlipCLI.Services
                 var envelopeResult = (Command)envelopeSerializer.Deserialize(responseBody);
                 var entities = envelopeResult.Resource as DocumentCollection;
 
+                if (verbose) Console.Write($"{entities.Total} - ");
+
                 foreach (var entity in entities)
                 {
                     if (verbose) Console.Write("*");
@@ -429,7 +431,7 @@ namespace Take.BlipCLI.Services
                 {
                     Id = EnvelopeId.NewId(),
                     To = Node.Parse("postmaster@ai.msging.net"),
-                    Uri = new LimeUri($"/intentions"),
+                    Uri = new LimeUri($"/intentions?$take=500"),
                     Method = CommandMethod.Get,
                 };
 
@@ -454,6 +456,8 @@ namespace Take.BlipCLI.Services
 
                 var envelopeResult = (Command)envelopeSerializer.Deserialize(responseBody);
                 var intents = envelopeResult.Resource as DocumentCollection;
+
+                if (verbose) Console.Write($"{intents.Total} - ");
 
                 foreach (var intent in intents)
                 {
