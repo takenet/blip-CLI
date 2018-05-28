@@ -18,6 +18,8 @@ namespace Take.BlipCLI.Handlers
         public INamedParameter<string> To { get; set; }
         public INamedParameter<string> ToAuthorization { get; set; }
         public INamedParameter<List<BucketNamespace>> Contents { get; set; }
+        public ISwitch Verbose { get; set; }
+        public ISwitch Force { get; set; }
 
         private readonly ISettingsFile _settingsFile;
 
@@ -65,7 +67,7 @@ namespace Take.BlipCLI.Handlers
 
                     foreach (var intent in intents)
                     {
-                        var id = await targetBlipAIClient.AddIntent(intent.Name, verbose: true);
+                        var id = await targetBlipAIClient.AddIntent(intent.Name, verbose: Verbose.IsSet);
                         if (!string.IsNullOrEmpty(id))
                         {
                             await targetBlipAIClient.AddQuestions(id, intent.Questions);

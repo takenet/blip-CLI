@@ -10,6 +10,7 @@ namespace Take.BlipCLI
     public class Program
     {
         private static ISwitch _verbose;
+        private static ISwitch _force;
 
         public static int Main(string[] args)
         {
@@ -24,6 +25,7 @@ namespace Take.BlipCLI
                 app.HelpText("BLiP Command Line Interface");
 
                 _verbose = app.Switch("v").Alias("verbose").HelpText("Enable verbose output.");
+                _force = app.Switch("force").HelpText("Enable force operation.");
 
                 var pingHandler = new PingHandler();
                 var pingCommand = app.Command("ping");
@@ -44,6 +46,8 @@ namespace Take.BlipCLI
                 copyHandler.FromAuthorization = copyCommand.Parameter<string>("fa").Alias("fromAuthorization").HelpText("Authorization key of source bot");
                 copyHandler.ToAuthorization = copyCommand.Parameter<string>("ta").Alias("toAuthorization").HelpText("Authorization key of target bot");
                 copyHandler.Contents = copyCommand.Parameter<List<BucketNamespace>>("c").Alias("contents").HelpText("Define which contents will be copied").ParseUsing(copyHandler.CustomNamespaceParser);
+                copyHandler.Verbose = _verbose;
+                copyHandler.Force = _force;
                 copyCommand.HelpText("Copy data from source bot (node) to target bot (node)");
                 copyCommand.Handler(copyHandler.Run);
 
