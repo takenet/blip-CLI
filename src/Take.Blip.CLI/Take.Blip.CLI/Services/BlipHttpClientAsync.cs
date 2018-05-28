@@ -302,7 +302,7 @@ namespace Take.BlipCLI.Services
             }
         }
 
-        public async Task<string> AddIntent(string intentName)
+        public async Task<string> AddIntent(string intentName, bool verbose = false)
         {
             try
             {
@@ -327,9 +327,18 @@ namespace Take.BlipCLI.Services
                 string responseBody = await response.Content.ReadAsStringAsync();
 
                 var envelopeResult = (Command)_envelopeSerializer.Deserialize(responseBody);
-                var createdIntention = envelopeResult.Resource as Intention;
+                
+                if(envelopeResult.Status == CommandStatus.Success)
+                {
+                    return (envelopeResult.Resource as Intention).Id;
+                }
 
-                return createdIntention.Id;
+                if(verbose)
+                {
+                    Console.WriteLine($"{intentName}: {envelopeResult.Status} - {envelopeResult.Reason.Code} = {envelopeResult.Reason.Description}");
+                }
+
+                return null;
             }
             catch (HttpRequestException e)
             {
@@ -533,9 +542,42 @@ namespace Take.BlipCLI.Services
             }
         }
 
-        public Task AddEntity(Entity entity)
+        public async Task<string> AddEntity(Entity entity)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var command = new Command
+                {
+                    Id = EnvelopeId.NewId(),
+                    To = Node.Parse("postmaster@ai.msging.net"),
+                    Uri = new LimeUri("/entities"),
+                    Method = CommandMethod.Set,
+                    Resource = new Entity
+                    {
+                        Name = entity.Name,
+                        Values = entity.Values
+                    }
+                };
+
+                var commandString = _envelopeSerializer.Serialize(command);
+
+                var httpContent = new StringContent(commandString, Encoding.UTF8, "application/json");
+
+                HttpResponseMessage response = await _client.PostAsync("/commands", httpContent);
+                response.EnsureSuccessStatusCode();
+                string responseBody = await response.Content.ReadAsStringAsync();
+
+                var envelopeResult = (Command)_envelopeSerializer.Deserialize(responseBody);
+                var createdEntity = envelopeResult.Resource as Entity;
+
+                return createdEntity.Id;
+            }
+            catch (HttpRequestException e)
+            {
+                Console.WriteLine("\nException Caught!");
+                Console.WriteLine("Message :{0} ", e.Message);
+                return null;
+            }
         }
 
         public void Dispose()

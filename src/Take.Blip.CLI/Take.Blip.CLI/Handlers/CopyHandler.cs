@@ -65,8 +65,12 @@ namespace Take.BlipCLI.Handlers
 
                     foreach (var intent in intents)
                     {
-                        var id = await targetBlipAIClient.AddIntent(intent.Name);
-                        await targetBlipAIClient.AddQuestions(id, intent.Questions);
+                        var id = await targetBlipAIClient.AddIntent(intent.Name, verbose: true);
+                        if (!string.IsNullOrEmpty(id))
+                        {
+                            await targetBlipAIClient.AddQuestions(id, intent.Questions);
+                            await targetBlipAIClient.AddAnswers(id, intent.Answers);
+                        }
                     }
                 }
                 else
@@ -87,7 +91,7 @@ namespace Take.BlipCLI.Handlers
             return 0;
         }
 
-        public List<BucketNamespace> CustomParser(string contents)
+        public List<BucketNamespace> CustomNamespaceParser(string contents)
         {
             var defaultContents = new List<BucketNamespace> {
                 BucketNamespace.AIModel,
@@ -110,9 +114,14 @@ namespace Take.BlipCLI.Handlers
                 }
             }
 
-            if(contentsList.Count == 0) return defaultContents;
+            if (contentsList.Count == 0) return defaultContents;
 
             return contentsList;
+        }
+
+        public bool CustomVerboseParser(string verbose)
+        {
+            return true;
         }
 
         private BucketNamespace? TryGetContentType(string content)

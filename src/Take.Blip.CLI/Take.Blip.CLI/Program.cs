@@ -43,7 +43,7 @@ namespace Take.BlipCLI
                 copyHandler.To = copyCommand.Parameter<string>("t").Alias("to").HelpText("Node (bot) target");
                 copyHandler.FromAuthorization = copyCommand.Parameter<string>("fa").Alias("fromAuthorization").HelpText("Authorization key of source bot");
                 copyHandler.ToAuthorization = copyCommand.Parameter<string>("ta").Alias("toAuthorization").HelpText("Authorization key of target bot");
-                copyHandler.Contents = copyCommand.Parameter<List<BucketNamespace>>("c").Alias("contents").HelpText("Define which contents will be copied").ParseUsing(copyHandler.CustomParser);
+                copyHandler.Contents = copyCommand.Parameter<List<BucketNamespace>>("c").Alias("contents").HelpText("Define which contents will be copied").ParseUsing(copyHandler.CustomNamespaceParser);
                 copyCommand.HelpText("Copy data from source bot (node) to target bot (node)");
                 copyCommand.Handler(copyHandler.Run);
 
@@ -90,11 +90,12 @@ namespace Take.BlipCLI
         private static void RegisterBlipTypes()
         {
             TypeUtil.RegisterDocument<AnalysisResponse>();
+            
             TypeUtil.RegisterDocument<Intention>();
-            TypeUtil.RegisterDocument<Entity>();
             TypeUtil.RegisterDocument<Answer>();
             TypeUtil.RegisterDocument<Question>();
-            TypeUtil.RegisterDocument<Intention>();
+
+            TypeUtil.RegisterDocument<Entity>();
         }
         
     }
