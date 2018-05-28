@@ -35,9 +35,10 @@ Main features
 | Command | Description | Sample |
 | -------- | -------- | :---------------------------- |
 | **ping** | Ping some node and show elapsed time | `blip ping -n papagaio@msging.net` |
-| **formatKey** | Returns authorization key (or access key) from an access key (authorization key)  | `formatKey -i testehttppost -a some-authorization-key` |
-| **saveNode** | Save nodes informations to reuse on next requests. (Saved only locally) | `saveNode -n papagaio@msging.net -a some-authorization-key` |
-| **copy**   | Copy data (like documents, bucket, IA) from a bot to another | `copy -f papagaio --fromAuthorization some-authorization-key -t papagaio --toAuthorization some-authorization-key -c document` |
+| **formatKey** | Returns authorization key (or access key) from an access key (authorization key)  | `blip formatKey -i testehttppost -a some-authorization-key` |
+| **saveNode** | Save nodes informations to reuse on next requests. (Saved only locally) | `blip saveNode -n papagaio@msging.net -a some-authorization-key` |
+| **copy**   | Copy data (like documents, bucket, IA) from a bot to another | `blip copy -f papagaio --fromAuthorization some-authorization-key -t papagaio --toAuthorization some-authorization-key -c document` |
+| **export**   | Download chatbot's data (like NLP model, tracks*, bucket*) to given directory. * not implemented yet| `blip export -a some-authorization-key -m nlpModel -o directory/to/download/` |
 
 Building from source
 --------------------

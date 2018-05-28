@@ -12,7 +12,7 @@ namespace Take.BlipCLI.Services.Interfaces
         Task DeleteIntent(string intentId);
         Task AddQuestions(string intentId, Question[] questions);
         Task AddEntity(Entity entity);
-        Task<List<Entity>> GetAllEntities();
-        Task<List<Intention>> GetAllIntents();
+        Task<List<Entity>> GetAllEntities(bool verbose = false);
+        Task<List<Intention>> GetAllIntents(bool verbose = false);
     }
 }
