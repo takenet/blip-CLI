@@ -473,6 +473,12 @@ namespace Take.BlipCLI.Services
                 var envelopeResult = (Command)envelopeSerializer.Deserialize(responseBody);
                 var entities = envelopeResult.Resource as DocumentCollection;
 
+                if(entities == null )
+                {
+                    if (verbose) Console.Write($"0");
+                    return entitiesList;
+                }
+
                 if (verbose) Console.Write($"{entities.Total} - ");
 
                 foreach (var entity in entities)
