@@ -57,29 +57,50 @@ namespace Take.BlipCLI.Handlers
                 //if IAModel handle in a different way
                 if (content.Equals(BucketNamespace.AIModel))
                 {
+                    if (Verbose.IsSet) Console.WriteLine($"COPY AIMODEL: {fromAuthorization} to {toAuthorization}");
+
                     if (Force.IsSet)
                     {
+                        if (Verbose.IsSet) Console.WriteLine("Force MODE");
+                        if (Verbose.IsSet) Console.WriteLine("\t> Deleting all entities and intents from target");
                         var tEntities = await targetBlipAIClient.GetAllEntities();
                         var tIntents = await targetBlipAIClient.GetAllIntents(justIds: true);
+
+                        if (Verbose.IsSet) Console.Write($"\t>>> Entities: {tEntities.Count} - ");
                         foreach (var entity in tEntities)
                         {
                             await targetBlipAIClient.DeleteEntity(entity.Id);
+                            if (Verbose.IsSet) Console.Write("*");
                         }
+                        if (Verbose.IsSet) Console.WriteLine("|");
 
+                        if (Verbose.IsSet) Console.Write($"\t>>> Intent: {tIntents.Count} - ");
                         foreach (var intent in tIntents)
                         {
                             await targetBlipAIClient.DeleteIntent(intent.Id);
+                            if (Verbose.IsSet) Console.Write("*");
                         }
+                        if (Verbose.IsSet) Console.WriteLine("|");
                     }
 
-                    var entities = await sourceBlipAIClient.GetAllEntities();
-                    var intents = await sourceBlipAIClient.GetAllIntents();
+                    if (Verbose.IsSet) Console.WriteLine("COPY: ");
+                    if (Verbose.IsSet) Console.WriteLine("\t> Getting AI Model from source: ");
+                    if (Verbose.IsSet) Console.Write("\t>>> ");
+                    var entities = await sourceBlipAIClient.GetAllEntities(verbose: Verbose.IsSet);
+                    if (Verbose.IsSet) Console.Write("\t>>> ");
+                    var intents = await sourceBlipAIClient.GetAllIntents(verbose: Verbose.IsSet);
 
+
+                    if (Verbose.IsSet) Console.WriteLine("\t> Copying AI Model to target: ");
+                    if (Verbose.IsSet) Console.Write($"\t>>> Entities: {entities.Count} - ");
                     foreach (var entity in entities)
                     {
                         await targetBlipAIClient.AddEntity(entity);
+                        if (Verbose.IsSet) Console.Write("*");
                     }
+                    if (Verbose.IsSet) Console.WriteLine("|");
 
+                    if (Verbose.IsSet) Console.Write($"\t>>> Intents: {intents.Count} - ");
                     foreach (var intent in intents)
                     {
                         var id = await targetBlipAIClient.AddIntent(intent.Name, verbose: Verbose.IsSet);
@@ -88,7 +109,9 @@ namespace Take.BlipCLI.Handlers
                             if (intent.Questions != null) await targetBlipAIClient.AddQuestions(id, intent.Questions);
                             if (intent.Answers != null) await targetBlipAIClient.AddAnswers(id, intent.Answers);
                         }
+                        if (Verbose.IsSet) Console.Write("*");
                     }
+                    if (Verbose.IsSet) Console.WriteLine("|");
                 }
                 else
                 {
