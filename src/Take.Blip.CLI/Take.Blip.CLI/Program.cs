@@ -1,8 +1,11 @@
 ﻿using ITGlobal.CommandLine;
 using Lime.Protocol.Serialization;
+using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Generic;
 using System.Reflection;
 using Take.BlipCLI.Handlers;
+using Take.BlipCLI.Services;
+using Take.BlipCLI.Services.Interfaces;
 using Takenet.Iris.Messaging.Resources.ArtificialIntelligence;
 
 namespace Take.BlipCLI
@@ -16,10 +19,15 @@ namespace Take.BlipCLI
         {
             RegisterBlipTypes();
 
+            var serviceProvider = new ServiceCollection()
+                .AddSingleton<IStringService, StringService>()
+                .AddSingleton<NLPCompareHandler>()
+                .BuildServiceProvider();
+
             return CLI.HandleErrors(() =>
             {
                 var app = CLI.Parser();
-
+                
                 app.ExecutableName(typeof(Program).GetTypeInfo().Assembly.GetName().Name);
                 app.FromAssembly(typeof(Program).GetTypeInfo().Assembly);
                 app.HelpText("BLiP Command Line Interface");
@@ -84,6 +92,15 @@ namespace Take.BlipCLI
                 exportCommand.HelpText("Export some BLiP model");
                 exportCommand.Handler(exportHandler.Run);
 
+                var compareHandler = serviceProvider.GetService<NLPCompareHandler>();
+                var compareCommand = app.Command("comp").Alias("compare");
+                compareHandler.Authorization1 = compareCommand.Parameter<string>("a1").Alias("authorization1").Alias("first").HelpText("Authorization key of first bot");
+                compareHandler.Authorization2 = compareCommand.Parameter<string>("a2").Alias("authorization2").Alias("second").HelpText("Authorization key of second bot");
+                compareHandler.OutputFilePath = compareCommand.Parameter<string>("o").Alias("output").Alias("path").HelpText("Output file path");
+                compareHandler.Method = compareCommand.Parameter<ComparisonMethod>("m").Alias("method").HelpText("Comparison method (exact, levenshtein)").ParseUsing(compareHandler.CustomMethodParser);
+                compareHandler.Verbose = _verbose;
+                compareCommand.HelpText("Compare two knowledgebases");
+                compareCommand.Handler(compareHandler.Run);
 
                 app.HelpCommand();
 
