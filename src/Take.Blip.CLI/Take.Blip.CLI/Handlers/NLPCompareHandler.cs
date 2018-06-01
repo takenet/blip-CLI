@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ITGlobal.CommandLine;
+using Lime.Messaging.Contents;
 using Take.BlipCLI.Models;
 using Take.BlipCLI.Services;
 using Take.BlipCLI.Services.Interfaces;
@@ -44,7 +45,6 @@ namespace Take.BlipCLI.Handlers
             NLPModel bot1Model = Bot1Path.IsSet ? GetBotModelFromPath(Bot1Path.Value) : await GetBotModelFromAPI(Authorization1.Value);
             NLPModel bot2Model = Bot2Path.IsSet ? GetBotModelFromPath(Bot2Path.Value) : await GetBotModelFromAPI(Authorization2.Value);
 
-
             foreach (var item1 in bot1Model.Intents)
             {
                 if (item1.Questions == null) continue;
@@ -80,7 +80,8 @@ namespace Take.BlipCLI.Handlers
 
         private NLPModel GetBotModelFromPath(string path)
         {
-            var intentionsMap = new Dictionary<string, List<string>>();
+            var intentinsQuestionsMap = new Dictionary<string, List<string>>();
+            var intentinsAnswersMap = new Dictionary<string, List<string>>();
 
             var intentCsv = new Chilkat.Csv { HasColumnNames = true };
             var entityCsv = new Chilkat.Csv { HasColumnNames = true };
@@ -111,13 +112,24 @@ namespace Take.BlipCLI.Handlers
                 var intentionName = intentCsv.GetCell(row, 0);
                 var question = intentCsv.GetCell(row, 1);
 
-                var questionsList = intentionsMap.ContainsKey(intentionName) ? intentionsMap[intentionName] : new List<string>();
+                var questionsList = intentinsQuestionsMap.ContainsKey(intentionName) ? intentinsQuestionsMap[intentionName] : new List<string>();
 
                 questionsList.Add(question);
-                intentionsMap[intentionName] = questionsList;
+                intentinsQuestionsMap[intentionName] = questionsList;
             }
 
-            foreach (var intent in intentionsMap)
+            for (int row = 0; row <= answerCsv.NumRows - 1; row++)
+            {
+                var intentionName = answerCsv.GetCell(row, 0);
+                var answer = answerCsv.GetCell(row, 1);
+
+                var answerList = intentinsAnswersMap.ContainsKey(intentionName) ? intentinsAnswersMap[intentionName] : new List<string>();
+
+                answerList.Add(answer);
+                intentinsAnswersMap[intentionName] = answerList;
+            }
+
+            foreach (var intent in intentinsQuestionsMap)
             {
                 model.Intents.Add(
                     new Intention
@@ -130,10 +142,22 @@ namespace Take.BlipCLI.Handlers
                             }).ToArray()
                     });
             }
+            
+            foreach (var intent in intentinsAnswersMap)
+            {
+                var existedIntent = model.Intents.FirstOrDefault(i => i.Name.Equals(intent.Key));
+                if (existedIntent == default(Intention))
+                    continue;
+                existedIntent.Answers = intent.Value.Select(a =>
+                            new Answer
+                            {
+                                Value = PlainText.Parse(a),
+                                Type = PlainText.MediaType
+                            }).ToArray();
+            }
 
 
-
-            throw new NotImplementedException();
+            return model;
         }
 
         internal ComparisonMethod CustomMethodParser(string arg)

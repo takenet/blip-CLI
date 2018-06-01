@@ -97,10 +97,9 @@ namespace Take.BlipCLI
                 compareHandler.Authorization1 = compareCommand.Parameter<string>("a1").Alias("authorization1").Alias("first").HelpText("Authorization key of first bot");
                 compareHandler.Bot1Path = compareCommand.Parameter<string>("p1").Alias("path1").Alias("firstpath").HelpText("Path of first bot containing exported model");
                 compareHandler.Authorization2 = compareCommand.Parameter<string>("a2").Alias("authorization2").Alias("second").HelpText("Authorization key of second bot");
-                compareHandler.Bot2Path = compareCommand.Parameter<string>("p2").Alias("path2").Alias("firstpath").HelpText("Path of second bot containing exported model");
+                compareHandler.Bot2Path = compareCommand.Parameter<string>("p2").Alias("path2").Alias("secondpath").HelpText("Path of second bot containing exported model");
                 compareHandler.OutputFilePath = compareCommand.Parameter<string>("o").Alias("output").Alias("path").HelpText("Output file path");
                 compareHandler.Method = compareCommand.Parameter<ComparisonMethod>("m").Alias("method").HelpText("Comparison method (exact, levenshtein)").ParseUsing(compareHandler.CustomMethodParser);
-
                 compareHandler.Verbose = _verbose;
                 compareCommand.HelpText("Compare two knowledgebases");
                 compareCommand.Handler(compareHandler.Run);
