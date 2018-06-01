@@ -45,10 +45,32 @@ namespace Take.BlipCLI.Handlers
             NLPModel bot1Model = Bot1Path.IsSet ? GetBotModelFromPath(Bot1Path.Value) : await GetBotModelFromAPI(Authorization1.Value);
             NLPModel bot2Model = Bot2Path.IsSet ? GetBotModelFromPath(Bot2Path.Value) : await GetBotModelFromAPI(Authorization2.Value);
 
+
+
             var report = new List<NLPModelComparationResult>();
             CompareIntentionsByQuestions(bot1Model, bot2Model, report);
             CompareIntentionsByAnswers(bot1Model, bot2Model, report);
             CompareIntentionsByName(bot1Model, bot2Model, report);
+
+            var now = DateTime.Now;
+            
+            var fileFullName = $"report_{now.ToString("yyyyMMdd_hhmm")}.txt";
+            Directory.CreateDirectory(OutputFilePath.Value);
+            var sw = new StreamWriter(Path.Combine(OutputFilePath.Value, fileFullName));
+            foreach (var result in report)
+            {
+                sw.WriteLine($"Intention \"{result.Element1}\" is close to \"{result.Element2}\"");
+                sw.WriteLine($"Because: ");
+                foreach (var reason in result.Reasons)
+                {
+                    foreach (var example in reason.Examples)
+                    {
+                        sw.WriteLine($"\t{Enum.GetName(typeof(NLPModelComparationResultReasonType), reason.Reason)}:\t{example}");
+                    }
+                }
+            }
+            sw.Close();
+
 
             return 0;
         }
@@ -142,7 +164,7 @@ namespace Take.BlipCLI.Handlers
                     });
                     reason = result.Reasons.First(r => r.Reason == criterion);
                 }
-                reason.Examples.Add($"Lev({text1},{text2}) = {distance}, min = {minimunLeveshteinDistance}");
+                reason.Examples.Add($"Dist(\"{text1}\",\"{text2}\") = {distance}, min = {minimunLeveshteinDistance}");
             }
         }
 
