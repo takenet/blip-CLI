@@ -45,18 +45,21 @@ namespace Take.BlipCLI.Handlers
             NLPModel bot1Model = Bot1Path.IsSet ? GetBotModelFromPath(Bot1Path.Value) : await GetBotModelFromAPI(Authorization1.Value);
             NLPModel bot2Model = Bot2Path.IsSet ? GetBotModelFromPath(Bot2Path.Value) : await GetBotModelFromAPI(Authorization2.Value);
 
+
+
             foreach (var item1 in bot1Model.Intents)
             {
                 if (item1.Questions == null) continue;
-                foreach (var question1 in item1.Questions)
+                foreach (var item2 in bot2Model.Intents)
                 {
-                    foreach (var item2 in bot2Model.Intents)
+                    if (item2.Questions == null) continue;
+                    foreach (var question1 in item1.Questions)
                     {
-                        if (item2.Questions == null) continue;
                         foreach (var question2 in item2.Questions)
                         {
                             int distance = _stringService.LevenshteinDistance(question1.Text, question2.Text);
-                            if (distance <= 4)
+                            int minimunLeveshteinDistance = CalculateMinimumLeveshteinDistance(question1.Text, question2.Text);
+                            if (distance <= minimunLeveshteinDistance)
                             {
                                 Console.WriteLine($"{item1.Name} is close to {item2.Name}");
                                 Console.WriteLine($"\tLev({question1.Text},{question2.Text}) = {distance}");
@@ -65,7 +68,52 @@ namespace Take.BlipCLI.Handlers
                     }
                 }
             }
+            Console.WriteLine("---------------------------------------------");
+            foreach (var item1 in bot1Model.Intents)
+            {
+                if (item1.Answers == null) continue;
+                foreach (var item2 in bot2Model.Intents)
+                {
+                    if (item2.Answers == null) continue;
+                    foreach (var answer1 in item1.Answers)
+                    {
+                        foreach (var answer2 in item2.Answers)
+                        {
+                            int distance = _stringService.LevenshteinDistance(answer1.Value.ToString(), answer2.Value.ToString());
+                            int minimunLeveshteinDistance = CalculateMinimumLeveshteinDistance(answer1.Value.ToString(), answer2.Value.ToString());
+                            if (distance <= minimunLeveshteinDistance)
+                            {
+                                Console.WriteLine($"{item1.Name} is close to {item2.Name}");
+                                Console.WriteLine($"\tLev({answer1.Value.ToString()},{answer2.Value.ToString()}) = {distance}");
+                            }
+                        }
+                    }
+                }
+            }
+            Console.WriteLine("---------------------------------------------");
+            foreach (var item1 in bot1Model.Intents)
+            {
+                foreach (var item2 in bot2Model.Intents)
+                {
+                    var name1 = item1.Name;
+                    var name2 = item2.Name;
+                    int distance = _stringService.LevenshteinDistance(name1, name2);
+                    int minimunLeveshteinDistance = CalculateMinimumLeveshteinDistance(name1, name2);
+                    if (distance <= minimunLeveshteinDistance)
+                    {
+                        Console.WriteLine($"{item1.Name} is close to {item2.Name}");
+                        Console.WriteLine($"\tLev({name1},{name2}) = {distance}");
+                    }
+                }
+            }
+
             return 0;
+        }
+
+        private int CalculateMinimumLeveshteinDistance(string v1, string v2)
+        {
+            int smallerStringSize = Math.Min(v1.Length, v2.Length);
+            return (int)Math.Max(1, 1.5 * Math.Log(smallerStringSize));
         }
 
         private async Task<NLPModel> GetBotModelFromAPI(string authKey)
@@ -142,7 +190,7 @@ namespace Take.BlipCLI.Handlers
                             }).ToArray()
                     });
             }
-            
+
             foreach (var intent in intentinsAnswersMap)
             {
                 var existedIntent = model.Intents.FirstOrDefault(i => i.Name.Equals(intent.Key));
