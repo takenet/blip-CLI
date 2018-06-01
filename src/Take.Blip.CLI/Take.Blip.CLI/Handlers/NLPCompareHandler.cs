@@ -45,30 +45,31 @@ namespace Take.BlipCLI.Handlers
             NLPModel bot1Model = Bot1Path.IsSet ? GetBotModelFromPath(Bot1Path.Value) : await GetBotModelFromAPI(Authorization1.Value);
             NLPModel bot2Model = Bot2Path.IsSet ? GetBotModelFromPath(Bot2Path.Value) : await GetBotModelFromAPI(Authorization2.Value);
 
+            var report = new List<NLPModelComparationResult>();
+            CompareIntentionsByQuestions(bot1Model, bot2Model, report);
+            CompareIntentionsByAnswers(bot1Model, bot2Model, report);
+            CompareIntentionsByName(bot1Model, bot2Model, report);
 
+            return 0;
+        }
 
+        private void CompareIntentionsByName(NLPModel bot1Model, NLPModel bot2Model, List<NLPModelComparationResult> report)
+        {
             foreach (var item1 in bot1Model.Intents)
             {
-                if (item1.Questions == null) continue;
                 foreach (var item2 in bot2Model.Intents)
                 {
-                    if (item2.Questions == null) continue;
-                    foreach (var question1 in item1.Questions)
-                    {
-                        foreach (var question2 in item2.Questions)
-                        {
-                            int distance = _stringService.LevenshteinDistance(question1.Text, question2.Text);
-                            int minimunLeveshteinDistance = CalculateMinimumLeveshteinDistance(question1.Text, question2.Text);
-                            if (distance <= minimunLeveshteinDistance)
-                            {
-                                Console.WriteLine($"{item1.Name} is close to {item2.Name}");
-                                Console.WriteLine($"\tLev({question1.Text},{question2.Text}) = {distance}");
-                            }
-                        }
-                    }
+                    var text1 = item1.Name;
+                    var text2 = item2.Name;
+                    var name1 = item1.Name;
+                    var name2 = item2.Name;
+                    CompareTextsToReport(report, text1, text2, name1, name2, NLPModelComparationResultReasonType.Name);
                 }
             }
-            Console.WriteLine("---------------------------------------------");
+        }
+
+        private void CompareIntentionsByAnswers(NLPModel bot1Model, NLPModel bot2Model, List<NLPModelComparationResult> report)
+        {
             foreach (var item1 in bot1Model.Intents)
             {
                 if (item1.Answers == null) continue;
@@ -79,35 +80,70 @@ namespace Take.BlipCLI.Handlers
                     {
                         foreach (var answer2 in item2.Answers)
                         {
-                            int distance = _stringService.LevenshteinDistance(answer1.Value.ToString(), answer2.Value.ToString());
-                            int minimunLeveshteinDistance = CalculateMinimumLeveshteinDistance(answer1.Value.ToString(), answer2.Value.ToString());
-                            if (distance <= minimunLeveshteinDistance)
-                            {
-                                Console.WriteLine($"{item1.Name} is close to {item2.Name}");
-                                Console.WriteLine($"\tLev({answer1.Value.ToString()},{answer2.Value.ToString()}) = {distance}");
-                            }
+                            var text1 = answer1.Value.ToString();
+                            var text2 = answer2.Value.ToString();
+                            var name1 = item1.Name;
+                            var name2 = item2.Name;
+                            CompareTextsToReport(report, text1, text2, name1, name2, NLPModelComparationResultReasonType.Answer);
                         }
                     }
                 }
             }
-            Console.WriteLine("---------------------------------------------");
+        }
+
+        private void CompareIntentionsByQuestions(NLPModel bot1Model, NLPModel bot2Model, List<NLPModelComparationResult> report)
+        {
             foreach (var item1 in bot1Model.Intents)
             {
+                if (item1.Questions == null) continue;
                 foreach (var item2 in bot2Model.Intents)
                 {
-                    var name1 = item1.Name;
-                    var name2 = item2.Name;
-                    int distance = _stringService.LevenshteinDistance(name1, name2);
-                    int minimunLeveshteinDistance = CalculateMinimumLeveshteinDistance(name1, name2);
-                    if (distance <= minimunLeveshteinDistance)
+                    if (item2.Questions == null) continue;
+                    foreach (var question1 in item1.Questions)
                     {
-                        Console.WriteLine($"{item1.Name} is close to {item2.Name}");
-                        Console.WriteLine($"\tLev({name1},{name2}) = {distance}");
+                        foreach (var question2 in item2.Questions)
+                        {
+                            var text1 = question1.Text;
+                            var text2 = question2.Text;
+                            var name1 = item1.Name;
+                            var name2 = item2.Name;
+                            CompareTextsToReport(report, text1, text2, name1, name2, NLPModelComparationResultReasonType.Question);
+                        }
                     }
                 }
             }
+        }
 
-            return 0;
+        private void CompareTextsToReport(List<NLPModelComparationResult> report, string text1, string text2, string key1, string key2, NLPModelComparationResultReasonType criterion)
+        {
+            int distance = _stringService.LevenshteinDistance(text1, text2);
+            int minimunLeveshteinDistance = CalculateMinimumLeveshteinDistance(text1, text2);
+            if (distance <= minimunLeveshteinDistance)
+            {
+                var result = report.FirstOrDefault(r => r.CheckKey(key1, key2));
+                if (result == default(NLPModelComparationResult))
+                {
+                    report.Add(new NLPModelComparationResult
+                    {
+                        Element1 = key1,
+                        Element2 = key2,
+                        Reasons = new List<NLPModelComparationResultReason>()
+                    });
+                    result = report.First(r => r.CheckKey(key1, key2));
+                }
+
+                var reason = result.Reasons.FirstOrDefault(r => r.Reason == criterion);
+                if (reason == default(NLPModelComparationResultReason))
+                {
+                    result.Reasons.Add(new NLPModelComparationResultReason
+                    {
+                        Reason = criterion,
+                        Examples = new List<string>()
+                    });
+                    reason = result.Reasons.First(r => r.Reason == criterion);
+                }
+                reason.Examples.Add($"Lev({text1},{text2}) = {distance}, min = {minimunLeveshteinDistance}");
+            }
         }
 
         private int CalculateMinimumLeveshteinDistance(string v1, string v2)
