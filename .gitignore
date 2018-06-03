@@ -295,4 +295,4 @@ __pycache__/
 !.vscode/extensions.json
 
 # BLiP files
-!Take.Blip.CLI/Take.Blip.CLI/.\\settings.blip
+ 
