@@ -288,8 +288,11 @@ __pycache__/
 *.xsd.cs
 
 # Visual Studio Code
-.vscode/*
+.vscode/
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+
+# BLiP files
+!Take.Blip.CLI/Take.Blip.CLI/.\\settings.blip
