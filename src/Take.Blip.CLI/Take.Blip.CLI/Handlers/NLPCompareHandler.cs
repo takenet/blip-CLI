@@ -171,7 +171,7 @@ namespace Take.BlipCLI.Handlers
         private int CalculateMinimumLeveshteinDistance(string v1, string v2)
         {
             int smallerStringSize = Math.Min(v1.Length, v2.Length);
-            return (int)Math.Max(1, 1.5 * Math.Log(smallerStringSize));
+            return (int)Math.Max(1, 2 * Math.Log(smallerStringSize));
         }
 
         private async Task<NLPModel> GetBotModelFromAPI(string authKey)
