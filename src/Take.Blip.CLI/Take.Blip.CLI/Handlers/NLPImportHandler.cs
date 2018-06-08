@@ -110,11 +110,12 @@ namespace Take.BlipCLI.Handlers
             {
                 //  Prior to loading the CSV file, indicate that the 1st row
                 //  should be treated as column names:
-                HasColumnNames = true
+                HasColumnNames = true,
+                
             };
 
             //  Load the CSV records from the entites file:
-            var success = csv.LoadFile(EntitiesFilePath.Value);
+            var success = csv.LoadFile2(EntitiesFilePath.Value, "utf-8");
             if (!success)
             {
                 Console.WriteLine(csv.LastErrorText);
@@ -128,14 +129,14 @@ namespace Take.BlipCLI.Handlers
                 var entityName = csv.GetCell(row, 0);
                 var value = csv.GetCell(row, 1);
                 var synonymous = csv.GetCell(row, 2);
-                var synonymousList = synonymous.Split(';');
+                var synonymousList = synonymous.Split(';').Where(s => s.Length > 0).ToArray();
 
                 var entitiesValuesList = entitiesMap.ContainsKey(entityName) ? entitiesMap[entityName] : new List<EntityValues>();
 
                 var entity = new EntityValues
                 {
                     Name = value,
-                    Synonymous = synonymousList.ToArray()
+                    Synonymous = synonymousList.Length == 0 ?  null : synonymousList.ToArray()
                 };
 
                 entitiesValuesList.Add(entity);

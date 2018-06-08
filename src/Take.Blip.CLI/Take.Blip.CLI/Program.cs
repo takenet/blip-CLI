@@ -41,9 +41,12 @@ namespace Take.BlipCLI
                 pingCommand.HelpText("Ping a specific bot (node)");
                 pingCommand.Handler(pingHandler.Run);
 
-                var nlpImportHandler = new PingHandler();
+                var nlpImportHandler = new NLPImportHandler();
                 var nlpImportCommand = app.Command("nlp-import");
                 nlpImportHandler.Node = nlpImportCommand.Parameter<string>("n").Alias("node").HelpText("Node to receive the data");
+                nlpImportHandler.Authorization = nlpImportCommand.Parameter<string>("a").Alias("authorization").HelpText("Node Authorization to receive the data");
+                nlpImportHandler.EntitiesFilePath = nlpImportCommand.Parameter<string>("ep").Alias("entities").HelpText("Path to entities file");
+                nlpImportHandler.IntentsFilePath = nlpImportCommand.Parameter<string>("ip").Alias("intents").HelpText("Path to intents file");
                 nlpImportCommand.HelpText("Import intents and entities to a specific bot (node)");
                 nlpImportCommand.Handler(nlpImportHandler.Run);
 
