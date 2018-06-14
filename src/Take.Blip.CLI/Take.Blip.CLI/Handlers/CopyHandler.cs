@@ -1,12 +1,11 @@
 ﻿using ITGlobal.CommandLine;
+using Lime.Protocol;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
 using System.Linq;
-using Take.BlipCLI.Services.Interfaces;
+using System.Threading.Tasks;
 using Take.BlipCLI.Services;
-using Lime.Protocol;
+using Take.BlipCLI.Services.Interfaces;
 using Take.BlipCLI.Services.Settings;
 
 namespace Take.BlipCLI.Handlers
@@ -18,6 +17,8 @@ namespace Take.BlipCLI.Handlers
         public INamedParameter<string> To { get; set; }
         public INamedParameter<string> ToAuthorization { get; set; }
         public INamedParameter<List<BucketNamespace>> Contents { get; set; }
+        public ISwitch CleanTarget { get; set; }
+        public ISwitch Verbose { get; set; }
 
         private readonly ISettingsFile _settingsFile;
 
@@ -50,41 +51,68 @@ namespace Take.BlipCLI.Handlers
             IBlipAIClient sourceBlipAIClient = new BlipHttpClientAsync(fromAuthorization);
             IBlipAIClient targetBlipAIClient = new BlipHttpClientAsync(toAuthorization);
 
-            foreach (var content in Contents.Value)
+            try
             {
-                //if IAModel handle in a different way
-                if (content.Equals(BucketNamespace.AIModel))
+                foreach (var content in Contents.Value)
                 {
-                    var entities = await sourceBlipAIClient.GetAllEntities();
-                    var intents = await sourceBlipAIClient.GetAllIntents();
-
-                    foreach (var entity in entities)
+                    //if IAModel handle in a different way
+                    if (content.Equals(BucketNamespace.AIModel))
                     {
-                        await targetBlipAIClient.AddEntity(entity);
-                    }
+                        LogVerbose("> Source data <");
+                        var entities = await sourceBlipAIClient.GetAllEntities(Verbose.IsSet);
+                        var intents = await sourceBlipAIClient.GetAllIntents(Verbose.IsSet);
 
-                    foreach (var intent in intents)
-                    {
-                        var id = await targetBlipAIClient.AddIntent(intent.Name);
-                        await targetBlipAIClient.AddQuestions(id, intent.Questions);
-                    }
-                }
-                else
-                {
-                    var documentKeysToCopy = await sourceBlipBucketClient.GetAllDocumentKeysAsync(content) ?? new DocumentCollection();
-                    var documentPairsToCopy = await sourceBlipBucketClient.GetAllDocumentsAsync(documentKeysToCopy, content);
-
-                    if (documentPairsToCopy != null)
-                    {
-                        foreach (var resourcePair in documentPairsToCopy)
+                        if (CleanTarget.IsSet)
                         {
-                            await targetBlipBucketClient.AddDocumentAsync(resourcePair.Key, resourcePair.Value, content);
+                            LogVerbose("> Remove target data <");
+                            var targetEntities = await targetBlipAIClient.GetAllEntities(Verbose.IsSet);
+                            foreach (var entity in targetEntities)
+                            {
+                                await targetBlipAIClient.DeleteEntity(entity.Id);
+                            }
+
+                            var targetIntents = await targetBlipAIClient.GetAllIntents(Verbose.IsSet);
+                            foreach (var intent in targetIntents)
+                            {
+                                await targetBlipAIClient.DeleteIntent(intent.Id);
+                            }
+                        }
+
+                        LogVerbose("> Target data <");
+                        foreach (var entity in entities)
+                        {
+                            await targetBlipAIClient.AddEntity(entity);
+                        }
+
+                        foreach (var intent in intents)
+                        {
+                            var id = await targetBlipAIClient.AddIntent(intent.Name);
+                            await targetBlipAIClient.AddQuestions(id, intent.Questions);
+                        }
+                    }
+                    else
+                    {
+                        var documentKeysToCopy = await sourceBlipBucketClient.GetAllDocumentKeysAsync(content) ?? new DocumentCollection();
+                        var documentPairsToCopy = await sourceBlipBucketClient.GetAllDocumentsAsync(documentKeysToCopy, content);
+
+                        if (documentPairsToCopy != null)
+                        {
+                            foreach (var resourcePair in documentPairsToCopy)
+                            {
+                                await targetBlipBucketClient.AddDocumentAsync(resourcePair.Key, resourcePair.Value, content);
+                            }
                         }
                     }
                 }
-            }
 
-            return 0;
+                return 0;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("\n>> Failed!");
+                Console.WriteLine(e);
+                return 1;
+            }
         }
 
         public List<BucketNamespace> CustomParser(string contents)
@@ -125,6 +153,12 @@ namespace Take.BlipCLI.Handlers
 
             return null;
         }
+
+        private void LogVerbose(string message)
+        {
+            if (Verbose.IsSet) Console.Write(message + Environment.NewLine);
+        }
+
     }
 
     public enum BucketNamespace
