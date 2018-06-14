@@ -401,7 +401,7 @@ namespace Take.BlipCLI.Services
 
                 var envelopeResult = (Command)envelopeSerializer.Deserialize(responseBody);
 
-                var entities = envelopeResult.Resource as DocumentCollection;
+                var entities = envelopeResult.Resource as DocumentCollection ?? new DocumentCollection { Items = Enumerable.Empty<Document>().ToArray() };
 
                 LogVerbose(verbose, $"{entities.Total} - ");
 
