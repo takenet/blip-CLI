@@ -392,25 +392,26 @@ namespace Take.BlipCLI.Services
 
                 var httpContent = new StringContent(commandString, Encoding.UTF8, "application/json");
 
-                if (verbose) Console.Write("Entities: ");
+                LogVerbose(verbose, "Entities: ");
 
-                HttpResponseMessage response = await _client.PostAsync("/commands", httpContent);
+                var response = await _client.PostAsync("/commands", httpContent);
                 response.EnsureSuccessStatusCode();
 
-                string responseBody = await response.Content.ReadAsStringAsync();
+                var responseBody = await response.Content.ReadAsStringAsync();
 
                 var envelopeResult = (Command)envelopeSerializer.Deserialize(responseBody);
+
                 var entities = envelopeResult.Resource as DocumentCollection;
 
-                if (verbose) Console.Write($"{entities.Total} - ");
+                LogVerbose(verbose, $"{entities.Total} - ");
 
                 foreach (var entity in entities)
                 {
-                    if (verbose) Console.Write("*");
+                    LogVerbose(verbose, "*");
                     entitiesList.Add(entity as Entity);
                 }
 
-                if (verbose) Console.WriteLine("|");
+                LogVerbose(verbose, "|");
                 return entitiesList;
             }
             catch (HttpRequestException e)
@@ -447,7 +448,7 @@ namespace Take.BlipCLI.Services
 
                 var httpContent = new StringContent(commandString, Encoding.UTF8, "application/json");
 
-                if (verbose) Console.Write("Intents: ");
+                LogVerbose(verbose, "Intents: ");
 
                 HttpResponseMessage response = await _client.PostAsync("/commands", httpContent);
                 response.EnsureSuccessStatusCode();
@@ -457,11 +458,11 @@ namespace Take.BlipCLI.Services
                 var envelopeResult = (Command)envelopeSerializer.Deserialize(responseBody);
                 var intents = envelopeResult.Resource as DocumentCollection;
 
-                if (verbose) Console.Write($"{intents.Total} - ");
+                LogVerbose(verbose, $"{intents.Total} - ");
 
                 foreach (var intent in intents)
                 {
-                    if (verbose) Console.Write("*");
+                    LogVerbose(verbose, "*");
                     var intention = intent as Intention;
 
                     //Answers
@@ -487,7 +488,7 @@ namespace Take.BlipCLI.Services
                     intentsList.Add(intention);
                 }
 
-                if (verbose) Console.WriteLine("|");
+                LogVerbose(verbose, "|");
                 return intentsList;
             }
             catch (HttpRequestException e)
@@ -512,13 +513,19 @@ namespace Take.BlipCLI.Services
         {
             command.Id = EnvelopeId.NewId();
             var commandString = _envelopeSerializer.Serialize(command);
-            var httpContent = new StringContent(commandString, Encoding.UTF8, "application/json");
-            var response = await _client.PostAsync("/commands", httpContent);
-            response.EnsureSuccessStatusCode();
-            var responseBody = await response.Content.ReadAsStringAsync();
-            return (Command)_envelopeSerializer.Deserialize(responseBody);
+            using (var httpContent = new StringContent(commandString, Encoding.UTF8, "application/json"))
+            {
+                var response = await _client.PostAsync("/commands", httpContent);
+                response.EnsureSuccessStatusCode();
+                var responseBody = await response.Content.ReadAsStringAsync();
+                return (Command)_envelopeSerializer.Deserialize(responseBody);
+            }
         }
 
+        private static void LogVerbose(bool verbose, string message)
+        {
+            if (verbose) Console.Write(message);
+        }
 
     }
 
