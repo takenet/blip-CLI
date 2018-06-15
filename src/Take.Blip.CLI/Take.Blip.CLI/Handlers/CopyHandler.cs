@@ -23,10 +23,12 @@ namespace Take.BlipCLI.Handlers
         public ISwitch Force { get; set; }
 
         private readonly ISettingsFile _settingsFile;
+        private readonly IBlipAIClientFactory _blipAIClientFactory;
 
-        public CopyHandler()
+        public CopyHandler(IBlipAIClientFactory blipAIClientFactory)
         {
             _settingsFile = new SettingsFile();
+            _blipAIClientFactory = blipAIClientFactory;
         }
 
         public async override Task<int> RunAsync(string[] args)
@@ -50,8 +52,8 @@ namespace Take.BlipCLI.Handlers
             IBlipBucketClient sourceBlipBucketClient = new BlipHttpClientAsync(fromAuthorization);
             IBlipBucketClient targetBlipBucketClient = new BlipHttpClientAsync(toAuthorization);
 
-            IBlipAIClient sourceBlipAIClient = new BlipHttpClientAsync(fromAuthorization);
-            IBlipAIClient targetBlipAIClient = new BlipHttpClientAsync(toAuthorization);
+            IBlipAIClient sourceBlipAIClient = _blipAIClientFactory.GetInstance(fromAuthorization);
+            IBlipAIClient targetBlipAIClient = _blipAIClientFactory.GetInstance(toAuthorization);
 
             foreach (var content in Contents.Value)
             {

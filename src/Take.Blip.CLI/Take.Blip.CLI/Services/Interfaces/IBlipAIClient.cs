@@ -6,7 +6,7 @@ using Takenet.Iris.Messaging.Resources.ArtificialIntelligence;
 
 namespace Take.BlipCLI.Services.Interfaces
 {
-    interface IBlipAIClient
+    public interface IBlipAIClient
     {
         Task<string> AddIntent(string intentName, bool verbose = false);
         Task DeleteIntent(string intentId);

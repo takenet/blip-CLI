@@ -21,7 +21,9 @@ namespace Take.BlipCLI
 
             var serviceProvider = new ServiceCollection()
                 .AddSingleton<IStringService, StringService>()
+                .AddSingleton<IBlipAIClientFactory, BlipAIClientFactory>()
                 .AddSingleton<NLPCompareHandler>()
+                .AddSingleton<CopyHandler>()
                 .BuildServiceProvider();
 
             return CLI.HandleErrors(() =>
@@ -50,7 +52,7 @@ namespace Take.BlipCLI
                 nlpImportCommand.HelpText("Import intents and entities to a specific bot (node)");
                 nlpImportCommand.Handler(nlpImportHandler.Run);
 
-                var copyHandler = new CopyHandler();
+                var copyHandler = serviceProvider.GetService<CopyHandler>();
                 var copyCommand = app.Command("copy");
                 copyHandler.From = copyCommand.Parameter<string>("f").Alias("from").HelpText("Node (bot) source");
                 copyHandler.To = copyCommand.Parameter<string>("t").Alias("to").HelpText("Node (bot) target");
