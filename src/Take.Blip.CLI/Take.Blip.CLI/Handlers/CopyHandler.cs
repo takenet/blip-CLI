@@ -8,6 +8,7 @@ using Take.BlipCLI.Services.Interfaces;
 using Take.BlipCLI.Services;
 using Lime.Protocol;
 using Take.BlipCLI.Services.Settings;
+using System.Globalization;
 
 namespace Take.BlipCLI.Handlers
 {
@@ -103,6 +104,7 @@ namespace Take.BlipCLI.Handlers
                     if (Verbose.IsSet) Console.Write($"\t>>> Intents: {intents.Count} - ");
                     foreach (var intent in intents)
                     {
+                        intent.Name = intent.Name.RemoveDiacritics().RemoveSpecialCharacters();
                         var id = await targetBlipAIClient.AddIntent(intent.Name, verbose: Verbose.IsSet);
                         if (!string.IsNullOrEmpty(id))
                         {
@@ -174,7 +176,9 @@ namespace Take.BlipCLI.Handlers
 
             return null;
         }
+
     }
+
 
     public enum BucketNamespace
     {
