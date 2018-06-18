@@ -8,11 +8,13 @@ namespace Take.BlipCLI.Services.Interfaces
 {
     interface IBlipAIClient
     {
-        Task<string> AddIntent(string intentName);
+        Task<string> AddIntent(string intentName, bool verbose = false);
         Task DeleteIntent(string intentId);
         Task AddQuestions(string intentId, Question[] questions);
-        Task AddEntity(Entity entity);
+        Task AddAnswers(string intentId, Answer[] answers);
+        Task<string> AddEntity(Entity entity);
+        Task DeleteEntity(string entityId);
         Task<List<Entity>> GetAllEntities(bool verbose = false);
-        Task<List<Intention>> GetAllIntents(bool verbose = false);
+        Task<List<Intention>> GetAllIntents(bool verbose = false, bool justIds = false);
     }
 }
