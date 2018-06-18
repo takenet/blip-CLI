@@ -122,6 +122,7 @@ namespace Take.BlipCLI.Handlers
             var i = 1;
             foreach (var intent in intentions)
             {
+                if (intent.Questions == null) continue;
                 foreach (var question in intent.Questions)
                 {
                     csv.SetCell(i, 0, intent.Name);
