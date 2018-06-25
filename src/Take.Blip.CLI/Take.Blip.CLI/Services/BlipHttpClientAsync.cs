@@ -286,7 +286,7 @@ namespace Take.BlipCLI.Services
             }
         }
 
-        public async Task<string> AddIntent(string intentName)
+        public async Task<string> AddIntent(string intentName, bool verbose = false)
         {
             try
             {
@@ -303,9 +303,14 @@ namespace Take.BlipCLI.Services
                 };
 
                 var envelopeResult = await RunCommandAsync(command);
-                var createdIntention = envelopeResult.Resource as Intention;
+                if (envelopeResult.Status == CommandStatus.Success)
+                {
+                    var createdIntention = envelopeResult.Resource as Intention;
+                    return createdIntention.Id;
+                }
 
-                return createdIntention.Id;
+                LogVerboseLine(verbose, $"{intentName}: {envelopeResult.Status} - {envelopeResult.Reason.Code} = {envelopeResult.Reason.Description}");
+                return null;
             }
             catch (Exception e)
             {
@@ -334,7 +339,37 @@ namespace Take.BlipCLI.Services
                     }
                 };
 
-                await RunCommandAsync(command);
+                var envelopeResult = await RunCommandAsync(command);
+                EnsureCommandSuccess(envelopeResult);
+            }
+            catch (HttpRequestException e)
+            {
+                Console.WriteLine("\nException Caught!");
+                Console.WriteLine("Message :{0} ", e.Message);
+            }
+        }
+
+        public async Task AddAnswers(string intentId, Answer[] answers)
+        {
+            if (answers == null) throw new ArgumentNullException(nameof(answers));
+
+            try
+            {
+                var command = new Command
+                {
+                    Id = EnvelopeId.NewId(),
+                    To = Node.Parse("postmaster@ai.msging.net"),
+                    Uri = new LimeUri(Uri.EscapeUriString($"/intentions/{intentId}/answers")),
+                    Method = CommandMethod.Set,
+                    Resource = new DocumentCollection
+                    {
+                        ItemType = Answer.MediaType,
+                        Items = answers
+                    }
+                };
+
+                var envelopeResult = await RunCommandAsync(command);
+                EnsureCommandSuccess(envelopeResult);
             }
             catch (HttpRequestException e)
             {
@@ -476,6 +511,11 @@ namespace Take.BlipCLI.Services
         private static void LogVerbose(bool verbose, string message)
         {
             if (verbose) Console.Write(message);
+        }
+
+        private static void LogVerboseLine(bool verbose, string message)
+        {
+            if (verbose) Console.WriteLine(message);
         }
 
         private static void EnsureCommandSuccess(Command envelopeResult)
