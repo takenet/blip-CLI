@@ -223,7 +223,7 @@ namespace Take.BlipCLI.Services
             }
         }
 
-        public async Task AddEntity(string entityId)
+        public async Task<string> AddEntity(Entity entity)
         {
             try
             {
@@ -231,16 +231,25 @@ namespace Take.BlipCLI.Services
                 {
                     Id = EnvelopeId.NewId(),
                     To = Node.Parse("postmaster@ai.msging.net"),
-                    Uri = new LimeUri($"/entities/{entityId}"),
-                    Method = CommandMethod.Delete,
+                    Uri = new LimeUri("/entities"),
+                    Method = CommandMethod.Set,
+                    Resource = new Entity
+                    {
+                        Name = entity.Name,
+                        Values = entity.Values
+                    }
                 };
+                var envelopeResult = await RunCommandAsync(command);
+                EnsureCommandSuccess(envelopeResult);
 
-                await RunCommandAsync(command);
+                var createdEntity = envelopeResult.Resource as Entity;
+                return createdEntity.Id;
             }
             catch (HttpRequestException e)
             {
                 Console.WriteLine("\nException Caught!");
                 Console.WriteLine("Message :{0} ", e.Message);
+                return null;
             }
         }
 
@@ -416,7 +425,7 @@ namespace Take.BlipCLI.Services
             }
         }
 
-        public async Task<List<Intention>> GetAllIntents(bool verbose = false)
+        public async Task<List<Intention>> GetAllIntents(bool verbose = false, bool justIds = false)
         {
             var intentsList = new List<Intention>();
 
@@ -449,24 +458,27 @@ namespace Take.BlipCLI.Services
                     LogVerbose(verbose, "*");
                     var intention = intent as Intention;
 
-                    //Answers
-                    var uri = Uri.EscapeUriString($"/intentions/{intention.Id}/answers");
-                    commandBase.Uri = new LimeUri(uri);
-                    envelopeResult = await GetCommandResultAsync(commandBase);
-                    if(envelopeResult.Status != CommandStatus.Failure)
+                    if (!justIds)
                     {
-                        var answers = envelopeResult.Resource as DocumentCollection;
-                        intention.Answers = answers.Items.Select(i => i as Answer).ToArray();
-                    }
+                        //Answers
+                        var uri = Uri.EscapeUriString($"/intentions/{intention.Id}/answers");
+                        commandBase.Uri = new LimeUri(uri);
+                        envelopeResult = await GetCommandResultAsync(commandBase);
+                        if (envelopeResult.Status != CommandStatus.Failure)
+                        {
+                            var answers = envelopeResult.Resource as DocumentCollection;
+                            intention.Answers = answers.Items.Select(i => i as Answer).ToArray();
+                        }
 
-                    //Questions
-                    uri = Uri.EscapeUriString($"/intentions/{intention.Id}/questions");
-                    commandBase.Uri = new LimeUri(uri);
-                    envelopeResult = await GetCommandResultAsync(commandBase);
-                    if (envelopeResult.Status != CommandStatus.Failure)
-                    {
-                        var questions = envelopeResult.Resource as DocumentCollection;
-                        intention.Questions = questions.Items.Select(i => i as Question).ToArray();
+                        //Questions
+                        uri = Uri.EscapeUriString($"/intentions/{intention.Id}/questions");
+                        commandBase.Uri = new LimeUri(uri);
+                        envelopeResult = await GetCommandResultAsync(commandBase);
+                        if (envelopeResult.Status != CommandStatus.Failure)
+                        {
+                            var questions = envelopeResult.Resource as DocumentCollection;
+                            intention.Questions = questions.Items.Select(i => i as Question).ToArray();
+                        }
                     }
 
                     intentsList.Add(intention);
@@ -522,11 +534,6 @@ namespace Take.BlipCLI.Services
         {
             if (envelopeResult.Status == CommandStatus.Failure)
                 throw new Exception($"Command failed: {envelopeResult.Reason.Description}({envelopeResult.Reason.Code})");
-        }
-
-        public Task AddEntity(Entity entity)
-        {
-            throw new NotImplementedException();
         }
     }
 
