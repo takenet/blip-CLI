@@ -443,13 +443,12 @@ namespace Take.BlipCLI.Services
                 {
                     To = Node.Parse("postmaster@ai.msging.net"),
                     Method = CommandMethod.Get,
-                };
-                
+                };                
 
                 LogVerbose(verbose, "Intents: ");
 
                 var envelopeResult = await RunCommandAsync(command);
-                var intents = envelopeResult.Resource as DocumentCollection;
+                var intents = envelopeResult.Resource as DocumentCollection ?? new DocumentCollection { Items = Enumerable.Empty<Document>().ToArray() };
 
                 LogVerbose(verbose, $"{intents.Total} - ");
 
