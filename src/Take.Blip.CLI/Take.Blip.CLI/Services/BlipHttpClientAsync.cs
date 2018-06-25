@@ -405,7 +405,7 @@ namespace Take.BlipCLI.Services
                     entitiesList.Add(entity as Entity);
                 }
 
-                LogVerbose(verbose, "|");
+                LogVerboseLine(verbose, "|");
                 return entitiesList;
             }
             catch (HttpRequestException e)
@@ -472,7 +472,7 @@ namespace Take.BlipCLI.Services
                     intentsList.Add(intention);
                 }
 
-                LogVerbose(verbose, "|");
+                LogVerboseLine(verbose, "|");
                 return intentsList;
             }
             catch (HttpRequestException e)

@@ -58,11 +58,11 @@ namespace Take.BlipCLI.Handlers
                     //if IAModel handle in a different way
                     if (content.Equals(BucketNamespace.AIModel))
                     {
-                        LogVerbose($"COPY AIMODEL: {From.Value} to {To.Value}");
+                        LogVerboseLine($"COPY AIMODEL: {From.Value} to {To.Value}");
 
                         if (Force.IsSet)
                         {
-                            LogVerboseLine("Force MODE");
+                            LogVerboseLine("FORCE mode");
                             LogVerboseLine("\t> Deleting all entities and intents from target");
 
                             var targetEntities = await targetBlipAIClient.GetAllEntities(Verbose.IsSet);
