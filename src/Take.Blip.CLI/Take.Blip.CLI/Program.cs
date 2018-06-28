@@ -27,7 +27,7 @@ namespace Take.BlipCLI
             return CLI.HandleErrors(() =>
             {
                 var app = CLI.Parser();
-                
+
                 app.ExecutableName(typeof(Program).GetTypeInfo().Assembly.GetName().Name);
                 app.FromAssembly(typeof(Program).GetTypeInfo().Assembly);
                 app.HelpText("BLiP Command Line Interface");
@@ -116,13 +116,13 @@ namespace Take.BlipCLI
         private static void RegisterBlipTypes()
         {
             TypeUtil.RegisterDocument<AnalysisResponse>();
-            
+
             TypeUtil.RegisterDocument<Intention>();
             TypeUtil.RegisterDocument<Answer>();
             TypeUtil.RegisterDocument<Question>();
 
             TypeUtil.RegisterDocument<Entity>();
         }
-        
+
     }
 }

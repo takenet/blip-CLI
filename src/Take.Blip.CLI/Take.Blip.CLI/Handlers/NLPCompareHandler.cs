@@ -53,7 +53,7 @@ namespace Take.BlipCLI.Handlers
             CompareIntentionsByName(bot1Model, bot2Model, report);
 
             var now = DateTime.Now;
-            
+
             var fileFullName = $"report_{now.ToString("yyyyMMdd_hhmm")}.txt";
             Directory.CreateDirectory(OutputFilePath.Value);
             var sw = new StreamWriter(Path.Combine(OutputFilePath.Value, fileFullName));
