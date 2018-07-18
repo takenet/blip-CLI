@@ -8,7 +8,7 @@ namespace Take.BlipCLI.Models
     internal class NLPModel
     {
         public string BotId { get; set; }
-        public List<Entity> Entities{ get; set; }
+        public List<Entity> Entities { get; set; }
         public List<Intention> Intents { get; set; }
     }
 }

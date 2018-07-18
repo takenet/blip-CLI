@@ -1,12 +1,11 @@
 ﻿using ITGlobal.CommandLine;
+using Lime.Protocol;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
 using System.Linq;
-using Take.BlipCLI.Services.Interfaces;
+using System.Threading.Tasks;
 using Take.BlipCLI.Services;
-using Lime.Protocol;
+using Take.BlipCLI.Services.Interfaces;
 using Take.BlipCLI.Services.Settings;
 using System.Globalization;
 using Takenet.Iris.Messaging.Resources.ArtificialIntelligence;
@@ -20,10 +19,11 @@ namespace Take.BlipCLI.Handlers
         public INamedParameter<string> To { get; set; }
         public INamedParameter<string> ToAuthorization { get; set; }
         public INamedParameter<List<BucketNamespace>> Contents { get; set; }
-        public ISwitch Verbose { get; set; }
         public ISwitch Force { get; set; }
+        public ISwitch Verbose { get; set; }
 
         private readonly ISettingsFile _settingsFile;
+
         private readonly IBlipAIClientFactory _blipAIClientFactory;
 
         public CopyHandler(IBlipAIClientFactory blipAIClientFactory)
@@ -83,12 +83,12 @@ namespace Take.BlipCLI.Handlers
 
         private async Task CopyAIModelAsync(string fromAuthorization, string toAuthorization, IBlipAIClient sourceBlipAIClient, IBlipAIClient targetBlipAIClient)
         {
-            if (Verbose.IsSet) Console.WriteLine($"COPY AIMODEL: {fromAuthorization} to {toAuthorization}");
+            LogVerboseLine($"COPY AIMODEL: {fromAuthorization} to {toAuthorization}");
 
             if (Force.IsSet)
             {
-                if (Verbose.IsSet) Console.WriteLine("Force MODE");
-                if (Verbose.IsSet) Console.WriteLine("\t> Deleting all entities and intents from target");
+                LogVerboseLine("Force MODE");
+                LogVerboseLine("\t> Deleting all entities and intents from target");
 
                 var tEntities = await targetBlipAIClient.GetAllEntities();
                 var tIntents = await targetBlipAIClient.GetAllIntents(justIds: true);
@@ -97,30 +97,30 @@ namespace Take.BlipCLI.Handlers
                 await DeleteIntentsAsync(targetBlipAIClient, tIntents);
             }
 
-            if (Verbose.IsSet) Console.WriteLine("COPY: ");
-            if (Verbose.IsSet) Console.WriteLine("\t> Getting AI Model from source: ");
-            if (Verbose.IsSet) Console.Write("\t>>> ");
+            LogVerboseLine("COPY: ");
+            LogVerboseLine("\t> Getting AI Model from source: ");
+            LogVerbose("\t>>> ");
             var entities = await sourceBlipAIClient.GetAllEntities(verbose: Verbose.IsSet);
-            if (Verbose.IsSet) Console.Write("\t>>> ");
+            LogVerbose("\t>>> ");
             var intents = await sourceBlipAIClient.GetAllIntents(verbose: Verbose.IsSet);
 
-            if (Verbose.IsSet) Console.WriteLine("\t> Copying AI Model to target: ");
+            LogVerboseLine("\t> Copying AI Model to target: ");
 
             await CopyEntitiesAsync(targetBlipAIClient, entities);
             await CopyIntentsAsync(targetBlipAIClient, intents);
 
-            if (Verbose.IsSet) Console.Write($"\t> DONE");
+            LogVerbose($"\t> DONE");
         }
 
         private async Task CopyIntentsAsync(IBlipAIClient blipAIClient, List<Intention> intents)
         {
             if (intents == null || intents.Count <= 0)
             {
-                if (Verbose.IsSet) Console.Write($"\t>>> No Intents");
+                LogVerbose($"\t>>> No Intents");
             }
             else
             {
-                if (Verbose.IsSet) Console.Write($"\t>>> Intents: {intents.Count} - ");
+                LogVerbose($"\t>>> Intents: {intents.Count} - ");
                 foreach (var intent in intents)
                 {
                     intent.Name = intent.Name.RemoveDiacritics().RemoveSpecialCharacters();
@@ -130,9 +130,9 @@ namespace Take.BlipCLI.Handlers
                         if (intent.Questions != null) await blipAIClient.AddQuestions(id, intent.Questions);
                         if (intent.Answers != null) await blipAIClient.AddAnswers(id, intent.Answers);
                     }
-                    if (Verbose.IsSet) Console.Write("*");
+                    LogVerbose("*");
                 }
-                if (Verbose.IsSet) Console.WriteLine("|");
+                LogVerboseLine("|");
             }
         }
 
@@ -140,17 +140,17 @@ namespace Take.BlipCLI.Handlers
         {
             if (entities == null || entities.Count <= 0)
             {
-                if (Verbose.IsSet) Console.Write($"\t>>> No Entities");
+                LogVerbose($"\t>>> No Entities");
             }
             else
             {
-                if (Verbose.IsSet) Console.Write($"\t>>> Entities: {entities.Count} - ");
+                LogVerbose($"\t>>> Entities: {entities.Count} - ");
                 foreach (var entity in entities)
                 {
                     await blipAIClient.AddEntity(entity);
-                    if (Verbose.IsSet) Console.Write("*");
+                    LogVerbose("*");
                 }
-                if (Verbose.IsSet) Console.WriteLine("|");
+                LogVerboseLine("|");
             }
         }
 
@@ -158,17 +158,17 @@ namespace Take.BlipCLI.Handlers
         {
             if (tIntents == null || tIntents.Count <= 0)
             {
-                if (Verbose.IsSet) Console.Write($"\t>>> No Intent");
+                LogVerbose($"\t>>> No Intent");
             }
             else
             {
-                if (Verbose.IsSet) Console.Write($"\t>>> Intent: {tIntents.Count} - ");
+                LogVerbose($"\t>>> Intent: {tIntents.Count} - ");
                 foreach (var intent in tIntents)
                 {
                     await blipAIClient.DeleteIntent(intent.Id);
-                    if (Verbose.IsSet) Console.Write("*");
+                    LogVerbose("*");
                 }
-                if (Verbose.IsSet) Console.WriteLine("|");
+                LogVerboseLine("|");
             }
         }
 
@@ -176,17 +176,17 @@ namespace Take.BlipCLI.Handlers
         {
             if (tEntities == null || tEntities.Count <= 0)
             {
-                if (Verbose.IsSet) Console.Write($"\t>>> No Entities");
+                LogVerbose($"\t>>> No Entities");
             }
             else
             {
-                if (Verbose.IsSet) Console.Write($"\t>>> Entities: {tEntities.Count} - ");
+                LogVerbose($"\t>>> Entities: {tEntities.Count} - ");
                 foreach (var entity in tEntities)
                 {
                     await blipAIClient.DeleteEntity(entity.Id);
-                    if (Verbose.IsSet) Console.Write("*");
+                    LogVerbose("*");
                 }
-                if (Verbose.IsSet) Console.WriteLine("|");
+                LogVerboseLine("|");
             }
         }
 
@@ -220,10 +220,6 @@ namespace Take.BlipCLI.Handlers
             return contentsList;
         }
 
-        public bool CustomVerboseParser(string verbose)
-        {
-            return true;
-        }
 
         private BucketNamespace? TryGetContentType(string content)
         {
@@ -236,8 +232,17 @@ namespace Take.BlipCLI.Handlers
             return null;
         }
 
-    }
+        private void LogVerbose(string message)
+        {
+            if (Verbose.IsSet) Console.Write(message);
+        }
 
+        private void LogVerboseLine(string message)
+        {
+            if (Verbose.IsSet) Console.WriteLine(message);
+        }
+
+    }
 
     public enum BucketNamespace
     {
