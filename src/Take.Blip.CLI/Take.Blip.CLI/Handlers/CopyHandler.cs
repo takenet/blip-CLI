@@ -9,6 +9,7 @@ using Take.BlipCLI.Services;
 using Lime.Protocol;
 using Take.BlipCLI.Services.Settings;
 using System.Globalization;
+using Takenet.Iris.Messaging.Resources.ArtificialIntelligence;
 
 namespace Take.BlipCLI.Handlers
 {
@@ -60,62 +61,7 @@ namespace Take.BlipCLI.Handlers
                 //if IAModel handle in a different way
                 if (content.Equals(BucketNamespace.AIModel))
                 {
-                    if (Verbose.IsSet) Console.WriteLine($"COPY AIMODEL: {fromAuthorization} to {toAuthorization}");
-
-                    if (Force.IsSet)
-                    {
-                        if (Verbose.IsSet) Console.WriteLine("Force MODE");
-                        if (Verbose.IsSet) Console.WriteLine("\t> Deleting all entities and intents from target");
-                        var tEntities = await targetBlipAIClient.GetAllEntities();
-                        var tIntents = await targetBlipAIClient.GetAllIntents(justIds: true);
-
-                        if (Verbose.IsSet) Console.Write($"\t>>> Entities: {tEntities.Count} - ");
-                        foreach (var entity in tEntities)
-                        {
-                            await targetBlipAIClient.DeleteEntity(entity.Id);
-                            if (Verbose.IsSet) Console.Write("*");
-                        }
-                        if (Verbose.IsSet) Console.WriteLine("|");
-
-                        if (Verbose.IsSet) Console.Write($"\t>>> Intent: {tIntents.Count} - ");
-                        foreach (var intent in tIntents)
-                        {
-                            await targetBlipAIClient.DeleteIntent(intent.Id);
-                            if (Verbose.IsSet) Console.Write("*");
-                        }
-                        if (Verbose.IsSet) Console.WriteLine("|");
-                    }
-
-                    if (Verbose.IsSet) Console.WriteLine("COPY: ");
-                    if (Verbose.IsSet) Console.WriteLine("\t> Getting AI Model from source: ");
-                    if (Verbose.IsSet) Console.Write("\t>>> ");
-                    var entities = await sourceBlipAIClient.GetAllEntities(verbose: Verbose.IsSet);
-                    if (Verbose.IsSet) Console.Write("\t>>> ");
-                    var intents = await sourceBlipAIClient.GetAllIntents(verbose: Verbose.IsSet);
-
-
-                    if (Verbose.IsSet) Console.WriteLine("\t> Copying AI Model to target: ");
-                    if (Verbose.IsSet) Console.Write($"\t>>> Entities: {entities.Count} - ");
-                    foreach (var entity in entities)
-                    {
-                        await targetBlipAIClient.AddEntity(entity);
-                        if (Verbose.IsSet) Console.Write("*");
-                    }
-                    if (Verbose.IsSet) Console.WriteLine("|");
-
-                    if (Verbose.IsSet) Console.Write($"\t>>> Intents: {intents.Count} - ");
-                    foreach (var intent in intents)
-                    {
-                        intent.Name = intent.Name.RemoveDiacritics().RemoveSpecialCharacters();
-                        var id = await targetBlipAIClient.AddIntent(intent.Name, verbose: Verbose.IsSet);
-                        if (!string.IsNullOrEmpty(id))
-                        {
-                            if (intent.Questions != null) await targetBlipAIClient.AddQuestions(id, intent.Questions);
-                            if (intent.Answers != null) await targetBlipAIClient.AddAnswers(id, intent.Answers);
-                        }
-                        if (Verbose.IsSet) Console.Write("*");
-                    }
-                    if (Verbose.IsSet) Console.WriteLine("|");
+                    await CopyAIModelAsync(fromAuthorization, toAuthorization, sourceBlipAIClient, targetBlipAIClient);
                 }
                 else
                 {
@@ -134,6 +80,117 @@ namespace Take.BlipCLI.Handlers
 
             return 0;
         }
+
+        private async Task CopyAIModelAsync(string fromAuthorization, string toAuthorization, IBlipAIClient sourceBlipAIClient, IBlipAIClient targetBlipAIClient)
+        {
+            if (Verbose.IsSet) Console.WriteLine($"COPY AIMODEL: {fromAuthorization} to {toAuthorization}");
+
+            if (Force.IsSet)
+            {
+                if (Verbose.IsSet) Console.WriteLine("Force MODE");
+                if (Verbose.IsSet) Console.WriteLine("\t> Deleting all entities and intents from target");
+
+                var tEntities = await targetBlipAIClient.GetAllEntities();
+                var tIntents = await targetBlipAIClient.GetAllIntents(justIds: true);
+
+                await DeleteEntitiesAsync(targetBlipAIClient, tEntities);
+                await DeleteIntentsAsync(targetBlipAIClient, tIntents);
+            }
+
+            if (Verbose.IsSet) Console.WriteLine("COPY: ");
+            if (Verbose.IsSet) Console.WriteLine("\t> Getting AI Model from source: ");
+            if (Verbose.IsSet) Console.Write("\t>>> ");
+            var entities = await sourceBlipAIClient.GetAllEntities(verbose: Verbose.IsSet);
+            if (Verbose.IsSet) Console.Write("\t>>> ");
+            var intents = await sourceBlipAIClient.GetAllIntents(verbose: Verbose.IsSet);
+
+            if (Verbose.IsSet) Console.WriteLine("\t> Copying AI Model to target: ");
+
+            await CopyEntitiesAsync(targetBlipAIClient, entities);
+            await CopyIntentsAsync(targetBlipAIClient, intents);
+
+            if (Verbose.IsSet) Console.Write($"\t> DONE");
+        }
+
+        private async Task CopyIntentsAsync(IBlipAIClient blipAIClient, List<Intention> intents)
+        {
+            if (intents == null || intents.Count <= 0)
+            {
+                if (Verbose.IsSet) Console.Write($"\t>>> No Intents");
+            }
+            else
+            {
+                if (Verbose.IsSet) Console.Write($"\t>>> Intents: {intents.Count} - ");
+                foreach (var intent in intents)
+                {
+                    intent.Name = intent.Name.RemoveDiacritics().RemoveSpecialCharacters();
+                    var id = await blipAIClient.AddIntent(intent.Name, verbose: Verbose.IsSet);
+                    if (!string.IsNullOrEmpty(id))
+                    {
+                        if (intent.Questions != null) await blipAIClient.AddQuestions(id, intent.Questions);
+                        if (intent.Answers != null) await blipAIClient.AddAnswers(id, intent.Answers);
+                    }
+                    if (Verbose.IsSet) Console.Write("*");
+                }
+                if (Verbose.IsSet) Console.WriteLine("|");
+            }
+        }
+
+        private async Task CopyEntitiesAsync(IBlipAIClient blipAIClient, List<Entity> entities)
+        {
+            if (entities == null || entities.Count <= 0)
+            {
+                if (Verbose.IsSet) Console.Write($"\t>>> No Entities");
+            }
+            else
+            {
+                if (Verbose.IsSet) Console.Write($"\t>>> Entities: {entities.Count} - ");
+                foreach (var entity in entities)
+                {
+                    await blipAIClient.AddEntity(entity);
+                    if (Verbose.IsSet) Console.Write("*");
+                }
+                if (Verbose.IsSet) Console.WriteLine("|");
+            }
+        }
+
+        private async Task DeleteIntentsAsync(IBlipAIClient blipAIClient, List<Intention> tIntents)
+        {
+            if (tIntents == null || tIntents.Count <= 0)
+            {
+                if (Verbose.IsSet) Console.Write($"\t>>> No Intent");
+            }
+            else
+            {
+                if (Verbose.IsSet) Console.Write($"\t>>> Intent: {tIntents.Count} - ");
+                foreach (var intent in tIntents)
+                {
+                    await blipAIClient.DeleteIntent(intent.Id);
+                    if (Verbose.IsSet) Console.Write("*");
+                }
+                if (Verbose.IsSet) Console.WriteLine("|");
+            }
+        }
+
+        private async Task DeleteEntitiesAsync(IBlipAIClient blipAIClient, List<Entity> tEntities)
+        {
+            if (tEntities == null || tEntities.Count <= 0)
+            {
+                if (Verbose.IsSet) Console.Write($"\t>>> No Entities");
+            }
+            else
+            {
+                if (Verbose.IsSet) Console.Write($"\t>>> Entities: {tEntities.Count} - ");
+                foreach (var entity in tEntities)
+                {
+                    await blipAIClient.DeleteEntity(entity.Id);
+                    if (Verbose.IsSet) Console.Write("*");
+                }
+                if (Verbose.IsSet) Console.WriteLine("|");
+            }
+        }
+
+
 
         public List<BucketNamespace> CustomNamespaceParser(string contents)
         {
