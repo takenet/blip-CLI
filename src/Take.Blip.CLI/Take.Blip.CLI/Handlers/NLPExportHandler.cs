@@ -15,6 +15,7 @@ namespace Take.BlipCLI.Handlers
         public INamedParameter<string> Node { get; set; }
         public INamedParameter<string> Authorization { get; set; }
         public INamedParameter<string> OutputFilePath { get; set; }
+        public ISwitch Verbose { get; set; }
 
         private readonly ISettingsFile _settingsFile;
 
@@ -42,9 +43,11 @@ namespace Take.BlipCLI.Handlers
 
             _blipAIClient = new BlipHttpClientAsync(authorization);
 
-            var intentions = await _blipAIClient.GetAllIntents(true);
+            LogVerboseLine("NLP Export");
 
-            var entities = await _blipAIClient.GetAllEntities(true);
+            var intentions = await _blipAIClient.GetAllIntents(verbose: Verbose.IsSet);
+
+            var entities = await _blipAIClient.GetAllEntities(verbose: Verbose.IsSet);
 
             Directory.CreateDirectory(OutputFilePath.Value);
 
@@ -53,6 +56,8 @@ namespace Take.BlipCLI.Handlers
             WriteAnswers(intentions);
 
             WriteEntities(entities);
+
+            LogVerboseLine("DONE");
 
             return 0;
         }
@@ -63,7 +68,7 @@ namespace Take.BlipCLI.Handlers
             {
                 Delimiter = ";"
             };
-            
+
             csv.SetCell(0, 0, "Entity");
             csv.SetCell(0, 1, "Value");
             csv.SetCell(0, 2, "Synonymous");
@@ -115,7 +120,7 @@ namespace Take.BlipCLI.Handlers
             {
                 Delimiter = ";",
             };
-            
+
             csv.SetCell(0, 0, "Intent");
             csv.SetCell(0, 1, "Question");
 
@@ -130,9 +135,19 @@ namespace Take.BlipCLI.Handlers
                     i++;
                 }
             }
-            
+
             var path = Path.Combine(OutputFilePath.Value, "intentions.csv");
             csv.SaveFile(path);
+        }
+
+        private void LogVerbose(string message)
+        {
+            if (Verbose.IsSet) Console.Write(message);
+        }
+
+        private void LogVerboseLine(string message)
+        {
+            if (Verbose.IsSet) Console.WriteLine(message);
         }
     }
 }

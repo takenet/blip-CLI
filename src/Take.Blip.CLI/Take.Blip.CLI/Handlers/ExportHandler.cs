@@ -13,6 +13,7 @@ namespace Take.BlipCLI.Handlers
         public INamedParameter<string> Authorization { get; set; }
         public INamedParameter<string> OutputFilePath { get; set; }
         public INamedParameter<ExportModel> Model { get; set; }
+        public ISwitch Verbose { get; set; }
 
         public override async Task<int> RunAsync(string[] args)
         {
@@ -27,7 +28,7 @@ namespace Take.BlipCLI.Handlers
             switch (Model.Value)
             {
                 case ExportModel.NLPModel:
-                    handler = new NLPExportHandler { Node = Node, Authorization = Authorization, OutputFilePath = OutputFilePath };
+                    handler = new NLPExportHandler { Node = Node, Authorization = Authorization, OutputFilePath = OutputFilePath, Verbose = Verbose };
                     break;
                 default:
                     break;
@@ -43,20 +44,20 @@ namespace Take.BlipCLI.Handlers
 
         public ExportModel CustomParser(string type)
         {
-            var defaultType = ExportModel.NLPModel;
-
-            if (string.IsNullOrWhiteSpace(type)) return defaultType;
-
-
             var getType = TryGetContentType(type);
             if (getType.HasValue)
             {
                 return getType.Value;
             }
-
-            return defaultType;
+            throw new CommandLineParameterException($"\"{type}\" was an invalid Exportable Model");
         }
 
+        public string GetTypesListAsString()
+        {
+            var validContents = Enum.GetNames(typeof(ExportModel));
+            return string.Join(", ", validContents);
+        }
+       
         private ExportModel? TryGetContentType(string content)
         {
             var validContents = Enum.GetNames(typeof(ExportModel));
@@ -69,10 +70,12 @@ namespace Take.BlipCLI.Handlers
         }
 
 
+
     }
 
     public enum ExportModel
     {
         NLPModel
     }
+
 }
