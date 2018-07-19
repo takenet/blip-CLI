@@ -54,7 +54,7 @@ namespace Take.BlipCLI
 
                 var copyHandler = serviceProvider.GetService<CopyHandler>();
                 var copyCommand = app.Command("copy");
-                copyHandler.From = copyCommand.Parameter<string>("f").Alias("from").HelpText("Node (bot) source");
+                copyHandler.From = copyCommand.Parameter<string>("f").Alias("from").HelpText("Node (bot) source.");
                 copyHandler.To = copyCommand.Parameter<string>("t").Alias("to").HelpText("Node (bot) target");
                 copyHandler.FromAuthorization = copyCommand.Parameter<string>("fa").Alias("fromAuthorization").HelpText("Authorization key of source bot");
                 copyHandler.ToAuthorization = copyCommand.Parameter<string>("ta").Alias("toAuthorization").HelpText("Authorization key of target bot");
@@ -92,8 +92,9 @@ namespace Take.BlipCLI
                 var exportCommand = app.Command("export").Alias("get");
                 exportHandler.Node = exportCommand.Parameter<string>("n").Alias("node").HelpText("Node (bot) source");
                 exportHandler.Authorization = exportCommand.Parameter<string>("a").Alias("authorization").HelpText("Authorization key of source bot");
-                exportHandler.OutputFilePath = exportCommand.Parameter<string>("o").Alias("output").Alias("path").HelpText("Output file path");
-                exportHandler.Model = exportCommand.Parameter<ExportModel>("m").Alias("model").HelpText("Model to be exported").ParseUsing(exportHandler.CustomParser);
+                exportHandler.OutputFilePath = exportCommand.Parameter<string>("o").Alias("output").Alias("path").HelpText("Output file path. Please use a full path.");
+                exportHandler.Model = exportCommand.Parameter<ExportModel>("m").Alias("model").HelpText($"Model to be exported. Examples: \'{exportHandler.GetTypesListAsString()}\'").ParseUsing(exportHandler.CustomParser);
+                exportHandler.Verbose = _verbose;
                 exportCommand.HelpText("Export some BLiP model");
                 exportCommand.Handler(exportHandler.Run);
 
