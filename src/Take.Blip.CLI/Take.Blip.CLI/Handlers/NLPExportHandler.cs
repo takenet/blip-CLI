@@ -1,45 +1,35 @@
-﻿using ITGlobal.CommandLine;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 using Take.BlipCLI.Services;
 using Take.BlipCLI.Services.Interfaces;
-using Take.BlipCLI.Services.Settings;
 
 namespace Take.BlipCLI.Handlers
 {
-    public class NLPExportHandler : HandlerAsync
+    public class NLPExportHandler : ExportHandler
     {
-        public INamedParameter<string> Node { get; set; }
-        public INamedParameter<string> Authorization { get; set; }
-        public INamedParameter<string> OutputFilePath { get; set; }
-        public ISwitch Verbose { get; set; }
-
-        private readonly ISettingsFile _settingsFile;
-
         private IBlipAIClient _blipAIClient;
 
-        public NLPExportHandler()
+        public NLPExportHandler(IBlipClientFactory blipClientFactory) : base(blipClientFactory)
         {
-            _settingsFile = new SettingsFile();
+
+        }
+
+        public static NLPExportHandler GetInstance(ExportHandler eh)
+        {
+            return new NLPExportHandler (eh.BlipClientFactory)
+            {
+                Node = eh.Node,
+                Authorization = eh.Authorization,
+                OutputFilePath = eh.OutputFilePath,
+                Model = eh.Model,
+                Verbose = eh.Verbose
+            };
         }
 
         public override async Task<int> RunAsync(string[] args)
         {
-            if (!Node.IsSet && !Authorization.IsSet)
-                throw new ArgumentNullException("You must provide the target bot (node) for this action. Use '-n' [--node] (or '-a' [--authorization]) parameters");
-
-            if (!OutputFilePath.IsSet)
-                throw new ArgumentNullException("You must provide the target output path for this action. Use '-o' [--output] parameter");
-
-            string authorization = Authorization.Value;
-
-            if (Node.IsSet)
-            {
-                authorization = _settingsFile.GetNodeCredentials(Lime.Protocol.Node.Parse(Node.Value)).Authorization;
-            }
+            string authorization = GetAuthorization();
 
             _blipAIClient = new BlipHttpClientAsync(authorization);
 
@@ -140,14 +130,6 @@ namespace Take.BlipCLI.Handlers
             csv.SaveFile(path);
         }
 
-        private void LogVerbose(string message)
-        {
-            if (Verbose.IsSet) Console.Write(message);
-        }
 
-        private void LogVerboseLine(string message)
-        {
-            if (Verbose.IsSet) Console.WriteLine(message);
-        }
     }
 }

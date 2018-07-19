@@ -21,9 +21,10 @@ namespace Take.BlipCLI
 
             var serviceProvider = new ServiceCollection()
                 .AddSingleton<IStringService, StringService>()
-                .AddSingleton<IBlipAIClientFactory, BlipAIClientFactory>()
+                .AddSingleton<IBlipClientFactory, BlipClientFactory>()
                 .AddSingleton<NLPCompareHandler>()
                 .AddSingleton<CopyHandler>()
+                .AddSingleton<ExportHandler>()
                 .BuildServiceProvider();
 
             return CLI.HandleErrors(() =>
@@ -88,7 +89,7 @@ namespace Take.BlipCLI
                 nlpAnalyseCommand.HelpText("Analyse some text using a bot IA model");
                 nlpAnalyseCommand.Handler(nlpAnalyseHandler.Run);
 
-                var exportHandler = new ExportHandler();
+                var exportHandler = serviceProvider.GetService<ExportHandler>();
                 var exportCommand = app.Command("export").Alias("get");
                 exportHandler.Node = exportCommand.Parameter<string>("n").Alias("node").HelpText("Node (bot) source");
                 exportHandler.Authorization = exportCommand.Parameter<string>("a").Alias("authorization").HelpText("Authorization key of source bot");

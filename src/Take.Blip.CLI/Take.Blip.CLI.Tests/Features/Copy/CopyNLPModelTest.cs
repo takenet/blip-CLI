@@ -40,9 +40,9 @@ namespace Take.Blip.Tests.Features.Copy
             sourceBlipAIClient.GetAllIntents(Arg.Any<bool>()).Returns(Task.FromResult<List<Intention>>(null));
 
             var targetBlipAIClient = Substitute.For<IBlipAIClient>();
-            var blipAIClientFactory = Substitute.For<IBlipAIClientFactory>();
-            blipAIClientFactory.GetInstance(Arg.Is<string>(s => s.Equals(fromKey))).Returns(sourceBlipAIClient);
-            blipAIClientFactory.GetInstance(Arg.Is<string>(s => s.Equals(toKey))).Returns(targetBlipAIClient);
+            var blipAIClientFactory = Substitute.For<IBlipClientFactory>();
+            blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(fromKey))).Returns(sourceBlipAIClient);
+            blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(toKey))).Returns(targetBlipAIClient);
 
 
             var handler = new CopyHandler(blipAIClientFactory);
@@ -78,9 +78,9 @@ namespace Take.Blip.Tests.Features.Copy
             targetBlipAIClient.GetAllIntents(Arg.Any<bool>()).Returns(Task.FromResult<List<Intention>>(null));
             targetBlipAIClient.GetAllEntities(Arg.Any<bool>()).Returns(Task.FromResult<List<Entity>>(null));
 
-            var blipAIClientFactory = Substitute.For<IBlipAIClientFactory>();
-            blipAIClientFactory.GetInstance(Arg.Is<string>(s => s.Equals(fromKey))).Returns(sourceBlipAIClient);
-            blipAIClientFactory.GetInstance(Arg.Is<string>(s => s.Equals(toKey))).Returns(targetBlipAIClient);
+            var blipAIClientFactory = Substitute.For<IBlipClientFactory>();
+            blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(fromKey))).Returns(sourceBlipAIClient);
+            blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(toKey))).Returns(targetBlipAIClient);
 
 
             var handler = new CopyHandler(blipAIClientFactory);
@@ -115,9 +115,9 @@ namespace Take.Blip.Tests.Features.Copy
             targetBlipAIClient.GetAllIntents(Arg.Any<bool>()).Returns(Task.FromResult<List<Intention>>(null));
             targetBlipAIClient.GetAllEntities(Arg.Any<bool>()).Returns(Task.FromResult<List<Entity>>(null));
 
-            var blipAIClientFactory = Substitute.For<IBlipAIClientFactory>();
-            blipAIClientFactory.GetInstance(Arg.Is<string>(s => s.Equals(fromKey))).Returns(sourceBlipAIClient);
-            blipAIClientFactory.GetInstance(Arg.Is<string>(s => s.Equals(toKey))).Returns(targetBlipAIClient);
+            var blipAIClientFactory = Substitute.For<IBlipClientFactory>();
+            blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(fromKey))).Returns(sourceBlipAIClient);
+            blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(toKey))).Returns(targetBlipAIClient);
 
 
             var handler = new CopyHandler(blipAIClientFactory);
@@ -176,9 +176,9 @@ namespace Take.Blip.Tests.Features.Copy
             targetBlipAIClient.GetAllIntents(Arg.Any<bool>()).Returns(Task.FromResult<List<Intention>>(null));
             targetBlipAIClient.GetAllEntities(Arg.Any<bool>()).Returns(Task.FromResult<List<Entity>>(null));
 
-            var blipAIClientFactory = Substitute.For<IBlipAIClientFactory>();
-            blipAIClientFactory.GetInstance(Arg.Is<string>(s => s.Equals(fromKey))).Returns(sourceBlipAIClient);
-            blipAIClientFactory.GetInstance(Arg.Is<string>(s => s.Equals(toKey))).Returns(targetBlipAIClient);
+            var blipAIClientFactory = Substitute.For<IBlipClientFactory>();
+            blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(fromKey))).Returns(sourceBlipAIClient);
+            blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(toKey))).Returns(targetBlipAIClient);
 
 
             var handler = new CopyHandler(blipAIClientFactory);
@@ -240,9 +240,9 @@ namespace Take.Blip.Tests.Features.Copy
             targetBlipAIClient.GetAllIntents(Arg.Any<bool>()).Returns(Task.FromResult<List<Intention>>(null));
             targetBlipAIClient.GetAllEntities(Arg.Any<bool>()).Returns(Task.FromResult<List<Entity>>(null));
 
-            var blipAIClientFactory = Substitute.For<IBlipAIClientFactory>();
-            blipAIClientFactory.GetInstance(Arg.Is<string>(s => s.Equals(fromKey))).Returns(sourceBlipAIClient);
-            blipAIClientFactory.GetInstance(Arg.Is<string>(s => s.Equals(toKey))).Returns(targetBlipAIClient);
+            var blipAIClientFactory = Substitute.For<IBlipClientFactory>();
+            blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(fromKey))).Returns(sourceBlipAIClient);
+            blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(toKey))).Returns(targetBlipAIClient);
 
 
             var handler = new CopyHandler(blipAIClientFactory);
@@ -306,9 +306,9 @@ namespace Take.Blip.Tests.Features.Copy
             targetBlipAIClient.GetAllIntents(Arg.Any<bool>(), Arg.Any<bool>()).Returns(Task.FromResult(intents));
             targetBlipAIClient.GetAllEntities(Arg.Any<bool>()).Returns(Task.FromResult(entities));
 
-            var blipAIClientFactory = Substitute.For<IBlipAIClientFactory>();
-            blipAIClientFactory.GetInstance(Arg.Is<string>(s => s.Equals(fromKey))).Returns(sourceBlipAIClient);
-            blipAIClientFactory.GetInstance(Arg.Is<string>(s => s.Equals(toKey))).Returns(targetBlipAIClient);
+            var blipAIClientFactory = Substitute.For<IBlipClientFactory>();
+            blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(fromKey))).Returns(sourceBlipAIClient);
+            blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(toKey))).Returns(targetBlipAIClient);
 
 
             var handler = new CopyHandler(blipAIClientFactory);
@@ -373,9 +373,9 @@ namespace Take.Blip.Tests.Features.Copy
             targetBlipAIClient.GetAllIntents(Arg.Any<bool>()).Returns(Task.FromResult(intents));
             targetBlipAIClient.GetAllEntities(Arg.Any<bool>()).Returns(Task.FromResult(entities));
 
-            var blipAIClientFactory = Substitute.For<IBlipAIClientFactory>();
-            blipAIClientFactory.GetInstance(Arg.Is<string>(s => s.Equals(fromKey))).Returns(sourceBlipAIClient);
-            blipAIClientFactory.GetInstance(Arg.Is<string>(s => s.Equals(toKey))).Returns(targetBlipAIClient);
+            var blipAIClientFactory = Substitute.For<IBlipClientFactory>();
+            blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(fromKey))).Returns(sourceBlipAIClient);
+            blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(toKey))).Returns(targetBlipAIClient);
 
 
             var handler = new CopyHandler(blipAIClientFactory);

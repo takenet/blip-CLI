@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Take.BlipCLI.Services.Interfaces;
+using Take.BlipCLI.Services.Settings;
 
 namespace Take.BlipCLI.Handlers
 {
@@ -14,27 +16,42 @@ namespace Take.BlipCLI.Handlers
         public INamedParameter<string> OutputFilePath { get; set; }
         public INamedParameter<ExportModel> Model { get; set; }
         public ISwitch Verbose { get; set; }
+        public IBlipClientFactory BlipClientFactory { get; set; }
+
+        private readonly ISettingsFile _settingsFile;
+
+        public ExportHandler(IBlipClientFactory blipClientFactory)
+        {
+            _settingsFile = new SettingsFile();
+            BlipClientFactory = blipClientFactory;
+        }
+
 
         public override async Task<int> RunAsync(string[] args)
         {
             if (!Node.IsSet && !Authorization.IsSet)
                 throw new ArgumentNullException("You must provide the target bot (node) for this action. Use '-n' [--node] (or '-a' [--authorization]) parameters");
 
-            if (!Model.IsSet)
-                throw new ArgumentNullException("You must provide the model type. Use '-m' [--model] parameter");
-            
+            if (!OutputFilePath.IsSet)
+                throw new ArgumentNullException("You must provide the target output path for this action. Use '-o' [--output] parameter");
+
 
             HandlerAsync handler = null;
             switch (Model.Value)
             {
                 case ExportModel.NLPModel:
-                    handler = new NLPExportHandler { Node = Node, Authorization = Authorization, OutputFilePath = OutputFilePath, Verbose = Verbose };
+                    handler = NLPExportHandler.GetInstance(this);
+                    break;
+                case ExportModel.Builder:
+                    var bucket = BucketExportHandler.GetInstance(this);
+                    bucket.Key = "blip_portal:builder_working_flow";
+                    handler = bucket;
                     break;
                 default:
                     break;
             }
 
-            if(handler != null)
+            if (handler != null)
             {
                 return await handler.RunAsync(args);
             }
@@ -57,7 +74,27 @@ namespace Take.BlipCLI.Handlers
             var validContents = Enum.GetNames(typeof(ExportModel));
             return string.Join(", ", validContents);
         }
-       
+
+        protected string GetAuthorization()
+        {
+            string authorization = Authorization.Value;
+            if (Node.IsSet)
+            {
+                authorization = _settingsFile.GetNodeCredentials(Lime.Protocol.Node.Parse(Node.Value)).Authorization;
+            }
+            return authorization;
+        }
+
+        protected void LogVerbose(string message)
+        {
+            if (Verbose.IsSet) Console.Write(message);
+        }
+
+        protected void LogVerboseLine(string message)
+        {
+            if (Verbose.IsSet) Console.WriteLine(message);
+        }
+
         private ExportModel? TryGetContentType(string content)
         {
             var validContents = Enum.GetNames(typeof(ExportModel));
@@ -75,7 +112,8 @@ namespace Take.BlipCLI.Handlers
 
     public enum ExportModel
     {
-        NLPModel
+        NLPModel,
+        Builder
     }
 
 }
