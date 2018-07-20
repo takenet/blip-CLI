@@ -48,8 +48,9 @@ namespace Take.BlipCLI
                 var nlpImportCommand = app.Command("nlp-import");
                 nlpImportHandler.Node = nlpImportCommand.Parameter<string>("n").Alias("node").HelpText("Node to receive the data");
                 nlpImportHandler.Authorization = nlpImportCommand.Parameter<string>("a").Alias("authorization").HelpText("Node Authorization to receive the data");
-                nlpImportHandler.EntitiesFilePath = nlpImportCommand.Parameter<string>("ep").Alias("entities").HelpText("Path to entities file");
-                nlpImportHandler.IntentsFilePath = nlpImportCommand.Parameter<string>("ip").Alias("intents").HelpText("Path to intents file");
+                nlpImportHandler.EntitiesFilePath = nlpImportCommand.Parameter<string>("ep").Alias("entities").HelpText("Path to entities file in CSV format");
+                nlpImportHandler.IntentsFilePath = nlpImportCommand.Parameter<string>("ip").Alias("intents").HelpText("Path to intents file in CSV format");
+                nlpImportHandler.AnswersFilePath = nlpImportCommand.Parameter<string>("ap").Alias("answers").HelpText("Path to answers file in CSV format");
                 nlpImportCommand.HelpText("Import intents and entities to a specific bot (node)");
                 nlpImportCommand.Handler(nlpImportHandler.Run);
 
