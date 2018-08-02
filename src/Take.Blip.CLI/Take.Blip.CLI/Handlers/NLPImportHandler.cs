@@ -1,4 +1,5 @@
 ﻿using ITGlobal.CommandLine;
+using Lime.Messaging.Contents;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +18,8 @@ namespace Take.BlipCLI.Handlers
         public INamedParameter<string> Authorization { get; set; }
         public INamedParameter<string> IntentsFilePath { get; set; }
         public INamedParameter<string> EntitiesFilePath { get; set; }
-
+        public INamedParameter<string> AnswersFilePath { get; set; }
+        
         private readonly ISettingsFile _settingsFile;
         private IBlipAIClient _blipAIClient;
 
@@ -40,12 +42,21 @@ namespace Take.BlipCLI.Handlers
 
             _blipAIClient = new BlipHttpClientAsync(authorization);
 
+            var intents = new List<Intention>();
             if (IntentsFilePath.IsSet)
             {
                 Console.WriteLine("Starting intents import task...");
-                await ImportIntentions();
+                intents = await ImportIntentions();
                 Console.WriteLine("Intents imported with success...");
             }
+
+            if (AnswersFilePath.IsSet && intents != null && intents.Count > 0)
+            {
+                Console.WriteLine("Starting answers import task...");
+                await ImportAnswers(intents);
+                Console.WriteLine("Answers imported with success...");
+            }
+
 
             if (EntitiesFilePath.IsSet)
             {
@@ -57,7 +68,7 @@ namespace Take.BlipCLI.Handlers
             return 0;
         }
 
-        private async Task ImportIntentions()
+        private async Task<List<Intention>> ImportIntentions()
         {
             var intentionsMap = new Dictionary<string, List<string>>();
 
@@ -74,20 +85,22 @@ namespace Take.BlipCLI.Handlers
             if (!success)
             {
                 Console.WriteLine(csv.LastErrorText);
-                return;
+                return null;
             }
 
             //  Display the contents of the 3rd column (i.e. the country names)
             for (int row = 0; row <= csv.NumRows - 1; row++)
             {
-                var question = csv.GetCell(row, 0);
-                var intentionName = csv.GetCell(row, 1);
+                var intentionName = csv.GetCell(row, 0);
+                var question = csv.GetCell(row, 1);
 
                 var questionsList = intentionsMap.ContainsKey(intentionName) ? intentionsMap[intentionName] : new List<string>();
 
                 questionsList.Add(question);
                 intentionsMap[intentionName] = questionsList;
             }
+
+            var intents = new List<Intention>();
 
             //Add each intention on BLiP IA model
             foreach (var intentionKey in intentionsMap.Keys)
@@ -98,7 +111,66 @@ namespace Take.BlipCLI.Handlers
                 var questionsArray = questionsList.Select(q => new Question { Text = q }).ToArray();
 
                 await _blipAIClient.AddQuestions(id, questionsArray);
+
+                intents.Add(new Intention { Id = id, Questions = questionsArray, Name = intentionKey });
+
             }
+
+            return intents;
+        }
+
+
+        private async Task ImportAnswers(List<Intention> intentions)
+        {
+            var answersMap = new Dictionary<string, List<string>>();
+
+            //Get intentions on file
+            var csv = new Chilkat.Csv
+            {
+                //  Prior to loading the CSV file, indicate that the 1st row
+                //  should be treated as column names:
+                HasColumnNames = true
+            };
+
+            //  Load the CSV records from intentions the file:
+            bool success = csv.LoadFile(AnswersFilePath.Value);
+            if (!success)
+            {
+                Console.WriteLine(csv.LastErrorText);
+                return;
+            }
+
+            //  Display the contents of the 3rd column (i.e. the country names)
+            for (int row = 0; row <= csv.NumRows - 1; row++)
+            {
+                var intentionName = csv.GetCell(row, 0);
+                var answer = csv.GetCell(row, 1);
+
+                var answersList = answersMap.ContainsKey(intentionName) ? answersMap[intentionName] : new List<string>();
+
+                answersList.Add(answer);
+                answersMap[intentionName] = answersList;
+            }
+
+            var intents = new List<Intention>();
+
+            //Add each intention on BLiP IA model
+            foreach (var intentionKey in answersMap.Keys)
+            {
+                var intention = intentions.FirstOrDefault(i => i.Name == intentionKey);
+                if(intention == null)
+                {
+                    Console.WriteLine($"{intentionKey} not present in intentions list.");
+                    continue;
+                }
+
+                var answersList = answersMap[intentionKey];
+                var answersArray = answersList.Select(q => new Answer { RawValue = q, Type = PlainText.MediaType, Value = PlainText.Parse(q) }).ToArray();
+
+                await _blipAIClient.AddAnswers(intention.Id, answersArray);
+
+            }
+            
         }
 
         private async Task ImportEntities()

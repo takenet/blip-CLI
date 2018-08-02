@@ -4,8 +4,9 @@ using System.Text;
 
 namespace Take.BlipCLI.Services.Interfaces
 {
-    public interface IBlipAIClientFactory
+    public interface IBlipClientFactory
     {
-        IBlipAIClient GetInstance(string authorizationKey);
+        IBlipAIClient GetInstanceForAI(string authorizationKey);
+        IBlipBucketClient GetInstanceForBucket(string authorizationKey);
     }
 }

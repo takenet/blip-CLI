@@ -88,25 +88,7 @@ namespace Take.BlipCLI.Services
         {
             try
             {
-                string @namespace;
-                switch (bucketNamespace)
-                {
-                    case BucketNamespace.Document:
-                        @namespace = "buckets";
-                        break;
-
-                    case BucketNamespace.Resource:
-                        @namespace = "resources";
-                        break;
-
-                    case BucketNamespace.Profile:
-                        @namespace = "profile";
-                        break;
-
-                    default:
-                        @namespace = "buckets";
-                        break;
-                }
+                string @namespace = GetNamespaceAsString(bucketNamespace);
 
                 var command = new Command
                 {
@@ -129,24 +111,7 @@ namespace Take.BlipCLI.Services
 
         public async Task<DocumentCollection> GetAllDocumentKeysAsync(BucketNamespace bucketNamespace = BucketNamespace.Document)
         {
-            string @namespace;
-            switch (bucketNamespace)
-            {
-                case BucketNamespace.Document:
-                    @namespace = "buckets";
-                    break;
-
-                case BucketNamespace.Resource:
-                    @namespace = "resources";
-                    break;
-
-                case BucketNamespace.Profile:
-                    @namespace = "profile";
-                    break;
-                default:
-                    @namespace = "buckets";
-                    break;
-            }
+            string @namespace = GetNamespaceAsString(bucketNamespace);
 
             try
             {
@@ -175,25 +140,7 @@ namespace Take.BlipCLI.Services
 
             try
             {
-                string @namespace;
-                switch (bucketNamespace)
-                {
-                    case BucketNamespace.Document:
-                        @namespace = "buckets";
-                        break;
-
-                    case BucketNamespace.Resource:
-                        @namespace = "resources";
-                        break;
-
-                    case BucketNamespace.Profile:
-                        @namespace = "profile";
-                        break;
-
-                    default:
-                        @namespace = "buckets";
-                        break;
-                }
+                string @namespace = GetNamespaceAsString(bucketNamespace);
 
                 var pairsCollection = new List<KeyValuePair<string, Document>>();
 
@@ -355,6 +302,7 @@ namespace Take.BlipCLI.Services
             {
                 Console.WriteLine("\nException Caught!");
                 Console.WriteLine("Message :{0} ", e.Message);
+                throw;
             }
         }
 
@@ -384,6 +332,7 @@ namespace Take.BlipCLI.Services
             {
                 Console.WriteLine("\nException Caught!");
                 Console.WriteLine("Message :{0} ", e.Message);
+                throw;
             }
         }
 
@@ -443,7 +392,7 @@ namespace Take.BlipCLI.Services
                 {
                     To = Node.Parse("postmaster@ai.msging.net"),
                     Method = CommandMethod.Get,
-                };                
+                };
 
                 LogVerbose(verbose, "Intents: ");
 
@@ -494,6 +443,37 @@ namespace Take.BlipCLI.Services
             }
         }
 
+        public async Task<KeyValuePair<string, Document>?> GetDocumentAsync(string key, BucketNamespace bucketNamespace)
+        {
+            try
+            {
+                string @namespace = GetNamespaceAsString(bucketNamespace);
+
+                var pairsCollection = new List<KeyValuePair<string, Document>>();
+
+                var command = new Command
+                {
+                    Id = EnvelopeId.NewId(),
+                    To = Node.Parse("postmaster@msging.net"),
+                    Uri = new LimeUri($"/{@namespace}/{key}"),
+                    Method = CommandMethod.Get
+                };
+
+                var envelopeResult = await RunCommandAsync(command);
+                var document = envelopeResult.Resource;
+
+                var value = new KeyValuePair<string, Document>(key.ToString(), document);
+
+                return value;
+            }
+            catch (HttpRequestException e)
+            {
+                Console.WriteLine("\nException Caught!");
+                Console.WriteLine("Message :{0} ", e.Message);
+                return null;
+            }
+        }
+
         public void Dispose()
         {
             _client.Dispose();
@@ -534,6 +514,32 @@ namespace Take.BlipCLI.Services
             if (envelopeResult.Status == CommandStatus.Failure)
                 throw new Exception($"Command failed: {envelopeResult.Reason.Description}({envelopeResult.Reason.Code})");
         }
+
+        private static string GetNamespaceAsString(BucketNamespace bucketNamespace)
+        {
+            string @namespace;
+            switch (bucketNamespace)
+            {
+                case BucketNamespace.Document:
+                    @namespace = "buckets";
+                    break;
+
+                case BucketNamespace.Resource:
+                    @namespace = "resources";
+                    break;
+
+                case BucketNamespace.Profile:
+                    @namespace = "profile";
+                    break;
+                default:
+                    @namespace = "buckets";
+                    break;
+            }
+
+            return @namespace;
+        }
+
+
     }
 
 }

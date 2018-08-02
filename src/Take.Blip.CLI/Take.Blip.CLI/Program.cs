@@ -21,9 +21,10 @@ namespace Take.BlipCLI
 
             var serviceProvider = new ServiceCollection()
                 .AddSingleton<IStringService, StringService>()
-                .AddSingleton<IBlipAIClientFactory, BlipAIClientFactory>()
+                .AddSingleton<IBlipClientFactory, BlipClientFactory>()
                 .AddSingleton<NLPCompareHandler>()
                 .AddSingleton<CopyHandler>()
+                .AddSingleton<ExportHandler>()
                 .BuildServiceProvider();
 
             return CLI.HandleErrors(() =>
@@ -47,8 +48,9 @@ namespace Take.BlipCLI
                 var nlpImportCommand = app.Command("nlp-import");
                 nlpImportHandler.Node = nlpImportCommand.Parameter<string>("n").Alias("node").HelpText("Node to receive the data");
                 nlpImportHandler.Authorization = nlpImportCommand.Parameter<string>("a").Alias("authorization").HelpText("Node Authorization to receive the data");
-                nlpImportHandler.EntitiesFilePath = nlpImportCommand.Parameter<string>("ep").Alias("entities").HelpText("Path to entities file");
-                nlpImportHandler.IntentsFilePath = nlpImportCommand.Parameter<string>("ip").Alias("intents").HelpText("Path to intents file");
+                nlpImportHandler.EntitiesFilePath = nlpImportCommand.Parameter<string>("ep").Alias("entities").HelpText("Path to entities file in CSV format");
+                nlpImportHandler.IntentsFilePath = nlpImportCommand.Parameter<string>("ip").Alias("intents").HelpText("Path to intents file in CSV format");
+                nlpImportHandler.AnswersFilePath = nlpImportCommand.Parameter<string>("ap").Alias("answers").HelpText("Path to answers file in CSV format");
                 nlpImportCommand.HelpText("Import intents and entities to a specific bot (node)");
                 nlpImportCommand.Handler(nlpImportHandler.Run);
 
@@ -88,7 +90,7 @@ namespace Take.BlipCLI
                 nlpAnalyseCommand.HelpText("Analyse some text using a bot IA model");
                 nlpAnalyseCommand.Handler(nlpAnalyseHandler.Run);
 
-                var exportHandler = new ExportHandler();
+                var exportHandler = serviceProvider.GetService<ExportHandler>();
                 var exportCommand = app.Command("export").Alias("get");
                 exportHandler.Node = exportCommand.Parameter<string>("n").Alias("node").HelpText("Node (bot) source");
                 exportHandler.Authorization = exportCommand.Parameter<string>("a").Alias("authorization").HelpText("Authorization key of source bot");
