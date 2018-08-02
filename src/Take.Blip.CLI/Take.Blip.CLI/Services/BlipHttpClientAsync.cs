@@ -208,7 +208,7 @@ namespace Take.BlipCLI.Services
                 {
                     Id = EnvelopeId.NewId(),
                     To = Node.Parse("postmaster@ai.msging.net"),
-                    Uri = new LimeUri($"/intentions/{intentId}"),
+                    Uri = new LimeUri(Uri.EscapeUriString($"/intentions/{intentId}")),
                     Method = CommandMethod.Delete,
                 };
 
@@ -229,7 +229,7 @@ namespace Take.BlipCLI.Services
                 {
                     Id = EnvelopeId.NewId(),
                     To = Node.Parse("postmaster@ai.msging.net"),
-                    Uri = new LimeUri($"/entities/{entityId}"),
+                    Uri = new LimeUri(Uri.EscapeUriString($"/entities/{entityId}")),
                     Method = CommandMethod.Delete,
                 };
 
@@ -286,7 +286,7 @@ namespace Take.BlipCLI.Services
                 {
                     Id = EnvelopeId.NewId(),
                     To = Node.Parse("postmaster@ai.msging.net"),
-                    Uri = new LimeUri($"/intentions/{intentId}/questions"),
+                    Uri = new LimeUri(Uri.EscapeUriString($"/intentions/{intentId}/questions")),
                     Method = CommandMethod.Set,
                     Resource = new DocumentCollection
                     {

@@ -19,8 +19,7 @@ namespace Take.BlipCLI.Handlers
         public INamedParameter<string> To { get; set; }
         public INamedParameter<string> ToAuthorization { get; set; }
         public INamedParameter<List<BucketNamespace>> Contents { get; set; }
-        public ISwitch Force { get; set; }
-        public ISwitch Verbose { get; set; }
+        
 
         private readonly ISettingsFile _settingsFile;
 
@@ -109,7 +108,7 @@ namespace Take.BlipCLI.Handlers
             await CopyEntitiesAsync(targetBlipAIClient, entities);
             await CopyIntentsAsync(targetBlipAIClient, intents);
 
-            LogVerbose($"\t> DONE");
+            LogVerbose($"> DONE");
         }
 
         private async Task CopyIntentsAsync(IBlipAIClient blipAIClient, List<Intention> intents)
@@ -232,15 +231,7 @@ namespace Take.BlipCLI.Handlers
             return null;
         }
 
-        private void LogVerbose(string message)
-        {
-            if (Verbose.IsSet) Console.Write(message);
-        }
-
-        private void LogVerboseLine(string message)
-        {
-            if (Verbose.IsSet) Console.WriteLine(message);
-        }
+     
 
     }
 

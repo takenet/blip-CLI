@@ -60,7 +60,7 @@ namespace Take.BlipCLI
                 copyHandler.To = copyCommand.Parameter<string>("t").Alias("to").HelpText("Node (bot) target");
                 copyHandler.FromAuthorization = copyCommand.Parameter<string>("fa").Alias("fromAuthorization").HelpText("Authorization key of source bot");
                 copyHandler.ToAuthorization = copyCommand.Parameter<string>("ta").Alias("toAuthorization").HelpText("Authorization key of target bot");
-                copyHandler.Contents = copyCommand.Parameter<List<BucketNamespace>>("c").Alias("contents").HelpText("Define which contents will be copied").ParseUsing(copyHandler.CustomNamespaceParser);
+                copyHandler.Contents = copyCommand.Parameter<List<BucketNamespace>>("c").Alias("contents").HelpText($"Define which contents will be copied. Examples: '{copyHandler.GetTypesListAsString<BucketNamespace>()}'").ParseUsing(copyHandler.CustomNamespaceParser);
                 copyHandler.Verbose = _verbose;
                 copyHandler.Force = _force;
                 copyCommand.HelpText("Copy data from source bot (node) to target bot (node)");
@@ -95,7 +95,7 @@ namespace Take.BlipCLI
                 exportHandler.Node = exportCommand.Parameter<string>("n").Alias("node").HelpText("Node (bot) source");
                 exportHandler.Authorization = exportCommand.Parameter<string>("a").Alias("authorization").HelpText("Authorization key of source bot");
                 exportHandler.OutputFilePath = exportCommand.Parameter<string>("o").Alias("output").Alias("path").HelpText("Output file path. Please use a full path.");
-                exportHandler.Model = exportCommand.Parameter<ExportModel>("m").Alias("model").HelpText($"Model to be exported. Examples: \'{exportHandler.GetTypesListAsString()}\'").ParseUsing(exportHandler.CustomParser);
+                exportHandler.Model = exportCommand.Parameter<ExportModel>("m").Alias("model").HelpText($"Model to be exported. Examples: \'{exportHandler.GetTypesListAsString<ExportModel>()}\'").ParseUsing(exportHandler.CustomParser);
                 exportHandler.Verbose = _verbose;
                 exportCommand.HelpText("Export some BLiP model");
                 exportCommand.Handler(exportHandler.Run);

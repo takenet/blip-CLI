@@ -15,7 +15,6 @@ namespace Take.BlipCLI.Handlers
         public INamedParameter<string> Authorization { get; set; }
         public INamedParameter<string> OutputFilePath { get; set; }
         public INamedParameter<ExportModel> Model { get; set; }
-        public ISwitch Verbose { get; set; }
         public IBlipClientFactory BlipClientFactory { get; set; }
 
         private readonly ISettingsFile _settingsFile;
@@ -69,12 +68,6 @@ namespace Take.BlipCLI.Handlers
             throw new CommandLineParameterException($"\"{type}\" was an invalid Exportable Model");
         }
 
-        public string GetTypesListAsString()
-        {
-            var validContents = Enum.GetNames(typeof(ExportModel));
-            return string.Join(", ", validContents);
-        }
-
         protected string GetAuthorization()
         {
             string authorization = Authorization.Value;
@@ -83,16 +76,6 @@ namespace Take.BlipCLI.Handlers
                 authorization = _settingsFile.GetNodeCredentials(Lime.Protocol.Node.Parse(Node.Value)).Authorization;
             }
             return authorization;
-        }
-
-        protected void LogVerbose(string message)
-        {
-            if (Verbose.IsSet) Console.Write(message);
-        }
-
-        protected void LogVerboseLine(string message)
-        {
-            if (Verbose.IsSet) Console.WriteLine(message);
         }
 
         private ExportModel? TryGetContentType(string content)
@@ -105,8 +88,6 @@ namespace Take.BlipCLI.Handlers
 
             return null;
         }
-
-
 
     }
 
