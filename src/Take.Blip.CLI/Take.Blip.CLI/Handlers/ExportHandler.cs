@@ -16,6 +16,7 @@ namespace Take.BlipCLI.Handlers
         public INamedParameter<string> OutputFilePath { get; set; }
         public INamedParameter<ExportModel> Model { get; set; }
         public ISwitch Verbose { get; set; }
+        public INamedParameter<string> Excel { get; set; }
         public IBlipClientFactory BlipClientFactory { get; set; }
 
         private readonly ISettingsFile _settingsFile;
@@ -34,7 +35,6 @@ namespace Take.BlipCLI.Handlers
 
             if (!OutputFilePath.IsSet)
                 throw new ArgumentNullException("You must provide the target output path for this action. Use '-o' [--output] parameter");
-
 
             HandlerAsync handler = null;
             switch (Model.Value)

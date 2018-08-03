@@ -97,6 +97,7 @@ namespace Take.BlipCLI
                 exportHandler.OutputFilePath = exportCommand.Parameter<string>("o").Alias("output").Alias("path").HelpText("Output file path. Please use a full path.");
                 exportHandler.Model = exportCommand.Parameter<ExportModel>("m").Alias("model").HelpText($"Model to be exported. Examples: \'{exportHandler.GetTypesListAsString()}\'").ParseUsing(exportHandler.CustomParser);
                 exportHandler.Verbose = _verbose;
+                exportHandler.Excel = exportCommand.Parameter<string>("ex").Alias("excel").HelpText("Export content in a excel file. Please specify the file name (without extension)");
                 exportCommand.HelpText("Export some BLiP model");
                 exportCommand.Handler(exportHandler.Run);
 
