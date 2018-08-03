@@ -56,6 +56,8 @@ namespace Take.BlipCLI.Handlers
                 {
                     WriteIntentionExcel(intentions, package);
 
+                    WriteQuestionsExcel(intentions, package);
+
                     WriteAnswersExcel(intentions, package);
 
                     WriteEntitiesExcel(entities, package);
@@ -77,7 +79,9 @@ namespace Take.BlipCLI.Handlers
 
             return 0;
         }
+
         #region Excel Generation
+
         private FileInfo CreateExcelFileInfo(string directory, string fileName)
         {
             string fileFullPath = Path.Combine(directory, $"{fileName}.xlsx");
@@ -100,6 +104,46 @@ namespace Take.BlipCLI.Handlers
 
         }
         private void SetColumnWidthFit(ExcelWorksheet worksheet, int columnIndex) => worksheet.Column(columnIndex).AutoFit();
+
+        private void WriteQuestionsExcel(List<Intention> intentions, ExcelPackage excelPackage)
+        {
+            int RowCount = 2;
+
+            ExcelWorksheet worksheet = CreateExcelWorkSheet(excelPackage, "Questions");
+
+            worksheet.Cells[1, 1].Value = "Intention Name";
+            worksheet.Cells[1, 2].Value = "Question";
+
+            using (var range = worksheet.Cells[1, 1, 1, 2])
+            {
+                FormatTitleCells(range);
+            }
+
+            foreach (var intent in intentions)
+            {
+                if (intent.Questions == null)
+                {
+                    worksheet.Cells[RowCount, 1].Value = intent.Name;
+                    worksheet.Cells[RowCount, 2].Value = string.Empty;
+
+                    RowCount++;
+
+                    continue;
+                }
+
+                foreach (var question in intent.Questions)
+                {
+                    worksheet.Cells[RowCount, 1].Value = intent.Name;
+                    worksheet.Cells[RowCount, 2].Value = question.Text;
+
+                    RowCount++;
+                }
+            }
+
+            SetColumnWidthFit(worksheet, 1);
+            SetColumnWidthFit(worksheet, 2);
+        }
+
 
         private void WriteEntitiesExcel(List<Entity> entities, ExcelPackage excelPackage)
         {
