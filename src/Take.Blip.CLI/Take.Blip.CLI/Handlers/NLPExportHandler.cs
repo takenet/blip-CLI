@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Take.BlipCLI.Models;
 using Take.BlipCLI.Services;
 using Take.BlipCLI.Services.Interfaces;
 using Takenet.Iris.Messaging.Resources.ArtificialIntelligence;
@@ -54,13 +55,17 @@ namespace Take.BlipCLI.Handlers
 
                 using (var package = new ExcelPackage(CreateExcelFileInfo(OutputFilePath.Value, Excel.Value)))
                 {
-                    WriteIntentionExcel(intentions, package);
+                    List<NLPExcelExportModel> excelExportModels = new List<NLPExcelExportModel>();
 
-                    WriteQuestionsExcel(intentions, package);
+                    excelExportModels.Add(WriteIntentionExcel(intentions));
 
-                    WriteAnswersExcel(intentions, package);
+                    excelExportModels.Add(WriteQuestionsExcel(intentions));
 
-                    WriteEntitiesExcel(entities, package);
+                    excelExportModels.Add(WriteAnswersExcel(intentions));
+
+                    excelExportModels.Add(WriteEntitiesExcel(entities));
+
+                    WriteContentOnExcel(excelExportModels, package);
 
                     package.Save();
                 }
@@ -78,6 +83,37 @@ namespace Take.BlipCLI.Handlers
             LogVerboseLine("DONE");
 
             return 0;
+        }
+
+        public void WriteContentOnExcel(List<NLPExcelExportModel> excelExportModel, ExcelPackage excelPackage)
+        {
+            foreach (var item in excelExportModel)
+            {
+                int RowCount = 2;
+                ExcelWorksheet worksheet = CreateExcelWorkSheet(excelPackage, item.SheetName);
+
+                //Write Columns 
+                for (int column = 0; column < item.Columns.Length; column++)
+                    worksheet.Cells[1, column + 1].Value = item.Columns[column];
+
+                //Format Title Cells with different color
+                using (var range = worksheet.Cells[1, 1, 1, item.Columns.Length])
+                    FormatTitleCells(range);
+
+                //Write Values on sheet
+                for (int rows = 0; rows < item.SheetValues.GetLength(0); rows++)
+                {
+                    for (int columns = 0; columns < item.SheetValues.GetLength(1); columns++)
+                    {
+                        worksheet.Cells[RowCount, columns + 1].Value = item.SheetValues[rows, columns];
+                    }
+                    RowCount++;
+                }
+
+                //Set Columns Width
+                for (int columns = 0; columns < item.Columns.Length; columns++)
+                    SetColumnWidthFit(worksheet, columns + 1);
+            }
         }
 
         #region Excel Generation
@@ -105,161 +141,188 @@ namespace Take.BlipCLI.Handlers
         }
         private void SetColumnWidthFit(ExcelWorksheet worksheet, int columnIndex) => worksheet.Column(columnIndex).AutoFit();
 
-        private void WriteQuestionsExcel(List<Intention> intentions, ExcelPackage excelPackage)
+        private NLPExcelExportModel WriteQuestionsExcel(List<Intention> intentions)
         {
-            int RowCount = 2;
+            int RowCount = 0;
+            int TotalQuestions = 0;
 
-            ExcelWorksheet worksheet = CreateExcelWorkSheet(excelPackage, "Questions");
+            NLPExcelExportModel excelExportModel = new NLPExcelExportModel();
+            excelExportModel.SheetName = "Questions";
 
-            worksheet.Cells[1, 1].Value = "Intention Name";
-            worksheet.Cells[1, 2].Value = "Question";
+            excelExportModel.Columns = new string[2];
 
-            using (var range = worksheet.Cells[1, 1, 1, 2])
+            excelExportModel.Columns[0] = "Intention Name";
+            excelExportModel.Columns[1] = "Question";
+
+            List<Intention> filteredIntentions = intentions.Where(x => x.IsDeleted == false).ToList();
+
+            filteredIntentions.ForEach(delegate (Intention intent)
             {
-                FormatTitleCells(range);
-            }
+                Question[] questions = intent.Questions;
 
-            foreach (var intent in intentions)
+                if (questions == null)
+                    TotalQuestions = TotalQuestions + 1;
+                else
+                    TotalQuestions = TotalQuestions + questions.Length;
+            });
+
+            excelExportModel.SheetValues = new string[TotalQuestions, excelExportModel.Columns.Length];
+
+            foreach (var intent in filteredIntentions)
             {
                 if (intent.Questions == null)
                 {
-                    worksheet.Cells[RowCount, 1].Value = intent.Name;
-                    worksheet.Cells[RowCount, 2].Value = string.Empty;
+                    excelExportModel.SheetValues[RowCount, 0] = intent.Name;
+                    excelExportModel.SheetValues[RowCount, 1] = string.Empty;
 
                     RowCount++;
-
                     continue;
                 }
 
                 foreach (var question in intent.Questions)
                 {
-                    worksheet.Cells[RowCount, 1].Value = intent.Name;
-                    worksheet.Cells[RowCount, 2].Value = question.Text;
+                    excelExportModel.SheetValues[RowCount, 0] = intent.Name;
+                    excelExportModel.SheetValues[RowCount, 1] = question.Text;
 
                     RowCount++;
                 }
             }
 
-            SetColumnWidthFit(worksheet, 1);
-            SetColumnWidthFit(worksheet, 2);
+            return excelExportModel;
         }
 
-
-        private void WriteEntitiesExcel(List<Entity> entities, ExcelPackage excelPackage)
+        private NLPExcelExportModel WriteEntitiesExcel(List<Entity> entities)
         {
-            int RowCount = 2;
+            int RowCount = 0;
+            int TotalEntitiesValue = 0;
 
-            ExcelWorksheet worksheet = CreateExcelWorkSheet(excelPackage, "Entities");
+            NLPExcelExportModel excelExportModel = new NLPExcelExportModel();
+            excelExportModel.SheetName = "Entities";
 
-            worksheet.Cells[1, 1].Value = "ID";
-            worksheet.Cells[1, 2].Value = "Entity Name";
-            worksheet.Cells[1, 3].Value = "Value Name";
-            worksheet.Cells[1, 4].Value = "Synonymous";
+            excelExportModel.Columns = new string[4];
 
-            using (var range = worksheet.Cells[1, 1, 1, 4])
+            excelExportModel.Columns[0] = "ID";
+            excelExportModel.Columns[1] = "Entity Name";
+            excelExportModel.Columns[2] = "Value Name";
+            excelExportModel.Columns[3] = "Synonymous";
+
+            List<Entity> filteredEntities = entities.Where(x => x.IsDeleted == false).ToList();
+
+            filteredEntities.ForEach(delegate (Entity entity)
             {
-                FormatTitleCells(range);
-            }
+                EntityValues[] questions = entity.Values;
 
-            foreach (var entity in entities)
+                if (questions == null)
+                    TotalEntitiesValue = TotalEntitiesValue + 1;
+                else
+                    TotalEntitiesValue = TotalEntitiesValue + questions.Length;
+            });
+
+            excelExportModel.SheetValues = new string[TotalEntitiesValue, excelExportModel.Columns.Length];
+
+            foreach (var entity in filteredEntities)
             {
                 if (entity.Values == null)
                 {
-                    worksheet.Cells[RowCount, 1].Value = entity.Id;
-                    worksheet.Cells[RowCount, 2].Value = entity.Name;
-                    worksheet.Cells[RowCount, 3].Value = string.Empty;
-                    worksheet.Cells[RowCount, 4].Value = string.Empty;
+                    excelExportModel.SheetValues[RowCount, 0] = entity.Id;
+                    excelExportModel.SheetValues[RowCount, 1] = entity.Name;
+                    excelExportModel.SheetValues[RowCount, 2] = string.Empty;
+                    excelExportModel.SheetValues[RowCount, 3] = string.Empty;
 
                     RowCount++;
-
                     continue;
                 }
 
                 foreach (var item in entity.Values)
                 {
-                    worksheet.Cells[RowCount, 1].Value = entity.Id;
-                    worksheet.Cells[RowCount, 2].Value = entity.Name;
-                    worksheet.Cells[RowCount, 3].Value = item.Name;
-                    worksheet.Cells[RowCount, 4].Value = string.Join(";", item.Synonymous);
+                    excelExportModel.SheetValues[RowCount, 0] = entity.Id;
+                    excelExportModel.SheetValues[RowCount, 1] = entity.Name;
+                    excelExportModel.SheetValues[RowCount, 2] = item.Name;
+                    excelExportModel.SheetValues[RowCount, 3] = string.Join(";", item.Synonymous);
 
                     RowCount++;
                 }
             }
 
-            SetColumnWidthFit(worksheet, 1);
-            SetColumnWidthFit(worksheet, 2);
-            SetColumnWidthFit(worksheet, 3);
-            SetColumnWidthFit(worksheet, 4);
+            return excelExportModel;
         }
 
-        private void WriteAnswersExcel(List<Intention> intentions, ExcelPackage excelPackage)
+        private NLPExcelExportModel WriteAnswersExcel(List<Intention> intentions)
         {
-            int RowCount = 2;
+            int RowCount = 0;
+            int TotalAnswers = 0;
 
-            ExcelWorksheet worksheet = CreateExcelWorkSheet(excelPackage, "Answers");
-            worksheet.Cells[1, 1].Value = "Intention";
-            worksheet.Cells[1, 2].Value = "Answer";
+            NLPExcelExportModel excelExportModel = new NLPExcelExportModel();
+            excelExportModel.SheetName = "Answers";
 
-            using (var range = worksheet.Cells[1, 1, 1, 2])
+            excelExportModel.Columns = new string[2];
+
+            excelExportModel.Columns[0] = "Intention Name";
+            excelExportModel.Columns[1] = "Answer";
+
+            List<Intention> filteredIntentions = intentions.Where(x => x.IsDeleted == false).ToList();
+
+            filteredIntentions.ForEach(delegate (Intention intent)
             {
-                FormatTitleCells(range);
-            }
+                Answer[] questions = intent.Answers;
 
-            foreach (var intent in intentions)
+                if (questions == null)
+                    TotalAnswers = TotalAnswers + 1;
+                else
+                    TotalAnswers = TotalAnswers + questions.Length;
+            });
+
+            excelExportModel.SheetValues = new string[TotalAnswers, excelExportModel.Columns.Length];
+
+            foreach (var intent in filteredIntentions)
             {
                 if (intent.Answers == null)
                 {
-                    worksheet.Cells[RowCount, 1].Value = intent.Name;
-                    worksheet.Cells[RowCount, 2].Value = string.Empty;
+                    excelExportModel.SheetValues[RowCount, 0] = intent.Name;
+                    excelExportModel.SheetValues[RowCount, 1] = string.Empty;
 
                     RowCount++;
-
                     continue;
                 }
 
                 foreach (var answer in intent.Answers)
                 {
-                    worksheet.Cells[RowCount, 1].Value = intent.Name;
-                    worksheet.Cells[RowCount, 2].Value = answer.Value.ToString();
+                    excelExportModel.SheetValues[RowCount, 0] = intent.Name;
+                    excelExportModel.SheetValues[RowCount, 1] = answer.Value.ToString();
 
                     RowCount++;
                 }
             }
 
-            SetColumnWidthFit(worksheet, 1);
-            SetColumnWidthFit(worksheet, 2);
+            return excelExportModel;
         }
 
-        private void WriteIntentionExcel(List<Intention> intentions, ExcelPackage excelPackage)
+        private NLPExcelExportModel WriteIntentionExcel(List<Intention> intentions)
         {
-            int RowCount = 2;
+            int RowCount = 0;
+            NLPExcelExportModel excelExportModel = new NLPExcelExportModel();
+            excelExportModel.SheetName = "Intentions";
 
-            ExcelWorksheet worksheet = CreateExcelWorkSheet(excelPackage, "Intentions");
+            excelExportModel.Columns = new string[3];
 
-            worksheet.Cells[1, 1].Value = "ID";
-            worksheet.Cells[1, 2].Value = "Intention Name";
-            worksheet.Cells[1, 3].Value = "Updated At";
-            worksheet.Cells[1, 4].Value = "Is Deleted";
+            excelExportModel.Columns[0] = "ID";
+            excelExportModel.Columns[1] = "Intention Name";
+            excelExportModel.Columns[2] = "Updated At";
 
-            using (var range = worksheet.Cells[1, 1, 1, 4])
+            List<Intention> filteredIntentions = intentions.Where(x => x.IsDeleted == false).ToList();
+
+            excelExportModel.SheetValues = new string[filteredIntentions.Count, excelExportModel.Columns.Length];
+
+            foreach (var intent in filteredIntentions)
             {
-                FormatTitleCells(range);
-            }
-
-            foreach (var item in intentions)
-            {
-                worksheet.Cells[RowCount, 1].Value = item.Id;
-                worksheet.Cells[RowCount, 2].Value = item.Name;
-                worksheet.Cells[RowCount, 3].Value = item.StorageDate.GetValueOrDefault().ToString("dd/MM/yyyy hh:mm:ss");
-                worksheet.Cells[RowCount, 4].Value = item.IsDeleted == false ? "Não" : "Sim";
+                excelExportModel.SheetValues[RowCount, 0] = intent.Id;
+                excelExportModel.SheetValues[RowCount, 1] = intent.Name;
+                excelExportModel.SheetValues[RowCount, 2] = intent.StorageDate.GetValueOrDefault().ToString("dd/MM/yyyy hh:mm:ss");
 
                 RowCount++;
             }
 
-            SetColumnWidthFit(worksheet, 1);
-            SetColumnWidthFit(worksheet, 2);
-            SetColumnWidthFit(worksheet, 3);
-            SetColumnWidthFit(worksheet, 4);
+            return excelExportModel;
         }
 
         #endregion
