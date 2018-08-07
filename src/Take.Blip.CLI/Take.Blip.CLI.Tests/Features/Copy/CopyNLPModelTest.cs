@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Take.Blip.CLI.Tests.Models;
 using Take.BlipCLI.Handlers;
 using Take.BlipCLI.Services.Interfaces;
 using Takenet.Iris.Messaging.Resources.ArtificialIntelligence;
@@ -400,65 +401,6 @@ namespace Take.Blip.Tests.Features.Copy
     }
 
 
-    class MyNamedParameter<T> : INamedParameter<T>
-    {
-        public bool IsSet => Value != null;
-
-        public T Value { set; get; }
-
-        public event Action<INamedParameter<T>> ValueParsed;
-
-        public INamedParameter<T> Alias(string name)
-        {
-            throw new NotImplementedException();
-        }
-
-        public INamedParameter<T> DefaultValue(T value)
-        {
-            throw new NotImplementedException();
-        }
-
-        public INamedParameter<T> HelpText(string text)
-        {
-            throw new NotImplementedException();
-        }
-
-        public INamedParameter<T> Hidden(bool hidden = true)
-        {
-            throw new NotImplementedException();
-        }
-
-        public INamedParameter<T> ParseUsing(Func<string, T> parser)
-        {
-            throw new NotImplementedException();
-        }
-
-        public INamedParameter<T> Required(bool isRequired = true)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    class MySwitch : ISwitch
-    {
-        public bool IsSet { get; set; }
-
-        public event Action<ISwitch> ValueParsed;
-
-        public ISwitch Alias(string name)
-        {
-            throw new NotImplementedException();
-        }
-
-        public ISwitch HelpText(string text)
-        {
-            throw new NotImplementedException();
-        }
-
-        public ISwitch Hidden(bool hidden = true)
-        {
-            throw new NotImplementedException();
-        }
-    }
+    
 
 }

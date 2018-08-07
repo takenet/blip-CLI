@@ -22,9 +22,11 @@ namespace Take.BlipCLI
             var serviceProvider = new ServiceCollection()
                 .AddSingleton<IStringService, StringService>()
                 .AddSingleton<IBlipClientFactory, BlipClientFactory>()
+                .AddSingleton<INLPAnalyseFileReader, NLPAnalyseFileReader>()
                 .AddSingleton<NLPCompareHandler>()
                 .AddSingleton<CopyHandler>()
                 .AddSingleton<ExportHandler>()
+                .AddSingleton<NLPAnalyseHandler>()
                 .BuildServiceProvider();
 
             return CLI.HandleErrors(() =>
@@ -82,11 +84,10 @@ namespace Take.BlipCLI
                 formatKeyCommand.HelpText("Show all valid keys for a bot");
                 formatKeyCommand.Handler(formatKeyHandler.Run);
 
-                var nlpAnalyseHandler = new NLPAnalyseHandler();
+                var nlpAnalyseHandler = serviceProvider.GetService<NLPAnalyseHandler>();
                 var nlpAnalyseCommand = app.Command("nlp-analyse").Alias("analyse");
-                nlpAnalyseHandler.Text = nlpAnalyseCommand.Parameter<string>("t").Alias("text").HelpText("Text to be analysed");
-                nlpAnalyseHandler.Node = nlpAnalyseCommand.Parameter<string>("n").Alias("node").Alias("identifier").HelpText("Bot identifier");
-                nlpAnalyseHandler.Node = nlpAnalyseCommand.Parameter<string>("a").Alias("accessKey").HelpText("Bot access key");
+                nlpAnalyseHandler.Input = nlpAnalyseCommand.Parameter<string>("i").Alias("input").HelpText("Input to be analysed. Works with a single phrase or with a text file (new line separator).");
+                nlpAnalyseHandler.Authorization = nlpAnalyseCommand.Parameter<string>("a").Alias("authorization").HelpText("Bot authorization key");
                 nlpAnalyseCommand.HelpText("Analyse some text using a bot IA model");
                 nlpAnalyseCommand.Handler(nlpAnalyseHandler.Run);
 
