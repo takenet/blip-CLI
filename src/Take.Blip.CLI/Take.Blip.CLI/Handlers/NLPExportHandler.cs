@@ -16,14 +16,13 @@ namespace Take.BlipCLI.Handlers
     {
         private IBlipAIClient _blipAIClient;
 
-        public NLPExportHandler(IBlipClientFactory blipClientFactory) : base(blipClientFactory)
+        public NLPExportHandler(IBlipClientFactory blipClientFactory, IExcelGeneratorService excelGeneratorService) : base(blipClientFactory, excelGeneratorService)
         {
-
         }
 
         public static NLPExportHandler GetInstance(ExportHandler eh)
         {
-            return new NLPExportHandler(eh.BlipClientFactory)
+            return new NLPExportHandler(eh.BlipClientFactory, eh.ExcelGeneratorService)
             {
                 Node = eh.Node,
                 Authorization = eh.Authorization,
@@ -53,23 +52,17 @@ namespace Take.BlipCLI.Handlers
                 if (Excel.Value == string.Empty || Excel.Value == null)
                     throw new ArgumentNullException("You must provide a file name to save the file.");
 
-                using (var package = new ExcelPackage(CreateExcelFileInfo(OutputFilePath.Value, Excel.Value)))
-                {
-                    List<NLPExcelExportModel> excelExportModels = new List<NLPExcelExportModel>();
+                List<NLPExcelExportModel> excelExportModels = new List<NLPExcelExportModel>();
 
-                    excelExportModels.Add(WriteIntentionExcel(intentions));
+                excelExportModels.Add(WriteIntentionExcel(intentions));
 
-                    excelExportModels.Add(WriteQuestionsExcel(intentions));
+                excelExportModels.Add(WriteQuestionsExcel(intentions));
 
-                    excelExportModels.Add(WriteAnswersExcel(intentions));
+                excelExportModels.Add(WriteAnswersExcel(intentions));
 
-                    excelExportModels.Add(WriteEntitiesExcel(entities));
+                excelExportModels.Add(WriteEntitiesExcel(entities));
 
-                    WriteContentOnExcel(excelExportModels, package);
-
-                    package.Save();
-                }
-
+                ExcelGeneratorService.WriteContentOnExcel(excelExportModels, OutputFilePath.Value, Excel.Value);
             }
             else
             {
@@ -85,61 +78,7 @@ namespace Take.BlipCLI.Handlers
             return 0;
         }
 
-        public void WriteContentOnExcel(List<NLPExcelExportModel> excelExportModel, ExcelPackage excelPackage)
-        {
-            foreach (var item in excelExportModel)
-            {
-                int RowCount = 2;
-                ExcelWorksheet worksheet = CreateExcelWorkSheet(excelPackage, item.SheetName);
-
-                //Write Columns 
-                for (int column = 0; column < item.Columns.Length; column++)
-                    worksheet.Cells[1, column + 1].Value = item.Columns[column];
-
-                //Format Title Cells with different color
-                using (var range = worksheet.Cells[1, 1, 1, item.Columns.Length])
-                    FormatTitleCells(range);
-
-                //Write Values on sheet
-                for (int rows = 0; rows < item.SheetValues.GetLength(0); rows++)
-                {
-                    for (int columns = 0; columns < item.SheetValues.GetLength(1); columns++)
-                    {
-                        worksheet.Cells[RowCount, columns + 1].Value = item.SheetValues[rows, columns];
-                    }
-                    RowCount++;
-                }
-
-                //Set Columns Width
-                for (int columns = 0; columns < item.Columns.Length; columns++)
-                    SetColumnWidthFit(worksheet, columns + 1);
-            }
-        }
-
         #region Excel Generation
-
-        private FileInfo CreateExcelFileInfo(string directory, string fileName)
-        {
-            string fileFullPath = Path.Combine(directory, $"{fileName}.xlsx");
-
-            var newFile = new FileInfo(fileFullPath);
-
-            if (newFile.Exists)
-            {
-                newFile.Delete();
-                newFile = new FileInfo(fileFullPath);
-            }
-            return newFile;
-        }
-        private ExcelWorksheet CreateExcelWorkSheet(ExcelPackage excelPackage, string worksheetName) => excelPackage.Workbook.Worksheets.Add(worksheetName);
-        private void FormatTitleCells(ExcelRange excelRange)
-        {
-            excelRange.Style.Font.Bold = true;
-            excelRange.Style.Fill.PatternType = ExcelFillStyle.Solid;
-            excelRange.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Yellow);
-
-        }
-        private void SetColumnWidthFit(ExcelWorksheet worksheet, int columnIndex) => worksheet.Column(columnIndex).AutoFit();
 
         private NLPExcelExportModel WriteQuestionsExcel(List<Intention> intentions)
         {

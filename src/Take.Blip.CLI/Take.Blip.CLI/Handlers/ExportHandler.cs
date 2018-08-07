@@ -18,13 +18,15 @@ namespace Take.BlipCLI.Handlers
         public ISwitch Verbose { get; set; }
         public INamedParameter<string> Excel { get; set; }
         public IBlipClientFactory BlipClientFactory { get; set; }
+        public IExcelGeneratorService ExcelGeneratorService { get; set; }
 
         private readonly ISettingsFile _settingsFile;
 
-        public ExportHandler(IBlipClientFactory blipClientFactory)
+        public ExportHandler(IBlipClientFactory blipClientFactory, IExcelGeneratorService excelGeneratorService)
         {
             _settingsFile = new SettingsFile();
             BlipClientFactory = blipClientFactory;
+            ExcelGeneratorService = excelGeneratorService;
         }
 
 

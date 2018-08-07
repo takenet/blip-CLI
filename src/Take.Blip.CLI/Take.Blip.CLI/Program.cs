@@ -22,6 +22,7 @@ namespace Take.BlipCLI
             var serviceProvider = new ServiceCollection()
                 .AddSingleton<IStringService, StringService>()
                 .AddSingleton<IBlipClientFactory, BlipClientFactory>()
+                .AddSingleton<IExcelGeneratorService, ExcelGeneratorService>()
                 .AddSingleton<NLPCompareHandler>()
                 .AddSingleton<CopyHandler>()
                 .AddSingleton<ExportHandler>()
