@@ -9,9 +9,19 @@ namespace Take.BlipCLI.Services
 {
     public class NLPAnalyseFileReader : INLPAnalyseFileReader
     {
-        public Task<List<string>> GetInputsToAnalyseAsync(string pathToFile)
+        public async Task<List<string>> GetInputsToAnalyseAsync(string pathToFile)
         {
-            throw new NotImplementedException();
+            var inputToAnalyse = new List<string>();
+            using (var reader = new StreamReader(pathToFile))
+            {
+                var line = "";
+                while ((line = (await reader.ReadLineAsync())) != null)
+                {
+                    inputToAnalyse.Add(line);
+                }
+            }
+
+            return inputToAnalyse;
         }
 
         public bool IsDirectory(string pathToFile)

@@ -246,6 +246,10 @@ namespace Take.Blip.CLI.Tests.Features.Analyse
             var status = handler.RunAsync(null).Result;
 
             //Assert
+            foreach (var item in inputList)
+            {
+                blipAIClient.Received().AnalyseForMetrics(item);
+            }
             blipAIClient.Received(inputList.Count).AnalyseForMetrics(Arg.Any<string>());
         }
     }
