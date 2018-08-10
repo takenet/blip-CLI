@@ -94,7 +94,7 @@ namespace Take.BlipCLI.Handlers
                 if (item == null)
                     return;
                 responses.Add(item);
-                LogVerboseLine($"\"{item.Text}\"\t{item.Intentions?[0].Id}:{item.Intentions?[0].Score}\t{EntitiesToString(item.Entities?.ToList())}");
+                LogVerboseLine($"\"{item.Text}\"\t{item.Intentions?[0].Id}:{item.Intentions?[0].Score:P}\t{EntitiesToString(item.Entities?.ToList())}");
             }
 
             var options = new ExecutionDataflowBlockOptions

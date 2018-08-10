@@ -22,7 +22,7 @@ namespace Take.BlipCLI.Services
         public async Task<List<string>> GetInputsToAnalyseAsync(string pathToFile)
         {
             var inputToAnalyse = new List<string>();
-            using (var reader = new StreamReader(pathToFile))
+            using (var reader = new StreamReader(pathToFile, detectEncodingFromByteOrderMarks: true))
             {
                 var line = "";
                 while ((line = (await reader.ReadLineAsync())) != null)
