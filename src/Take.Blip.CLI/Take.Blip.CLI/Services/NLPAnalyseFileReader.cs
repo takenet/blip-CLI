@@ -26,16 +26,12 @@ namespace Take.BlipCLI.Services
 
         public bool IsDirectory(string pathToFile)
         {
-            var isDirectory = Directory.Exists(pathToFile);
-            var isFile = File.Exists(pathToFile);
-            return isDirectory && !isFile;
+            return Directory.Exists(pathToFile);
         }
 
         public bool IsFile(string pathToFile)
         {
-            var isDirectory = Directory.Exists(pathToFile);
-            var isFile = File.Exists(pathToFile);
-            return isDirectory && isFile;
+            return File.Exists(pathToFile);
         }
     }
 }

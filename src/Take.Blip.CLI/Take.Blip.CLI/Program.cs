@@ -88,6 +88,8 @@ namespace Take.BlipCLI
                 var nlpAnalyseCommand = app.Command("nlp-analyse").Alias("analyse");
                 nlpAnalyseHandler.Input = nlpAnalyseCommand.Parameter<string>("i").Alias("input").HelpText("Input to be analysed. Works with a single phrase or with a text file (new line separator).");
                 nlpAnalyseHandler.Authorization = nlpAnalyseCommand.Parameter<string>("a").Alias("authorization").HelpText("Bot authorization key");
+                nlpAnalyseHandler.Force = _force;
+                nlpAnalyseHandler.Verbose = _verbose;
                 nlpAnalyseCommand.HelpText("Analyse some text using a bot IA model");
                 nlpAnalyseCommand.Handler(nlpAnalyseHandler.Run);
 
