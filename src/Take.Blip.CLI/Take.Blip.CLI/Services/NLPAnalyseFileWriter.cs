@@ -29,7 +29,7 @@ namespace Take.BlipCLI.Services
         {
             var intention = analysis.Intentions?[0];
             var entities = analysis.Entities;
-            return $"{analysis.Text}\t{intention?.Id}\t{intention?.Score}\t{EntitiesToString(entities?.ToList())}";
+            return $"{analysis.Text}\t{intention?.Id}\t{intention?.Score:P}\t{EntitiesToString(entities?.ToList())}";
         }
 
         private string EntitiesToString(List<EntityResponse> entities)
