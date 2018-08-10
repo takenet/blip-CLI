@@ -16,18 +16,16 @@ namespace Take.BlipCLI.Handlers
     public class NLPAnalyseHandler : HandlerAsync
     {
         private readonly IBlipClientFactory _blipClientFactory;
-        private readonly INLPAnalyseFileReader _fileReader;
-        private readonly INLPAnalyseFileWriter _fileWriter;
+        private readonly IFileManagerService _fileService;
 
         public INamedParameter<string> Input { get; set; }
         public INamedParameter<string> Authorization { get; set; }
         public INamedParameter<string> ReportOutput { get; set; }
 
-        public NLPAnalyseHandler(IBlipClientFactory blipClientFactory, INLPAnalyseFileReader fileReader, INLPAnalyseFileWriter fileWriter)
+        public NLPAnalyseHandler(IBlipClientFactory blipClientFactory, IFileManagerService fileService)
         {
             _blipClientFactory = blipClientFactory;
-            _fileReader = fileReader;
-            _fileWriter = fileWriter;
+            _fileService = fileService;
         }
 
         public override async Task<int> RunAsync(string[] args)
@@ -42,10 +40,8 @@ namespace Take.BlipCLI.Handlers
                 throw new ArgumentNullException("You must provide the full output's report file name for this action. Use '-o' [--output] parameters");
 
             var fullFileName = ReportOutput.Value;
-            var path = Path.GetDirectoryName(fullFileName);
-            if (!Directory.Exists(path))
-                Directory.CreateDirectory(path);
-
+            _fileService.CreateDirectoryIfNotExists(fullFileName);
+            
             if (string.IsNullOrEmpty(Input.Value))
                 throw new ArgumentNullException("You must provide the input source (phrase or file) for this action. Your input was empty.");
 
@@ -58,8 +54,8 @@ namespace Take.BlipCLI.Handlers
 
             bool isPhrase = false;
 
-            var isDirectory = _fileReader.IsDirectory(inputData);
-            var isFile = _fileReader.IsFile(inputData);
+            var isDirectory = _fileService.IsDirectory(inputData);
+            var isFile = _fileService.IsFile(inputData);
 
             if (isFile)
             {
@@ -121,7 +117,7 @@ namespace Take.BlipCLI.Handlers
             }
             else
             {
-                var inputList = await _fileReader.GetInputsToAnalyseAsync(inputData);
+                var inputList = await _fileService.GetInputsToAnalyseAsync(inputData);
                 foreach (var input in inputList)
                 {
                     await analyseBlock.SendAsync(input);
@@ -136,7 +132,7 @@ namespace Take.BlipCLI.Handlers
                 FullReportFileName = ReportOutput.Value
             };
 
-            await _fileWriter.WriteAnalyseReportAsync(report);
+            await _fileService.WriteAnalyseReportAsync(report);
 
             return 0;
         }

@@ -9,7 +9,7 @@ using Take.BlipCLI.Services;
 namespace Take.Blip.CLI.Tests.Services
 {
     [TestFixture]
-    public class NLPAnalyseFileReaderTest
+    public class NLPAnalyseFileServiceTest
     {
         public string PathToFile { get; set; }
 
@@ -30,7 +30,7 @@ namespace Take.Blip.CLI.Tests.Services
         public async Task When_ReadFile_Should_Works()
         {
             //Arrange
-            var fileReader = new NLPAnalyseFileReader();
+            var fileReader = new NLPAnalyseFileService();
             
             var file = "file.txt";
             var collection = new List<string> { "a", "b", "c", "d", "e" };

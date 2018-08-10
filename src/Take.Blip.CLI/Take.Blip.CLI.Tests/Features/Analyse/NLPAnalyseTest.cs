@@ -26,10 +26,9 @@ namespace Take.Blip.CLI.Tests.Features.Analyse
 
             var blipAIClientFactory = Substitute.For<IBlipClientFactory>();
             blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(authKey))).Returns(blipAIClient);
-            var fileReader = Substitute.For<INLPAnalyseFileReader>();
-            var fileWriter = Substitute.For<INLPAnalyseFileWriter>();
+            var fileService = Substitute.For<IFileManagerService>();
 
-            var handler = new NLPAnalyseHandler(blipAIClientFactory, fileReader, fileWriter)
+            var handler = new NLPAnalyseHandler(blipAIClientFactory, fileService)
             {
                 Authorization = new MyNamedParameter<string> { Value = null },
                 Input = new MyNamedParameter<string> { Value = null },
@@ -68,13 +67,13 @@ namespace Take.Blip.CLI.Tests.Features.Analyse
 
             var blipAIClientFactory = Substitute.For<IBlipClientFactory>();
             blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(authKey))).Returns(blipAIClient);
-            var fileReader = Substitute.For<INLPAnalyseFileReader>();
-            var fileWriter = Substitute.For<INLPAnalyseFileWriter>();
+            var fileService = Substitute.For<IFileManagerService>();
 
-            var handler = new NLPAnalyseHandler(blipAIClientFactory, fileReader, fileWriter)
+            var handler = new NLPAnalyseHandler(blipAIClientFactory, fileService)
             {
                 Authorization = new MyNamedParameter<string> { Value = authKey },
                 Input = new MyNamedParameter<string> { Value = null },
+                ReportOutput = new MyNamedParameter<string> { Value = string.Empty },
                 Verbose = new MySwitch { IsSet = false }
             };
 
@@ -110,13 +109,13 @@ namespace Take.Blip.CLI.Tests.Features.Analyse
 
             var blipAIClientFactory = Substitute.For<IBlipClientFactory>();
             blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(authKey))).Returns(blipAIClient);
-            var fileReader = Substitute.For<INLPAnalyseFileReader>();
-            var fileWriter = Substitute.For<INLPAnalyseFileWriter>();
+            var fileService = Substitute.For<IFileManagerService>();
 
-            var handler = new NLPAnalyseHandler(blipAIClientFactory, fileReader, fileWriter)
+            var handler = new NLPAnalyseHandler(blipAIClientFactory, fileService)
             {
                 Authorization = new MyNamedParameter<string> { Value = authKey },
                 Input = new MyNamedParameter<string> { Value = string.Empty },
+                ReportOutput = new MyNamedParameter<string> { Value = string.Empty },
                 Verbose = new MySwitch { IsSet = false }
             };
 
@@ -152,15 +151,15 @@ namespace Take.Blip.CLI.Tests.Features.Analyse
 
             var blipAIClientFactory = Substitute.For<IBlipClientFactory>();
             blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(authKey))).Returns(blipAIClient);
-            var fileReader = Substitute.For<INLPAnalyseFileReader>();
-            fileReader.IsDirectory(input).Returns(true);
-            fileReader.IsFile(input).Returns(false);
-            var fileWriter = Substitute.For<INLPAnalyseFileWriter>();
+            var fileService = Substitute.For<IFileManagerService>();
+            fileService.IsDirectory(input).Returns(true);
+            fileService.IsFile(input).Returns(false);
 
-            var handler = new NLPAnalyseHandler(blipAIClientFactory, fileReader, fileWriter)
+            var handler = new NLPAnalyseHandler(blipAIClientFactory, fileService)
             {
                 Authorization = new MyNamedParameter<string> { Value = authKey },
                 Input = new MyNamedParameter<string> { Value = input },
+                ReportOutput = new MyNamedParameter<string> { Value = string.Empty },
                 Verbose = new MySwitch { IsSet = false }
             };
 
@@ -201,13 +200,13 @@ namespace Take.Blip.CLI.Tests.Features.Analyse
 
             var blipAIClientFactory = Substitute.For<IBlipClientFactory>();
             blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(authKey))).Returns(blipAIClient);
-            var fileReader = Substitute.For<INLPAnalyseFileReader>();
-            var fileWriter = Substitute.For<INLPAnalyseFileWriter>();
+            var fileService = Substitute.For<IFileManagerService>();
 
-            var handler = new NLPAnalyseHandler(blipAIClientFactory, fileReader, fileWriter)
+            var handler = new NLPAnalyseHandler(blipAIClientFactory, fileService)
             {
                 Authorization = new MyNamedParameter<string> { Value = authKey },
                 Input = new MyNamedParameter<string> { Value = input },
+                ReportOutput = new MyNamedParameter<string> { Value = string.Empty },
                 Verbose = new MySwitch { IsSet = false }
             };
 
@@ -227,24 +226,25 @@ namespace Take.Blip.CLI.Tests.Features.Analyse
             var analysisResponse = new AnalysisResponse
             {
                 Id = Guid.NewGuid().ToString(),
-                Text = input
+                Text = input,
+                Intentions = new List<IntentionResponse> { new IntentionResponse { Id = "a", Score = 0.5f } }.ToArray(),
+                Entities = new List<EntityResponse> { new EntityResponse { Id = "e", Value = "v" } }.ToArray()
             };
             var inputList = new List<string> { "a", "b", "c" };
             var blipAIClient = Substitute.For<IBlipAIClient>();
             blipAIClient.AnalyseForMetrics(Arg.Any<string>()).Returns(Task.FromResult(analysisResponse));
-
             var blipAIClientFactory = Substitute.For<IBlipClientFactory>();
             blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(authKey))).Returns(blipAIClient);
-            var fileReader = Substitute.For<INLPAnalyseFileReader>();
-            fileReader.IsDirectory(input).Returns(true);
-            fileReader.IsFile(input).Returns(true);
-            fileReader.GetInputsToAnalyseAsync(input).Returns(Task.FromResult(inputList));
-            var fileWriter = Substitute.For<INLPAnalyseFileWriter>();
+            var fileService = Substitute.For<IFileManagerService>();
+            fileService.IsDirectory(input).Returns(true);
+            fileService.IsFile(input).Returns(true);
+            fileService.GetInputsToAnalyseAsync(input).Returns(inputList);
 
-            var handler = new NLPAnalyseHandler(blipAIClientFactory, fileReader, fileWriter)
+            var handler = new NLPAnalyseHandler(blipAIClientFactory, fileService)
             {
                 Authorization = new MyNamedParameter<string> { Value = authKey },
                 Input = new MyNamedParameter<string> { Value = input },
+                ReportOutput = new MyNamedParameter<string> { Value = string.Empty },
                 Verbose = new MySwitch { IsSet = false }
             };
 

@@ -10,8 +10,44 @@ using Takenet.Iris.Messaging.Resources.ArtificialIntelligence;
 
 namespace Take.BlipCLI.Services
 {
-    public class NLPAnalyseFileWriter : INLPAnalyseFileWriter
+    public class NLPAnalyseFileService : IFileManagerService
     {
+        public void CreateDirectoryIfNotExists(string fullFileName)
+        {
+            var path = Path.GetDirectoryName(fullFileName);
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+        }
+
+        public async Task<List<string>> GetInputsToAnalyseAsync(string pathToFile)
+        {
+            var inputToAnalyse = new List<string>();
+            using (var reader = new StreamReader(pathToFile))
+            {
+                var line = "";
+                while ((line = (await reader.ReadLineAsync())) != null)
+                {
+                    line = line.Trim();
+                    if (string.IsNullOrWhiteSpace(line))
+                        continue;
+                    inputToAnalyse.Add(line);
+                }
+            }
+            inputToAnalyse = inputToAnalyse.Distinct().ToList();
+
+            return inputToAnalyse;
+        }
+
+        public bool IsDirectory(string pathToFile)
+        {
+            return Directory.Exists(pathToFile);
+        }
+
+        public bool IsFile(string pathToFile)
+        {
+            return File.Exists(pathToFile);
+        }
+
         public async Task WriteAnalyseReportAsync(NLPAnalyseReport analyseReport)
         {
             var sortedAnalysis = analyseReport.AnalysisResponses.OrderBy(a => a.Text);
