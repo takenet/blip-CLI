@@ -201,7 +201,7 @@ namespace Take.BlipCLI.Handlers
                 var entityName = csv.GetCell(row, 0);
                 var value = csv.GetCell(row, 1);
                 var synonymous = csv.GetCell(row, 2);
-                var synonymousList = synonymous.Split(';').Where(s => s.Length > 0).ToArray();
+                var synonymousList = synonymous.Split('/').Where(s => s.Length > 0).ToArray();
 
                 var entitiesValuesList = entitiesMap.ContainsKey(entityName) ? entitiesMap[entityName] : new List<EntityValues>();
 

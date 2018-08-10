@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using Take.BlipCLI.Models;
 using Take.BlipCLI.Services;
 using Take.BlipCLI.Services.Interfaces;
 using Takenet.Iris.Messaging.Resources.ArtificialIntelligence;
@@ -16,14 +17,17 @@ namespace Take.BlipCLI.Handlers
     {
         private readonly IBlipClientFactory _blipClientFactory;
         private readonly INLPAnalyseFileReader _fileReader;
+        private readonly INLPAnalyseFileWriter _fileWriter;
 
         public INamedParameter<string> Input { get; set; }
         public INamedParameter<string> Authorization { get; set; }
+        public INamedParameter<string> ReportOutput { get; set; }
 
-        public NLPAnalyseHandler(IBlipClientFactory blipClientFactory, INLPAnalyseFileReader fileReader)
+        public NLPAnalyseHandler(IBlipClientFactory blipClientFactory, INLPAnalyseFileReader fileReader, INLPAnalyseFileWriter fileWriter)
         {
             _blipClientFactory = blipClientFactory;
             _fileReader = fileReader;
+            _fileWriter = fileWriter;
         }
 
         public override async Task<int> RunAsync(string[] args)
@@ -34,10 +38,17 @@ namespace Take.BlipCLI.Handlers
             if (!Input.IsSet)
                 throw new ArgumentNullException("You must provide the input source (phrase or file) for this action. Use '-i' [--input] parameters");
 
+            if (!ReportOutput.IsSet)
+                throw new ArgumentNullException("You must provide the full output's report file name for this action. Use '-o' [--output] parameters");
+
+            var fullFileName = ReportOutput.Value;
+            var path = Path.GetDirectoryName(fullFileName);
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+
             if (string.IsNullOrEmpty(Input.Value))
-            {
                 throw new ArgumentNullException("You must provide the input source (phrase or file) for this action. Your input was empty.");
-            }
+
 
             string authorization = Authorization.Value;
 
@@ -50,16 +61,16 @@ namespace Take.BlipCLI.Handlers
             var isDirectory = _fileReader.IsDirectory(inputData);
             var isFile = _fileReader.IsFile(inputData);
 
-            if (isDirectory)
-            {
-                LogVerboseLine("\tÉ diretório");
-                throw new ArgumentNullException("You must provide the input source (phrase or file) for this action. Your input was a direcory.");
-            }
-            else
             if (isFile)
             {
                 LogVerboseLine("\tÉ arquivo");
                 isPhrase = false;
+            }
+            else
+            if (isDirectory)
+            {
+                LogVerboseLine("\tÉ diretório");
+                throw new ArgumentNullException("You must provide the input source (phrase or file) for this action. Your input was a direcory.");
             }
             else
             {
@@ -84,14 +95,25 @@ namespace Take.BlipCLI.Handlers
 
             void ShowResult(AnalysisResponse item)
             {
+                if (item == null)
+                    return;
                 responses.Add(item);
-                LogVerboseLine($"\"{item.Text}\"\t{item.Intentions[0].Id}:{item.Intentions[0].Score}\t{EntitiesToString(item.Entities.ToList())}");
+                LogVerboseLine($"\"{item.Text}\"\t{item.Intentions?[0].Id}:{item.Intentions?[0].Score}\t{EntitiesToString(item.Entities?.ToList())}");
             }
 
-            var analyseBlock = new TransformBlock<string, AnalysisResponse>((Func<string, Task<AnalysisResponse>>)AnalyseForMetrics);
-            var actionBlock = new ActionBlock<AnalysisResponse>((Action<AnalysisResponse>)ShowResult);
+            var options = new ExecutionDataflowBlockOptions
+            {
+                BoundedCapacity = DataflowBlockOptions.Unbounded,
+                MaxDegreeOfParallelism = 10
+            };
 
-            analyseBlock.LinkTo(actionBlock);
+            var analyseBlock = new TransformBlock<string, AnalysisResponse>((Func<string, Task<AnalysisResponse>>)AnalyseForMetrics, options);
+            var actionBlock = new ActionBlock<AnalysisResponse>((Action<AnalysisResponse>)ShowResult, options);
+
+            analyseBlock.LinkTo(actionBlock, new DataflowLinkOptions
+            {
+                PropagateCompletion = true
+            });
 
             if (isPhrase)
             {
@@ -108,11 +130,13 @@ namespace Take.BlipCLI.Handlers
             analyseBlock.Complete();
             await actionBlock.Completion;
 
-            LogVerboseLine("*********** TESTING ***********");
-            foreach (var item in responses)
+            var report = new NLPAnalyseReport
             {
-                LogVerboseLine($"\"{item.Text}\"\t{item.Intentions[0].Id}:{item.Intentions[0].Score}\t{EntitiesToString(item.Entities.ToList())}");
-            }
+                AnalysisResponses = responses,
+                FullReportFileName = ReportOutput.Value
+            };
+
+            await _fileWriter.WriteAnalyseReportAsync(report);
 
             return 0;
         }

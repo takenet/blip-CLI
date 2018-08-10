@@ -23,6 +23,7 @@ namespace Take.BlipCLI
                 .AddSingleton<IStringService, StringService>()
                 .AddSingleton<IBlipClientFactory, BlipClientFactory>()
                 .AddSingleton<INLPAnalyseFileReader, NLPAnalyseFileReader>()
+                .AddSingleton<INLPAnalyseFileWriter, NLPAnalyseFileWriter>()
                 .AddSingleton<NLPCompareHandler>()
                 .AddSingleton<CopyHandler>()
                 .AddSingleton<ExportHandler>()
@@ -88,9 +89,10 @@ namespace Take.BlipCLI
                 var nlpAnalyseCommand = app.Command("nlp-analyse").Alias("analyse");
                 nlpAnalyseHandler.Input = nlpAnalyseCommand.Parameter<string>("i").Alias("input").HelpText("Input to be analysed. Works with a single phrase or with a text file (new line separator).");
                 nlpAnalyseHandler.Authorization = nlpAnalyseCommand.Parameter<string>("a").Alias("authorization").HelpText("Bot authorization key");
+                nlpAnalyseHandler.ReportOutput = nlpAnalyseCommand.Parameter<string>("o").Alias("report").Alias("output").HelpText("Report's file fullname (path + name)");
                 nlpAnalyseHandler.Force = _force;
                 nlpAnalyseHandler.Verbose = _verbose;
-                nlpAnalyseCommand.HelpText("Analyse some text using a bot IA model");
+                nlpAnalyseCommand.HelpText("Analyse some text or file using a bot IA model");
                 nlpAnalyseCommand.Handler(nlpAnalyseHandler.Run);
 
                 var exportHandler = serviceProvider.GetService<ExportHandler>();
