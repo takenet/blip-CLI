@@ -15,14 +15,18 @@ namespace Take.BlipCLI.Handlers
         public INamedParameter<string> Authorization { get; set; }
         public INamedParameter<string> OutputFilePath { get; set; }
         public INamedParameter<ExportModel> Model { get; set; }
+        public ISwitch Verbose { get; set; }
+        public INamedParameter<string> Excel { get; set; }
         public IBlipClientFactory BlipClientFactory { get; set; }
+        public IExcelGeneratorService ExcelGeneratorService { get; set; }
 
         private readonly ISettingsFile _settingsFile;
 
-        public ExportHandler(IBlipClientFactory blipClientFactory)
+        public ExportHandler(IBlipClientFactory blipClientFactory, IExcelGeneratorService excelGeneratorService)
         {
             _settingsFile = new SettingsFile();
             BlipClientFactory = blipClientFactory;
+            ExcelGeneratorService = excelGeneratorService;
         }
 
 
@@ -33,7 +37,6 @@ namespace Take.BlipCLI.Handlers
 
             if (!OutputFilePath.IsSet)
                 throw new ArgumentNullException("You must provide the target output path for this action. Use '-o' [--output] parameter");
-
 
             HandlerAsync handler = null;
             switch (Model.Value)

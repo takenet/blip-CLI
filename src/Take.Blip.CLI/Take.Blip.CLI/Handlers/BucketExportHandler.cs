@@ -13,14 +13,13 @@ namespace Take.BlipCLI.Handlers
     {
         public string Key { get; set; }
 
-        public BucketExportHandler(IBlipClientFactory blipClientFactory) : base(blipClientFactory)
+        public BucketExportHandler(IBlipClientFactory blipClientFactory, IExcelGeneratorService excelGeneratorService) : base(blipClientFactory, excelGeneratorService)
         {
-
         }
 
         public static BucketExportHandler GetInstance(ExportHandler eh)
         {
-            return new BucketExportHandler(eh.BlipClientFactory)
+            return new BucketExportHandler(eh.BlipClientFactory, eh.ExcelGeneratorService)
             {
                 Node = eh.Node,
                 Authorization = eh.Authorization,
@@ -47,7 +46,7 @@ namespace Take.BlipCLI.Handlers
                 var asString = JsonConvert.SerializeObject(data.Value.Value);
                 var flow = Path.Combine(OutputFilePath.Value, "bucket.json");
                 Directory.CreateDirectory(OutputFilePath.Value);
-                using(var fw = new StreamWriter(flow, false, Encoding.UTF8))
+                using (var fw = new StreamWriter(flow, false, Encoding.UTF8))
                 {
                     await fw.WriteAsync(asString);
                 }
