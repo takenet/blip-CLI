@@ -15,20 +15,13 @@ namespace Take.BlipCLI
         private static ISwitch _verbose;
         private static ISwitch _force;
 
+        public static ServiceProvider ServiceProvider = null;
+
         public static int Main(string[] args)
         {
             RegisterBlipTypes();
-
-            var serviceProvider = new ServiceCollection()
-                .AddSingleton<IStringService, StringService>()
-                .AddSingleton<IBlipClientFactory, BlipClientFactory>()
-                .AddSingleton<IExcelGeneratorService, ExcelGeneratorService>()
-                .AddSingleton<IFileManagerService, NLPAnalyseFileService>()
-                .AddSingleton<NLPCompareHandler>()
-                .AddSingleton<CopyHandler>()
-                .AddSingleton<ExportHandler>()
-                .AddSingleton<NLPAnalyseHandler>()
-                .BuildServiceProvider();
+            if (ServiceProvider == null)
+                ServiceProvider = GetServiceProvider();
 
             return CLI.HandleErrors(() =>
             {
@@ -57,7 +50,7 @@ namespace Take.BlipCLI
                 nlpImportCommand.HelpText("Import intents and entities to a specific bot (node)");
                 nlpImportCommand.Handler(nlpImportHandler.Run);
 
-                var copyHandler = serviceProvider.GetService<CopyHandler>();
+                var copyHandler = ServiceProvider.GetService<CopyHandler>();
                 var copyCommand = app.Command("copy");
                 copyHandler.From = copyCommand.Parameter<string>("f").Alias("from").HelpText("Node (bot) source.");
                 copyHandler.To = copyCommand.Parameter<string>("t").Alias("to").HelpText("Node (bot) target");
@@ -85,7 +78,7 @@ namespace Take.BlipCLI
                 formatKeyCommand.HelpText("Show all valid keys for a bot");
                 formatKeyCommand.Handler(formatKeyHandler.Run);
 
-                var nlpAnalyseHandler = serviceProvider.GetService<NLPAnalyseHandler>();
+                var nlpAnalyseHandler = ServiceProvider.GetService<NLPAnalyseHandler>();
                 var nlpAnalyseCommand = app.Command("nlp-analyse").Alias("analyse");
                 nlpAnalyseHandler.Input = nlpAnalyseCommand.Parameter<string>("i").Alias("input").HelpText("Input to be analysed. Works with a single phrase or with a text file (new line separator).");
                 nlpAnalyseHandler.Authorization = nlpAnalyseCommand.Parameter<string>("a").Alias("authorization").HelpText("Bot authorization key");
@@ -95,7 +88,7 @@ namespace Take.BlipCLI
                 nlpAnalyseCommand.HelpText("Analyse some text or file using a bot IA model");
                 nlpAnalyseCommand.Handler(nlpAnalyseHandler.Run);
 
-                var exportHandler = serviceProvider.GetService<ExportHandler>();
+                var exportHandler = ServiceProvider.GetService<ExportHandler>();
                 var exportCommand = app.Command("export").Alias("get");
                 exportHandler.Node = exportCommand.Parameter<string>("n").Alias("node").HelpText("Node (bot) source");
                 exportHandler.Authorization = exportCommand.Parameter<string>("a").Alias("authorization").HelpText("Authorization key of source bot");
@@ -106,7 +99,7 @@ namespace Take.BlipCLI
                 exportCommand.HelpText("Export some BLiP model");
                 exportCommand.Handler(exportHandler.Run);
 
-                var compareHandler = serviceProvider.GetService<NLPCompareHandler>();
+                var compareHandler = ServiceProvider.GetService<NLPCompareHandler>();
                 var compareCommand = app.Command("comp").Alias("compare");
                 compareHandler.Authorization1 = compareCommand.Parameter<string>("a1").Alias("authorization1").Alias("first").HelpText("Authorization key of first bot");
                 compareHandler.Bot1Path = compareCommand.Parameter<string>("p1").Alias("path1").Alias("firstpath").HelpText("Path of first bot containing exported model");
@@ -121,6 +114,25 @@ namespace Take.BlipCLI
                 app.HelpCommand();
                 return app.Parse(args).Run();
             });
+        }
+
+        public static ServiceProvider GetServiceProvider()
+        {
+            return GetServiceCollection()
+                .BuildServiceProvider();
+        }
+
+        public static IServiceCollection GetServiceCollection()
+        {
+            return new ServiceCollection()
+                            .AddSingleton<IStringService, StringService>()
+                            .AddSingleton<IBlipClientFactory, BlipClientFactory>()
+                            .AddSingleton<IExcelGeneratorService, ExcelGeneratorService>()
+                            .AddSingleton<IFileManagerService, NLPAnalyseFileService>()
+                            .AddSingleton<NLPCompareHandler>()
+                            .AddSingleton<CopyHandler>()
+                            .AddSingleton<ExportHandler>()
+                            .AddSingleton<NLPAnalyseHandler>();
         }
 
         private static void RegisterBlipTypes()
