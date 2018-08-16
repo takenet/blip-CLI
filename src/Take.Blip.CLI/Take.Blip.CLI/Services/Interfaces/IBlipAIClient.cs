@@ -16,5 +16,6 @@ namespace Take.BlipCLI.Services.Interfaces
         Task DeleteEntity(string entityId);
         Task<List<Entity>> GetAllEntities(bool verbose = false);
         Task<List<Intention>> GetAllIntents(bool verbose = false, bool justIds = false);
+        Task<AnalysisResponse> AnalyseForMetrics(string analysisRequest);
     }
 }
