@@ -23,6 +23,7 @@ namespace Take.BlipCLI
                 .AddSingleton<IStringService, StringService>()
                 .AddSingleton<IBlipClientFactory, BlipClientFactory>()
                 .AddSingleton<IExcelGeneratorService, ExcelGeneratorService>()
+                .AddSingleton<IFileManagerService, NLPAnalyseFileService>()
                 .AddSingleton<NLPCompareHandler>()
                 .AddSingleton<CopyHandler>()
                 .AddSingleton<ExportHandler>()
