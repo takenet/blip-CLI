@@ -27,7 +27,7 @@ You can download the BLiP CLI as a zip file. The zip file contains both the .NET
 | **Windows x64** | [zip](https://github.com/takenet/blip-CLI/releases/tag/0.0.1) |
 | **Windows x86** | [zip](https://github.com/takenet/blip-CLI/releases/tag/0.0.1) |
 | **Linux x64** | [Ubuntu zip](https://github.com/takenet/blip-CLI/releases/tag/0.0.1) |
-| **macOS** | *comming soon* |
+| **macOS** | *coming soon* |
 
 
 Main features
@@ -47,6 +47,42 @@ Building from source
 In order to run BLiP CLI code you must have .NET Core 2.0 (or greater) installed on machine. To download the .NET Core runtime **without** the SDK, visit https://github.com/dotnet/core-setup#daily-builds.
 
 Is recommended use Visual Studio 2017 (version 15.5) or greater.
+
+Generating BLiP Executable from source
+--------------------
+
+Possible configurations: `release` or `debug`
+
+| System | Runtime |
+| -------- | :----------------------------: |
+| **Windows 10 x64** | `win10-x64` |
+| **Windows 10 x86** | `win10-x86` |
+| **Windows 8.1 x64** | `win81-x64` |
+| **Windows 8.1 x86** | `win81-x86` |
+| **Ubuntu x64** | `ubuntu-x64` |
+
+### Using `dotnet`
+Base command:
+```sh
+dotnet publish src/Take.Blip.CLI/Take.Blip.CLI/Take.Blip.CLI.csproj --framework netcoreapp2.0 --runtime %runtime% --configuration %config%
+```
+
+Example:
+```sh
+dotnet publish src/Take.Blip.CLI/Take.Blip.CLI/Take.Blip.CLI.csproj --framework netcoreapp2.0 --runtime win10-x64 --configuration release
+```
+
+### Using Windows (Batch File)
+```batch
+./build <runtime> <configuration>
+```
+If no parameters are given, the Batch file defaults to `release` and `win10-x64`.
+
+### Using Linux (Shellscript)
+```sh
+sh build.sh <runtime> <configuration>
+```
+If no parameters are given, the ShellScript file defaults to `release` and `ubuntu-x64`.
 
 Questions & Comments
 --------------------
