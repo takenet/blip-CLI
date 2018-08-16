@@ -91,5 +91,33 @@ namespace Take.Blip.CLI.Tests
             //Assert
             Assert.AreEqual(result, 0);
         }
+
+        [Test]
+        public void Export_NLP_Command()
+        {
+            //Arrange
+            var authKey = "key";
+            var output = @"D:\path\to\file";
+            var model = "NLPModel";
+            var args = new string[] { "export", "-v", "-a", authKey, "-o", output, "-m", model };
+            var serviceProvider = Program.GetServiceCollection();
+            
+            var sourceBlipAIClient = Substitute.For<IBlipAIClient>();
+            sourceBlipAIClient.GetAllIntents(Arg.Any<bool>()).Returns(Task.FromResult<List<Intention>>(null));
+            sourceBlipAIClient.GetAllEntities(Arg.Any<bool>()).Returns(Task.FromResult<List<Entity>>(null));
+            var blipAIClientFactory = Substitute.For<IBlipClientFactory>();
+            blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(authKey))).Returns(sourceBlipAIClient);
+
+            serviceProvider.AddSingleton<IBlipClientFactory>(blipAIClientFactory);
+
+            Program.ServiceProvider = serviceProvider.BuildServiceProvider();
+
+            //Act
+            int result = Program.Main(args);
+
+            //Assert
+            Assert.AreEqual(result, 0);
+        }
+
     }
 }

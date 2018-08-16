@@ -14,8 +14,6 @@ namespace Take.BlipCLI.Handlers
 {
     public class NLPExportHandler : ExportHandler
     {
-        private IBlipAIClient _blipAIClient;
-
         public NLPExportHandler(IBlipClientFactory blipClientFactory, IExcelGeneratorService excelGeneratorService) : base(blipClientFactory, excelGeneratorService)
         {
         }
@@ -29,6 +27,7 @@ namespace Take.BlipCLI.Handlers
                 OutputFilePath = eh.OutputFilePath,
                 Model = eh.Model,
                 Verbose = eh.Verbose,
+                Force = eh.Force,
                 Excel = eh.Excel
             };
         }
@@ -37,13 +36,13 @@ namespace Take.BlipCLI.Handlers
         {
             string authorization = GetAuthorization();
 
-            _blipAIClient = new BlipHttpClientAsync(authorization);
+            var blipAIClient = BlipClientFactory.GetInstanceForAI(authorization);
 
             LogVerboseLine("NLP Export");
 
-            var intentions = await _blipAIClient.GetAllIntents(verbose: Verbose.IsSet);
+            var intentions = await blipAIClient.GetAllIntents(verbose: Verbose.IsSet);
 
-            var entities = await _blipAIClient.GetAllEntities(verbose: Verbose.IsSet);
+            var entities = await blipAIClient.GetAllEntities(verbose: Verbose.IsSet);
 
             Directory.CreateDirectory(OutputFilePath.Value);
 
