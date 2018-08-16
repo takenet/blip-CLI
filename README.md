@@ -49,7 +49,8 @@ In order to run BLiP CLI code you must have .NET Core 2.0 (or greater) installed
 Is recommended use Visual Studio 2017 (version 15.5) or greater.
 
 Generating BLiP Executable from source
----
+--------------------
+
 Possible configurations: `release` or `debug`
 
 | System | Runtime |
@@ -77,8 +78,11 @@ dotnet publish src/Take.Blip.CLI/Take.Blip.CLI/Take.Blip.CLI.csproj --framework 
 ```
 If no parameters are given, the Batch file defaults to `release` and `win10-x64`.
 
-### Using Linux
-(Coming soon)
+### Using Linux (Shellscript)
+```sh
+sh build.sh <runtime> <configuration>
+```
+If no parameters are given, the ShellScript file defaults to `release` and `ubuntu-x64`.
 
 Questions & Comments
 --------------------
