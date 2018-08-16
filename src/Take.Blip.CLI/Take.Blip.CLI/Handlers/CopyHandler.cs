@@ -34,7 +34,7 @@ namespace Take.BlipCLI.Handlers
         public async override Task<int> RunAsync(string[] args)
         {
             if ((!From.IsSet && !FromAuthorization.IsSet) || (!To.IsSet && !ToAuthorization.IsSet))
-                throw new ArgumentNullException("You must provide from and to parameters for this action. Use '-f' [--from] (or '-fa' [--fromAuthorization]) and '-t' [--to] (or '-ta' [--toAuthorization]) parameters");
+                throw new ArgumentNullException("You must provide from and to parameters for this action. Use '-f' [--from] (or '--fa' [--fromAuthorization]) and '-t' [--to] (or '--ta' [--toAuthorization]) parameters");
 
             string fromAuthorization = FromAuthorization.Value;
             string toAuthorization = ToAuthorization.Value;
