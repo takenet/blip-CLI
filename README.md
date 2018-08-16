@@ -27,7 +27,7 @@ You can download the BLiP CLI as a zip file. The zip file contains both the .NET
 | **Windows x64** | [zip](https://github.com/takenet/blip-CLI/releases/tag/0.0.1) |
 | **Windows x86** | [zip](https://github.com/takenet/blip-CLI/releases/tag/0.0.1) |
 | **Linux x64** | [Ubuntu zip](https://github.com/takenet/blip-CLI/releases/tag/0.0.1) |
-| **macOS** | *comming soon* |
+| **macOS** | *coming soon* |
 
 
 Main features
@@ -78,6 +78,7 @@ dotnet publish src/Take.Blip.CLI/Take.Blip.CLI/Take.Blip.CLI.csproj --framework 
 If no parameters are given, the Batch file defaults to `release` and `win10-x64`.
 
 ### Using Linux
+(Coming soon)
 
 Questions & Comments
 --------------------
