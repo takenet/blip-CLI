@@ -7,6 +7,6 @@ namespace Take.BlipCLI.Services.Interfaces
 {
     public interface IExcelGeneratorService
     {
-        void WriteContentOnExcel(List<NLPExcelExportModel> excelExportModel, string directory, string fileName);
+        void WriteContentOnExcel(List<NLPExportModel> excelExportModel, string directory, string fileName);
     }
 }

@@ -105,10 +105,14 @@ namespace Take.Blip.CLI.Tests
             var sourceBlipAIClient = Substitute.For<IBlipAIClient>();
             sourceBlipAIClient.GetAllIntents(Arg.Any<bool>()).Returns(Task.FromResult<List<Intention>>(null));
             sourceBlipAIClient.GetAllEntities(Arg.Any<bool>()).Returns(Task.FromResult<List<Entity>>(null));
-            var blipAIClientFactory = Substitute.For<IBlipClientFactory>();
-            blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(authKey))).Returns(sourceBlipAIClient);
+            var blipClientFactory = Substitute.For<IBlipClientFactory>();
+            blipClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(authKey))).Returns(sourceBlipAIClient);
+            var fileManagerService = Substitute.For<IFileManagerService>();
+            var csvService = Substitute.For<ICSVGeneratorService>();
 
-            serviceProvider.AddSingleton<IBlipClientFactory>(blipAIClientFactory);
+            serviceProvider.AddSingleton<IBlipClientFactory>(blipClientFactory);
+            serviceProvider.AddSingleton<IFileManagerService>(fileManagerService);
+            serviceProvider.AddSingleton<ICSVGeneratorService>(csvService);
 
             Program.ServiceProvider = serviceProvider.BuildServiceProvider();
 

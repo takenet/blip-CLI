@@ -16,21 +16,24 @@ namespace Take.BlipCLI.Services
     {
         private readonly IBlipClientFactory _blipClientFactory;
         private readonly IExcelGeneratorService _excelGeneratorService;
+        private readonly ICSVGeneratorService _csvGeneratorService;
         private readonly IFileManagerService _fileManagerService;
         private readonly ILogger _logger;
 
         public ExportService(
-            IBlipClientFactory blipClientFactory, 
+            IBlipClientFactory blipClientFactory,
             IExcelGeneratorService excelGeneratorService,
+            ICSVGeneratorService csvGeneratorService,
             IFileManagerService fileManagerService,
             ILogger logger)
         {
             _blipClientFactory = blipClientFactory;
             _excelGeneratorService = excelGeneratorService;
+            _csvGeneratorService = csvGeneratorService;
             _fileManagerService = fileManagerService;
             _logger = logger;
         }
-        
+
 
         public async Task ExportNLPModelAsync(string authorization, string outputFilePath, string excel = null)
         {
@@ -39,7 +42,7 @@ namespace Take.BlipCLI.Services
 
             if (string.IsNullOrEmpty(outputFilePath))
                 throw new ArgumentNullException(nameof(outputFilePath));
-            
+
             var blipAIClient = _blipClientFactory.GetInstanceForAI(authorization);
 
             _logger.LogDebug("NLP Export\n");
@@ -51,7 +54,7 @@ namespace Take.BlipCLI.Services
 
             if (!string.IsNullOrEmpty(excel))
             {
-                List<NLPExcelExportModel> excelExportModels = new List<NLPExcelExportModel>
+                List<NLPExportModel> excelExportModels = new List<NLPExportModel>
                 {
                     WriteIntentionExcel(intentions),
                     WriteQuestionsExcel(intentions),
@@ -63,13 +66,19 @@ namespace Take.BlipCLI.Services
             }
             else
             {
-                WriteIntentionCSV(intentions, outputFilePath);
-                WriteAnswersCSV(intentions, outputFilePath);
-                WriteEntitiesCSV(entities, outputFilePath);
+                var csvExportModels = new List<NLPExportModel>
+                {
+                    WriteIntentionCSV(intentions, outputFilePath),
+                    WriteAnswersCSV(intentions, outputFilePath),
+                    WriteEntitiesCSV(entities, outputFilePath)
+
+                };
+                _csvGeneratorService.WriteContentOnCSV(csvExportModels, outputFilePath);
+
             }
 
             _logger.LogDebug("DONE");
-            
+
         }
 
         public async Task ExportContentByKeyAsync(string authorization, string key, string outputFilePath, string excel = null)
@@ -104,13 +113,13 @@ namespace Take.BlipCLI.Services
 
         #region Excel Generation
 
-        private NLPExcelExportModel WriteQuestionsExcel(List<Intention> intentions)
+        private NLPExportModel WriteQuestionsExcel(List<Intention> intentions)
         {
             int RowCount = 0;
             int TotalQuestions = 0;
 
-            NLPExcelExportModel excelExportModel = new NLPExcelExportModel();
-            excelExportModel.SheetName = "Questions";
+            NLPExportModel excelExportModel = new NLPExportModel();
+            excelExportModel.Name = "Questions";
 
             excelExportModel.Columns = new string[2];
 
@@ -129,14 +138,14 @@ namespace Take.BlipCLI.Services
                     TotalQuestions = TotalQuestions + questions.Length;
             });
 
-            excelExportModel.SheetValues = new string[TotalQuestions, excelExportModel.Columns.Length];
+            excelExportModel.Values = new string[TotalQuestions, excelExportModel.Columns.Length];
 
             foreach (var intent in filteredIntentions)
             {
                 if (intent.Questions == null)
                 {
-                    excelExportModel.SheetValues[RowCount, 0] = intent.Name;
-                    excelExportModel.SheetValues[RowCount, 1] = string.Empty;
+                    excelExportModel.Values[RowCount, 0] = intent.Name;
+                    excelExportModel.Values[RowCount, 1] = string.Empty;
 
                     RowCount++;
                     continue;
@@ -144,8 +153,8 @@ namespace Take.BlipCLI.Services
 
                 foreach (var question in intent.Questions)
                 {
-                    excelExportModel.SheetValues[RowCount, 0] = intent.Name;
-                    excelExportModel.SheetValues[RowCount, 1] = question.Text;
+                    excelExportModel.Values[RowCount, 0] = intent.Name;
+                    excelExportModel.Values[RowCount, 1] = question.Text;
 
                     RowCount++;
                 }
@@ -154,13 +163,13 @@ namespace Take.BlipCLI.Services
             return excelExportModel;
         }
 
-        private NLPExcelExportModel WriteEntitiesExcel(List<Entity> entities)
+        private NLPExportModel WriteEntitiesExcel(List<Entity> entities)
         {
             int RowCount = 0;
             int TotalEntitiesValue = 0;
 
-            NLPExcelExportModel excelExportModel = new NLPExcelExportModel();
-            excelExportModel.SheetName = "Entities";
+            NLPExportModel excelExportModel = new NLPExportModel();
+            excelExportModel.Name = "Entities";
 
             excelExportModel.Columns = new string[4];
 
@@ -181,16 +190,16 @@ namespace Take.BlipCLI.Services
                     TotalEntitiesValue = TotalEntitiesValue + questions.Length;
             });
 
-            excelExportModel.SheetValues = new string[TotalEntitiesValue, excelExportModel.Columns.Length];
+            excelExportModel.Values = new string[TotalEntitiesValue, excelExportModel.Columns.Length];
 
             foreach (var entity in filteredEntities)
             {
                 if (entity.Values == null)
                 {
-                    excelExportModel.SheetValues[RowCount, 0] = entity.Id;
-                    excelExportModel.SheetValues[RowCount, 1] = entity.Name;
-                    excelExportModel.SheetValues[RowCount, 2] = string.Empty;
-                    excelExportModel.SheetValues[RowCount, 3] = string.Empty;
+                    excelExportModel.Values[RowCount, 0] = entity.Id;
+                    excelExportModel.Values[RowCount, 1] = entity.Name;
+                    excelExportModel.Values[RowCount, 2] = string.Empty;
+                    excelExportModel.Values[RowCount, 3] = string.Empty;
 
                     RowCount++;
                     continue;
@@ -198,10 +207,10 @@ namespace Take.BlipCLI.Services
 
                 foreach (var item in entity.Values)
                 {
-                    excelExportModel.SheetValues[RowCount, 0] = entity.Id;
-                    excelExportModel.SheetValues[RowCount, 1] = entity.Name;
-                    excelExportModel.SheetValues[RowCount, 2] = item.Name;
-                    excelExportModel.SheetValues[RowCount, 3] = string.Join(";", item.Synonymous);
+                    excelExportModel.Values[RowCount, 0] = entity.Id;
+                    excelExportModel.Values[RowCount, 1] = entity.Name;
+                    excelExportModel.Values[RowCount, 2] = item.Name;
+                    excelExportModel.Values[RowCount, 3] = string.Join(";", item.Synonymous);
 
                     RowCount++;
                 }
@@ -210,13 +219,13 @@ namespace Take.BlipCLI.Services
             return excelExportModel;
         }
 
-        private NLPExcelExportModel WriteAnswersExcel(List<Intention> intentions)
+        private NLPExportModel WriteAnswersExcel(List<Intention> intentions)
         {
             int RowCount = 0;
             int TotalAnswers = 0;
 
-            NLPExcelExportModel excelExportModel = new NLPExcelExportModel();
-            excelExportModel.SheetName = "Answers";
+            NLPExportModel excelExportModel = new NLPExportModel();
+            excelExportModel.Name = "Answers";
 
             excelExportModel.Columns = new string[2];
 
@@ -235,14 +244,14 @@ namespace Take.BlipCLI.Services
                     TotalAnswers = TotalAnswers + questions.Length;
             });
 
-            excelExportModel.SheetValues = new string[TotalAnswers, excelExportModel.Columns.Length];
+            excelExportModel.Values = new string[TotalAnswers, excelExportModel.Columns.Length];
 
             foreach (var intent in filteredIntentions)
             {
                 if (intent.Answers == null)
                 {
-                    excelExportModel.SheetValues[RowCount, 0] = intent.Name;
-                    excelExportModel.SheetValues[RowCount, 1] = string.Empty;
+                    excelExportModel.Values[RowCount, 0] = intent.Name;
+                    excelExportModel.Values[RowCount, 1] = string.Empty;
 
                     RowCount++;
                     continue;
@@ -250,8 +259,8 @@ namespace Take.BlipCLI.Services
 
                 foreach (var answer in intent.Answers)
                 {
-                    excelExportModel.SheetValues[RowCount, 0] = intent.Name;
-                    excelExportModel.SheetValues[RowCount, 1] = answer.Value.ToString();
+                    excelExportModel.Values[RowCount, 0] = intent.Name;
+                    excelExportModel.Values[RowCount, 1] = answer.Value.ToString();
 
                     RowCount++;
                 }
@@ -260,11 +269,11 @@ namespace Take.BlipCLI.Services
             return excelExportModel;
         }
 
-        private NLPExcelExportModel WriteIntentionExcel(List<Intention> intentions)
+        private NLPExportModel WriteIntentionExcel(List<Intention> intentions)
         {
             int RowCount = 0;
-            NLPExcelExportModel excelExportModel = new NLPExcelExportModel();
-            excelExportModel.SheetName = "Intentions";
+            NLPExportModel excelExportModel = new NLPExportModel();
+            excelExportModel.Name = "Intentions";
 
             excelExportModel.Columns = new string[3];
 
@@ -274,13 +283,13 @@ namespace Take.BlipCLI.Services
 
             List<Intention> filteredIntentions = intentions.Where(x => x.IsDeleted == false).ToList();
 
-            excelExportModel.SheetValues = new string[filteredIntentions.Count, excelExportModel.Columns.Length];
+            excelExportModel.Values = new string[filteredIntentions.Count, excelExportModel.Columns.Length];
 
             foreach (var intent in filteredIntentions)
             {
-                excelExportModel.SheetValues[RowCount, 0] = intent.Id;
-                excelExportModel.SheetValues[RowCount, 1] = intent.Name;
-                excelExportModel.SheetValues[RowCount, 2] = intent.StorageDate.GetValueOrDefault().ToString("dd/MM/yyyy hh:mm:ss");
+                excelExportModel.Values[RowCount, 0] = intent.Id;
+                excelExportModel.Values[RowCount, 1] = intent.Name;
+                excelExportModel.Values[RowCount, 2] = intent.StorageDate.GetValueOrDefault().ToString("dd/MM/yyyy hh:mm:ss");
 
                 RowCount++;
             }
@@ -291,85 +300,96 @@ namespace Take.BlipCLI.Services
         #endregion
 
         #region CSV Generation
-        private void WriteEntitiesCSV(List<Entity> entities, string outputPath)
+        private NLPExportModel WriteEntitiesCSV(List<Entity> entities, string outputPath)
         {
-            var csv = new Chilkat.Csv
+            if (entities == null)
+                return null;
+
+            var total = entities.Sum((entity) => entity.Values == null ? 0 : entity.Values.Length);
+
+            var model = new NLPExportModel
             {
-                Delimiter = ";"
+                Columns = new string[] { "Entity", "Value", "Synonymous" },
+                Values = new string[total, 3]
             };
 
-            csv.SetCell(0, 0, "Entity");
-            csv.SetCell(0, 1, "Value");
-            csv.SetCell(0, 2, "Synonymous");
-
-            var i = 1;
+            var i = 0;
             foreach (var entity in entities)
             {
                 if (entity.Values == null) continue;
                 foreach (var value in entity.Values)
                 {
-                    csv.SetCell(i, 0, entity.Name);
-                    csv.SetCell(i, 1, value.Name);
-                    csv.SetCell(i, 2, string.Join('/', value.Synonymous));
+                    model.Values[i, 0] = entity.Name;
+                    model.Values[i, 1] = value.Name;
+                    model.Values[i, 2] = string.Join('/', value.Synonymous);
                     i++;
                 }
             }
+            model.Name = "entities.csv";
 
-            csv.SaveFile(Path.Combine(outputPath, "entities.csv"));
+            return model;
         }
 
-        private void WriteAnswersCSV(List<Intention> intentions, string outputPath)
+        private NLPExportModel WriteAnswersCSV(List<Intention> intentions, string outputPath)
         {
-            var csv = new Chilkat.Csv
+            if (intentions == null)
+                return null;
+
+            var total = intentions.Sum((intention) => intention.Answers == null ? 0 : intention.Answers.Length);
+
+            var model = new NLPExportModel
             {
-                Delimiter = ";",
+                Columns = new string[] { "Intent", "Answer" },
+                Values = new string[total, 2]
             };
 
-            csv.SetCell(0, 0, "Intent");
-            csv.SetCell(0, 1, "Answer");
-
-            var i = 1;
+            var i = 0;
             foreach (var intent in intentions)
             {
                 if (intent.Answers == null) continue;
                 foreach (var answers in intent.Answers)
                 {
-                    csv.SetCell(i, 0, intent.Name);
-                    csv.SetCell(i, 1, answers.Value.ToString());
+                    model.Values[i, 0] = intent.Name;
+                    model.Values[i, 1] = answers.Value.ToString();
                     i++;
                 }
             }
+            model.Name = "answers.csv";
 
-            csv.SaveFile(Path.Combine(outputPath, "answers.csv"));
+            return model;
         }
 
-        private void WriteIntentionCSV(List<Intention> intentions, string outputPath)
+        private NLPExportModel WriteIntentionCSV(List<Intention> intentions, string outputPath)
         {
-            var csv = new Chilkat.Csv
+            if (intentions == null)
+                return null;
+
+            var total = intentions.Sum((intention) => intention.Questions == null ? 0 : intention.Questions.Length);
+
+            var model = new NLPExportModel
             {
-                Delimiter = ";",
+                Columns = new string[] { "Intent", "Question" },
+                Values = new string[total, 2]
             };
 
-            csv.SetCell(0, 0, "Intent");
-            csv.SetCell(0, 1, "Question");
-
-            var i = 1;
+            var i = 0;
             foreach (var intent in intentions)
             {
                 if (intent.Questions == null) continue;
                 foreach (var question in intent.Questions)
                 {
-                    csv.SetCell(i, 0, intent.Name);
-                    csv.SetCell(i, 1, question.Text);
+                    model.Values[i, 0] = intent.Name;
+                    model.Values[i, 1] = question.Text;
                     i++;
                 }
             }
 
-            var path = Path.Combine(outputPath, "intentions.csv");
-            csv.SaveFile(path);
+            model.Name = "intentions.csv";
+
+            return model;
         }
 
-        
+
         #endregion
     }
 }
