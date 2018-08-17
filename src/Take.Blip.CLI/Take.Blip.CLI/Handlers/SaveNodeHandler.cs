@@ -22,7 +22,7 @@ namespace Take.BlipCLI.Handlers
             _settingsFile = new SettingsFile();
         }
 
-        public async override Task<int> RunAsync(string[] args)
+        public override Task<int> RunAsync(string[] args)
         {
             if (!AccessKey.IsSet && !Authorization.IsSet)
                 throw new ArgumentNullException("You must provide at least one of the key parameters for a bot. Use 'k' or 'a' parameters");
@@ -44,8 +44,8 @@ namespace Take.BlipCLI.Handlers
             }
 
             _settingsFile.AddNodeCredentials(new NodeCredential { Node = node, Authorization = authorization });
-            
-            return 0;
+
+            return Task.FromResult(0);
         }
     }
 }

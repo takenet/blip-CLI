@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Take.Blip.CLI.Tests.Models;
 using Take.BlipCLI.Handlers;
+using Take.BlipCLI.Models;
 using Take.BlipCLI.Services.Interfaces;
 using Takenet.Iris.Messaging.Resources.ArtificialIntelligence;
 

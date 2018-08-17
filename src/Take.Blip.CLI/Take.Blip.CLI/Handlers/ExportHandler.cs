@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Take.BlipCLI.Models;
 using Take.BlipCLI.Services.Interfaces;
 using Take.BlipCLI.Services.Settings;
 
@@ -11,22 +12,28 @@ namespace Take.BlipCLI.Handlers
 {
     public class ExportHandler : HandlerAsync
     {
+        public const string BUILDER_BUCKET_KEY = "blip_portal:builder_working_flow";
+
         public INamedParameter<string> Node { get; set; }
         public INamedParameter<string> Authorization { get; set; }
         public INamedParameter<string> OutputFilePath { get; set; }
         public INamedParameter<ExportModel> Model { get; set; }
-        public ISwitch Verbose { get; set; }
         public INamedParameter<string> Excel { get; set; }
         public IBlipClientFactory BlipClientFactory { get; set; }
         public IExcelGeneratorService ExcelGeneratorService { get; set; }
 
         private readonly ISettingsFile _settingsFile;
+        private readonly IExportServiceFactory _exportServiceFactory;
 
-        public ExportHandler(IBlipClientFactory blipClientFactory, IExcelGeneratorService excelGeneratorService)
+        public ExportHandler(
+            IBlipClientFactory blipClientFactory,
+            IExcelGeneratorService excelGeneratorService,
+            IExportServiceFactory exportServiceFactory)
         {
             _settingsFile = new SettingsFile();
             BlipClientFactory = blipClientFactory;
             ExcelGeneratorService = excelGeneratorService;
+            _exportServiceFactory = exportServiceFactory;
         }
 
 
@@ -38,24 +45,25 @@ namespace Take.BlipCLI.Handlers
             if (!OutputFilePath.IsSet)
                 throw new ArgumentNullException("You must provide the target output path for this action. Use '-o' [--output] parameter");
 
-            HandlerAsync handler = null;
+            var authorization = GetAuthorization();
+            var outputPath = OutputFilePath.Value;
+            string excel = null;
+
+            if (Excel.IsSet && !string.IsNullOrEmpty(Excel.Value))
+                excel = Excel.Value;
+
             switch (Model.Value)
             {
                 case ExportModel.NLPModel:
-                    handler = NLPExportHandler.GetInstance(this);
-                    break;
+                    var nlpExportInstance = _exportServiceFactory.GetNLPExportInstance();
+                    await nlpExportInstance.ExportNLPModelAsync(authorization, outputPath, excel: excel);
+                    return 0;
                 case ExportModel.Builder:
-                    var bucket = BucketExportHandler.GetInstance(this);
-                    bucket.Key = "blip_portal:builder_working_flow";
-                    handler = bucket;
-                    break;
+                    var bucketExportInstance = _exportServiceFactory.GetBucketExportInstance();
+                    await bucketExportInstance.ExportContentByKeyAsync(authorization, BUILDER_BUCKET_KEY, outputPath);
+                    return 0;
                 default:
                     break;
-            }
-
-            if (handler != null)
-            {
-                return await handler.RunAsync(args);
             }
 
             return -1;
@@ -92,12 +100,6 @@ namespace Take.BlipCLI.Handlers
             return null;
         }
 
-    }
-
-    public enum ExportModel
-    {
-        NLPModel,
-        Builder
     }
 
 }

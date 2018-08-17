@@ -13,7 +13,7 @@ namespace Take.BlipCLI.Handlers
         public INamedParameter<string> AccessKey { get; set; }
         public INamedParameter<string> Authorization { get; set; }
 
-        public override async Task<int> RunAsync(string[] args)
+        public override Task<int> RunAsync(string[] args)
         {
             var authorization = Authorization.Value;
             var accessKey = AccessKey.Value;
@@ -43,7 +43,7 @@ namespace Take.BlipCLI.Handlers
                 Console.Write($"{authorization}\n");
             }
 
-            return 0;
+            return Task.FromResult(0);
         }
     }
 }

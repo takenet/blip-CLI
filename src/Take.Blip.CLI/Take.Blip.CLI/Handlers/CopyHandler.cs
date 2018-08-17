@@ -9,6 +9,7 @@ using Take.BlipCLI.Services.Interfaces;
 using Take.BlipCLI.Services.Settings;
 using System.Globalization;
 using Takenet.Iris.Messaging.Resources.ArtificialIntelligence;
+using Take.BlipCLI.Models;
 
 namespace Take.BlipCLI.Handlers
 {
@@ -235,11 +236,5 @@ namespace Take.BlipCLI.Handlers
 
     }
 
-    public enum BucketNamespace
-    {
-        Resource,
-        Document,
-        Profile,
-        AIModel
-    }
+    
 }

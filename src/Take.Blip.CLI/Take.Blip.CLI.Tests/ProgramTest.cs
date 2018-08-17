@@ -14,7 +14,7 @@ namespace Take.Blip.CLI.Tests
     [TestFixture]
     public class ProgramTest
     {
-        [Test]
+        [Test, NonParallelizable]
         public void Help_Command()
         {
             var args = new string[] { "help" };
@@ -22,7 +22,7 @@ namespace Take.Blip.CLI.Tests
             Assert.AreEqual(result, 0);
         }
 
-        [Test]
+        [Test, NonParallelizable]
         public void Copy_Command()
         {
             //Arrange
@@ -53,7 +53,7 @@ namespace Take.Blip.CLI.Tests
             Assert.AreEqual(result, 0);
         }
 
-        [Test]
+        [Test, NonParallelizable]
         public void Analyse_Command()
         {
             //Arrange
@@ -92,7 +92,7 @@ namespace Take.Blip.CLI.Tests
             Assert.AreEqual(result, 0);
         }
 
-        [Test]
+        [Test, NonParallelizable]
         public void Export_NLP_Command()
         {
             //Arrange

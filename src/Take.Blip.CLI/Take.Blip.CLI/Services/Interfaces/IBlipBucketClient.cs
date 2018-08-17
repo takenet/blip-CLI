@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using Take.BlipCLI.Handlers;
+using Take.BlipCLI.Models;
 
 namespace Take.BlipCLI.Services.Interfaces
 {

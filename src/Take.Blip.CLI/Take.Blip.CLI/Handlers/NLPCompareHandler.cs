@@ -23,7 +23,6 @@ namespace Take.BlipCLI.Handlers
         public INamedParameter<ComparisonMethod> Method { get; internal set; }
         public INamedParameter<string> Bot1Path { get; internal set; }
         public INamedParameter<string> Bot2Path { get; internal set; }
-        public ISwitch Verbose { get; internal set; }
         public bool IsVerbose { get => Verbose.IsSet; }
 
         public NLPCompareHandler(IStringService stringService)

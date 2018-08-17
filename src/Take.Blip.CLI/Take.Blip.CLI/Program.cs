@@ -1,9 +1,12 @@
 ﻿using ITGlobal.CommandLine;
 using Lime.Protocol.Serialization;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
 using System.Collections.Generic;
 using System.Reflection;
 using Take.BlipCLI.Handlers;
+using Take.BlipCLI.Models;
 using Take.BlipCLI.Services;
 using Take.BlipCLI.Services.Interfaces;
 using Takenet.Iris.Messaging.Resources.ArtificialIntelligence;
@@ -129,6 +132,12 @@ namespace Take.BlipCLI
                             .AddSingleton<IBlipClientFactory, BlipClientFactory>()
                             .AddSingleton<IExcelGeneratorService, ExcelGeneratorService>()
                             .AddSingleton<IFileManagerService, NLPAnalyseFileService>()
+                            .AddSingleton<INLPAnalyseService, NLPAnalyseService>()
+                            .AddSingleton<IExportService, ExportService>()
+                            .AddSingleton<IBucketExportService, ExportService>()
+                            .AddSingleton<INLPModelExportService, ExportService>()
+                            .AddSingleton<IExportServiceFactory, ExportServiceFactory>()
+                            .AddSingleton<ILogger>(new ConsoleLogger("blip-CLI", (s,l) => { return true; }, true)) // TODO: Configure that =D
                             .AddSingleton<NLPCompareHandler>()
                             .AddSingleton<CopyHandler>()
                             .AddSingleton<ExportHandler>()
