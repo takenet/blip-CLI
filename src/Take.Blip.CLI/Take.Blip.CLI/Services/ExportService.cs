@@ -47,7 +47,7 @@ namespace Take.BlipCLI.Services
 
             _logger.LogDebug("NLP Export\n");
 
-            var intentions = await blipAIClient.GetAllIntents();
+            var intentions = await blipAIClient.GetAllIntentsAsync();
             var entities = await blipAIClient.GetAllEntities();
 
             _fileManagerService.CreateDirectoryIfNotExists(outputFilePath);

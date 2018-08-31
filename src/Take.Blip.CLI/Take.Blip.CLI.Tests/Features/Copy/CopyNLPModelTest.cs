@@ -39,7 +39,7 @@ namespace Take.Blip.Tests.Features.Copy
 
             var sourceBlipAIClient = Substitute.For<IBlipAIClient>();
             sourceBlipAIClient.GetAllEntities(Arg.Any<bool>()).Returns(Task.FromResult<List<Entity>>(null));
-            sourceBlipAIClient.GetAllIntents(Arg.Any<bool>()).Returns(Task.FromResult<List<Intention>>(null));
+            sourceBlipAIClient.GetAllIntentsAsync(Arg.Any<bool>()).Returns(Task.FromResult<List<Intention>>(null));
 
             var targetBlipAIClient = Substitute.For<IBlipAIClient>();
             var blipAIClientFactory = Substitute.For<IBlipClientFactory>();
@@ -73,11 +73,11 @@ namespace Take.Blip.Tests.Features.Copy
             var toKey = "key2";
 
             var sourceBlipAIClient = Substitute.For<IBlipAIClient>();
-            sourceBlipAIClient.GetAllIntents(Arg.Any<bool>()).Returns(Task.FromResult<List<Intention>>(null));
+            sourceBlipAIClient.GetAllIntentsAsync(Arg.Any<bool>()).Returns(Task.FromResult<List<Intention>>(null));
             sourceBlipAIClient.GetAllEntities(Arg.Any<bool>()).Returns(Task.FromResult<List<Entity>>(null));
 
             var targetBlipAIClient = Substitute.For<IBlipAIClient>();
-            targetBlipAIClient.GetAllIntents(Arg.Any<bool>()).Returns(Task.FromResult<List<Intention>>(null));
+            targetBlipAIClient.GetAllIntentsAsync(Arg.Any<bool>()).Returns(Task.FromResult<List<Intention>>(null));
             targetBlipAIClient.GetAllEntities(Arg.Any<bool>()).Returns(Task.FromResult<List<Entity>>(null));
 
             var blipAIClientFactory = Substitute.For<IBlipClientFactory>();
@@ -110,11 +110,11 @@ namespace Take.Blip.Tests.Features.Copy
             var toKey = "key2";
 
             var sourceBlipAIClient = Substitute.For<IBlipAIClient>();
-            sourceBlipAIClient.GetAllIntents(Arg.Any<bool>()).Returns(Task.FromResult<List<Intention>>(null));
+            sourceBlipAIClient.GetAllIntentsAsync(Arg.Any<bool>()).Returns(Task.FromResult<List<Intention>>(null));
             sourceBlipAIClient.GetAllEntities(Arg.Any<bool>()).Returns(Task.FromResult<List<Entity>>(null));
 
             var targetBlipAIClient = Substitute.For<IBlipAIClient>();
-            targetBlipAIClient.GetAllIntents(Arg.Any<bool>()).Returns(Task.FromResult<List<Intention>>(null));
+            targetBlipAIClient.GetAllIntentsAsync(Arg.Any<bool>()).Returns(Task.FromResult<List<Intention>>(null));
             targetBlipAIClient.GetAllEntities(Arg.Any<bool>()).Returns(Task.FromResult<List<Entity>>(null));
 
             var blipAIClientFactory = Substitute.For<IBlipClientFactory>();
@@ -171,11 +171,11 @@ namespace Take.Blip.Tests.Features.Copy
             {
                 entities.Add(new Entity { Id = $"{i}", Name = $"Name{i}" });
             }
-            sourceBlipAIClient.GetAllIntents(Arg.Any<bool>()).Returns(Task.FromResult(intents));
+            sourceBlipAIClient.GetAllIntentsAsync(Arg.Any<bool>()).Returns(Task.FromResult(intents));
             sourceBlipAIClient.GetAllEntities(Arg.Any<bool>()).Returns(Task.FromResult(entities));
 
             var targetBlipAIClient = Substitute.For<IBlipAIClient>();
-            targetBlipAIClient.GetAllIntents(Arg.Any<bool>()).Returns(Task.FromResult<List<Intention>>(null));
+            targetBlipAIClient.GetAllIntentsAsync(Arg.Any<bool>()).Returns(Task.FromResult<List<Intention>>(null));
             targetBlipAIClient.GetAllEntities(Arg.Any<bool>()).Returns(Task.FromResult<List<Entity>>(null));
 
             var blipAIClientFactory = Substitute.For<IBlipClientFactory>();
@@ -235,11 +235,11 @@ namespace Take.Blip.Tests.Features.Copy
             {
                 entities.Add(new Entity { Id = $"{i}", Name = $"Name{i}" });
             }
-            sourceBlipAIClient.GetAllIntents(Arg.Any<bool>()).Returns(Task.FromResult(intents));
+            sourceBlipAIClient.GetAllIntentsAsync(Arg.Any<bool>()).Returns(Task.FromResult(intents));
             sourceBlipAIClient.GetAllEntities(Arg.Any<bool>()).Returns(Task.FromResult(entities));
 
             var targetBlipAIClient = Substitute.For<IBlipAIClient>();
-            targetBlipAIClient.GetAllIntents(Arg.Any<bool>()).Returns(Task.FromResult<List<Intention>>(null));
+            targetBlipAIClient.GetAllIntentsAsync(Arg.Any<bool>()).Returns(Task.FromResult<List<Intention>>(null));
             targetBlipAIClient.GetAllEntities(Arg.Any<bool>()).Returns(Task.FromResult<List<Entity>>(null));
 
             var blipAIClientFactory = Substitute.For<IBlipClientFactory>();
@@ -301,11 +301,11 @@ namespace Take.Blip.Tests.Features.Copy
             }
 
             var sourceBlipAIClient = Substitute.For<IBlipAIClient>();
-            sourceBlipAIClient.GetAllIntents(Arg.Any<bool>()).Returns(Task.FromResult<List<Intention>>(null));
+            sourceBlipAIClient.GetAllIntentsAsync(Arg.Any<bool>()).Returns(Task.FromResult<List<Intention>>(null));
             sourceBlipAIClient.GetAllEntities(Arg.Any<bool>()).Returns(Task.FromResult<List<Entity>>(null));
 
             var targetBlipAIClient = Substitute.For<IBlipAIClient>();
-            targetBlipAIClient.GetAllIntents(Arg.Any<bool>(), Arg.Any<bool>()).Returns(Task.FromResult(intents));
+            targetBlipAIClient.GetAllIntentsAsync(Arg.Any<bool>(), Arg.Any<bool>()).Returns(Task.FromResult(intents));
             targetBlipAIClient.GetAllEntities(Arg.Any<bool>()).Returns(Task.FromResult(entities));
 
             var blipAIClientFactory = Substitute.For<IBlipClientFactory>();
@@ -368,11 +368,11 @@ namespace Take.Blip.Tests.Features.Copy
             }
 
             var sourceBlipAIClient = Substitute.For<IBlipAIClient>();
-            sourceBlipAIClient.GetAllIntents(Arg.Any<bool>()).Returns(Task.FromResult<List<Intention>>(null));
+            sourceBlipAIClient.GetAllIntentsAsync(Arg.Any<bool>()).Returns(Task.FromResult<List<Intention>>(null));
             sourceBlipAIClient.GetAllEntities(Arg.Any<bool>()).Returns(Task.FromResult<List<Entity>>(null));
 
             var targetBlipAIClient = Substitute.For<IBlipAIClient>();
-            targetBlipAIClient.GetAllIntents(Arg.Any<bool>()).Returns(Task.FromResult(intents));
+            targetBlipAIClient.GetAllIntentsAsync(Arg.Any<bool>()).Returns(Task.FromResult(intents));
             targetBlipAIClient.GetAllEntities(Arg.Any<bool>()).Returns(Task.FromResult(entities));
 
             var blipAIClientFactory = Substitute.For<IBlipClientFactory>();

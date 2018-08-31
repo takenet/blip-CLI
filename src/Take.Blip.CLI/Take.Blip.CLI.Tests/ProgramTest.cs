@@ -33,11 +33,11 @@ namespace Take.Blip.CLI.Tests
             var toKey = "key2";
 
             var sourceBlipAIClient = Substitute.For<IBlipAIClient>();
-            sourceBlipAIClient.GetAllIntents(Arg.Any<bool>()).Returns(Task.FromResult<List<Intention>>(null));
+            sourceBlipAIClient.GetAllIntentsAsync(Arg.Any<bool>()).Returns(Task.FromResult<List<Intention>>(null));
             sourceBlipAIClient.GetAllEntities(Arg.Any<bool>()).Returns(Task.FromResult<List<Entity>>(null));
 
             var targetBlipAIClient = Substitute.For<IBlipAIClient>();
-            targetBlipAIClient.GetAllIntents(Arg.Any<bool>()).Returns(Task.FromResult<List<Intention>>(null));
+            targetBlipAIClient.GetAllIntentsAsync(Arg.Any<bool>()).Returns(Task.FromResult<List<Intention>>(null));
             targetBlipAIClient.GetAllEntities(Arg.Any<bool>()).Returns(Task.FromResult<List<Entity>>(null));
 
             var blipAIClientFactory = Substitute.For<IBlipClientFactory>();
@@ -103,7 +103,7 @@ namespace Take.Blip.CLI.Tests
             var serviceProvider = Program.GetServiceCollection();
             
             var sourceBlipAIClient = Substitute.For<IBlipAIClient>();
-            sourceBlipAIClient.GetAllIntents(Arg.Any<bool>()).Returns(Task.FromResult<List<Intention>>(null));
+            sourceBlipAIClient.GetAllIntentsAsync(Arg.Any<bool>()).Returns(Task.FromResult<List<Intention>>(null));
             sourceBlipAIClient.GetAllEntities(Arg.Any<bool>()).Returns(Task.FromResult<List<Entity>>(null));
             var blipClientFactory = Substitute.For<IBlipClientFactory>();
             blipClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(authKey))).Returns(sourceBlipAIClient);

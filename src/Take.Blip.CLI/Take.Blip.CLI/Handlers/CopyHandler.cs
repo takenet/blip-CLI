@@ -91,7 +91,7 @@ namespace Take.BlipCLI.Handlers
                 LogVerboseLine("\t> Deleting all entities and intents from target");
 
                 var tEntities = await targetBlipAIClient.GetAllEntities();
-                var tIntents = await targetBlipAIClient.GetAllIntents(justIds: true);
+                var tIntents = await targetBlipAIClient.GetAllIntentsAsync(justIds: true);
 
                 await DeleteEntitiesAsync(targetBlipAIClient, tEntities);
                 await DeleteIntentsAsync(targetBlipAIClient, tIntents);
@@ -102,7 +102,7 @@ namespace Take.BlipCLI.Handlers
             LogVerbose("\t>>> ");
             var entities = await sourceBlipAIClient.GetAllEntities(verbose: Verbose.IsSet);
             LogVerbose("\t>>> ");
-            var intents = await sourceBlipAIClient.GetAllIntents(verbose: Verbose.IsSet);
+            var intents = await sourceBlipAIClient.GetAllIntentsAsync(verbose: Verbose.IsSet);
 
             LogVerboseLine("\t> Copying AI Model to target: ");
 

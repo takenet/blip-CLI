@@ -138,7 +138,7 @@ namespace Take.BlipCLI
                             .AddSingleton<IBucketExportService, ExportService>()
                             .AddSingleton<INLPModelExportService, ExportService>()
                             .AddSingleton<IExportServiceFactory, ExportServiceFactory>()
-                            .AddSingleton<ILogger>(new ConsoleLogger("blip-CLI", (s,l) => { return true; }, true)) // TODO: Configure that =D
+                            .AddSingleton<ILogger>(new ConsoleLogger("blip-CLI", (s,l) => { return false; }, true)) // TODO: Configure that =D
                             .AddSingleton<NLPCompareHandler>()
                             .AddSingleton<CopyHandler>()
                             .AddSingleton<ExportHandler>()

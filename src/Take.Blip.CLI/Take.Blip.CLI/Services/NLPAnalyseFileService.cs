@@ -50,10 +50,10 @@ namespace Take.BlipCLI.Services
 
         public async Task WriteAnalyseReportAsync(NLPAnalyseReport analyseReport)
         {
-            var sortedAnalysis = analyseReport.AnalysisResponses.OrderBy(a => a.Text);
+            var sortedAnalysis = analyseReport.ResultData.OrderBy(a => a.Input);
             using (var writer = new StreamWriter(analyseReport.FullReportFileName))
             {
-                await writer.WriteLineAsync("Text\tIntentionId\tIntentionScore\tEntities");
+                await writer.WriteLineAsync("Text\tIntentionId\tIntentionScore\tEntities\tAnswer");
                 foreach (var item in sortedAnalysis)
                 {
                     await writer.WriteLineAsync(AnalysisResponseToString(item));
@@ -61,11 +61,11 @@ namespace Take.BlipCLI.Services
             }
         }
 
-        private string AnalysisResponseToString(AnalysisResponse analysis)
+        private string AnalysisResponseToString(AnalysisResultData analysis)
         {
-            var intention = analysis.Intentions?[0];
+            var intention = analysis.Intent;
             var entities = analysis.Entities;
-            return $"{analysis.Text}\t{intention?.Id}\t{intention?.Score:P}\t{EntitiesToString(entities?.ToList())}";
+            return $"{analysis.Input}\t{intention}\t{analysis.Confidence:P}\t{entities}\t\"{analysis.Answer}\"";
         }
 
         private string EntitiesToString(List<EntityResponse> entities)

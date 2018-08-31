@@ -10,6 +10,9 @@ using System.Threading.Tasks.Dataflow;
 using Take.BlipCLI.Models;
 using Take.BlipCLI.Services;
 using Take.BlipCLI.Services.Interfaces;
+using Take.ContentProvider.Domain.Contract.Enums;
+using Take.ContentProvider.Domain.Contract.Model;
+using Take.ContentProvider.Infra.Bucket;
 using Takenet.Iris.Messaging.Resources.ArtificialIntelligence;
 
 namespace Take.BlipCLI.Services
@@ -20,6 +23,8 @@ namespace Take.BlipCLI.Services
         private readonly IFileManagerService _fileService;
         private readonly ILogger _logger;
 
+        private static object _locker = new object();
+
         public NLPAnalyseService(IBlipClientFactory blipClientFactory, IFileManagerService fileService, ILogger logger)
         {
             _blipClientFactory = blipClientFactory;
@@ -29,7 +34,7 @@ namespace Take.BlipCLI.Services
 
         public async Task AnalyseAsync(string authorization, string inputSource, string reportOutput)
         {
-            if(string.IsNullOrEmpty(authorization))
+            if (string.IsNullOrEmpty(authorization))
                 throw new ArgumentNullException("You must provide the target bot (node) for this action.");
 
             if (string.IsNullOrEmpty(inputSource))
@@ -37,12 +42,18 @@ namespace Take.BlipCLI.Services
 
             if (string.IsNullOrEmpty(reportOutput))
                 throw new ArgumentNullException("You must provide the full output's report file name for this action.");
-            
+
             _fileService.CreateDirectoryIfNotExists(reportOutput);
-           
+
+            var bucketStorage = new BucketStorage("Key " + authorization);
+            var contentProvider = new Take.ContentProvider.ContentProvider(bucketStorage, 5);
+
+            //var resultContent = contentProvider.GetAsync(intent.name, entities).Result;
+
+            int count = 0;
 
             var client = _blipClientFactory.GetInstanceForAI(authorization);
-            
+            var allIntents = await client.GetAllIntentsAsync();
 
             bool isPhrase = false;
 
@@ -66,7 +77,7 @@ namespace Take.BlipCLI.Services
                 isPhrase = true;
             }
 
-            var responses = new List<AnalysisResponse>();
+            var resultDataList = new List<AnalysisResultData>();
 
             string EntitiesToString(List<EntityResponse> entities)
             {
@@ -76,29 +87,91 @@ namespace Take.BlipCLI.Services
                 return toString;
             }
 
-            async Task<AnalysisResponse> AnalyseForMetrics(string request)
+            #region Methods
+            async Task<(string, AnalysisResponse)> AnalyseForMetrics(string request)
             {
-                return await client.AnalyseForMetrics(request);
+                var response = await client.AnalyseForMetrics(request);
+                return (request, response);
             }
 
-            void ShowResult(AnalysisResponse item)
+            (string, AnalysisResponse) CheckResponse((string request, AnalysisResponse response) tuple)
             {
+                var item = tuple.response;
                 if (item == null)
-                    return;
-                responses.Add(item);
-                _logger.LogDebug($"\"{item.Text}\"\t{item.Intentions?[0].Id}:{item.Intentions?[0].Score:P}\t{EntitiesToString(item.Entities?.ToList())}\n");
+                {
+                    _logger.LogError($"Error when analysing: \"{tuple.request}\"");
+                    return tuple;
+                }
+                return tuple;
             }
+
+            async Task<(string, AnalysisResponse, ContentResult)> GetContent((string request, AnalysisResponse response) tuple)
+            {
+                var intentId = tuple.response.Intentions?[0].Id;
+                var intentName = allIntents.FirstOrDefault(i => i.Id == intentId)?.Name;
+                var entites = tuple.response.Entities?.Select(e => e.Value).ToList();
+                var content = await contentProvider.GetAsync(intentName, entites);
+
+                return (tuple.request, tuple.response, content);
+            }
+
+            void BuildResult((string r, AnalysisResponse a, ContentResult c) tuple)
+            {
+                lock(_locker)
+                {
+                    count++;
+                    if(count % 100 == 0)
+                    {
+                        Console.WriteLine($"Foi {count}");
+                    }
+                }
+
+                var input = tuple.r;
+                var analysis = tuple.a;
+                var content = tuple.c;
+
+                if (analysis == null)
+                    return;
+
+                var resultData = new AnalysisResultData
+                {
+                    Input = input,
+                    Intent = analysis.Intentions?[0].Id,
+                    Confidence = analysis.Intentions?[0].Score,
+                    Entities = EntitiesToString(analysis.Entities?.ToList()),
+                };
+
+                if (content != null)
+                {
+                    resultData.Answer = content.Status == ContentResultStatus.NotMatch ? "NotMatch" : content.Contents.FirstOrDefault().ContentText;
+                }
+
+                resultDataList.Add(resultData);
+
+                _logger.LogDebug($"\"{resultData.Input}\"\t{resultData.Intent}:{resultData.Confidence:P}\t{resultData.Entities}\t{resultData.Answer}");
+            }
+            #endregion
 
             var options = new ExecutionDataflowBlockOptions
             {
                 BoundedCapacity = DataflowBlockOptions.Unbounded,
-                MaxDegreeOfParallelism = 10
+                MaxDegreeOfParallelism = 20
             };
 
-            var analyseBlock = new TransformBlock<string, AnalysisResponse>((Func<string, Task<AnalysisResponse>>)AnalyseForMetrics, options);
-            var actionBlock = new ActionBlock<AnalysisResponse>((Action<AnalysisResponse>)ShowResult, options);
+            var analyseBlock = new TransformBlock<string, (string, AnalysisResponse)>((Func<string, Task<(string, AnalysisResponse)>>)AnalyseForMetrics, options);
+            var checkBlock = new TransformBlock<(string, AnalysisResponse), (string, AnalysisResponse)>((Func<(string, AnalysisResponse), (string, AnalysisResponse)>)CheckResponse, options);
+            var contentBlock = new TransformBlock<(string, AnalysisResponse), (string, AnalysisResponse, ContentResult)>((Func<(string, AnalysisResponse), Task<(string, AnalysisResponse, ContentResult)>>)GetContent, options);
+            var showResultBlock = new ActionBlock<(string, AnalysisResponse, ContentResult)>((Action<(string, AnalysisResponse, ContentResult)>)BuildResult, options);
 
-            analyseBlock.LinkTo(actionBlock, new DataflowLinkOptions
+            analyseBlock.LinkTo(checkBlock, new DataflowLinkOptions
+            {
+                PropagateCompletion = true
+            });
+            checkBlock.LinkTo(contentBlock, new DataflowLinkOptions
+            {
+                PropagateCompletion = true
+            });
+            contentBlock.LinkTo(showResultBlock, new DataflowLinkOptions
             {
                 PropagateCompletion = true
             });
@@ -116,16 +189,18 @@ namespace Take.BlipCLI.Services
                 }
             }
             analyseBlock.Complete();
-            await actionBlock.Completion;
+            await showResultBlock.Completion;
 
             var report = new NLPAnalyseReport
             {
-                AnalysisResponses = responses,
+                ResultData = resultDataList,
                 FullReportFileName = reportOutput
             };
 
             await _fileService.WriteAnalyseReportAsync(report);
-            
+
         }
     }
+
+    
 }

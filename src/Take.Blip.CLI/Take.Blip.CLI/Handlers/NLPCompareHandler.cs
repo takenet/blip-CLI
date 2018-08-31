@@ -178,7 +178,7 @@ namespace Take.BlipCLI.Handlers
             IBlipAIClient blipAIClient = new BlipHttpClientAsync(authKey);
 
             var entities = await blipAIClient.GetAllEntities(verbose: IsVerbose);
-            var intents = await blipAIClient.GetAllIntents(verbose: IsVerbose);
+            var intents = await blipAIClient.GetAllIntentsAsync(verbose: IsVerbose);
 
             return new NLPModel { BotId = authKey, Entities = entities, Intents = intents };
         }

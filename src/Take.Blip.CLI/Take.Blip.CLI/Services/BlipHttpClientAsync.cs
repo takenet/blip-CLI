@@ -375,7 +375,7 @@ namespace Take.BlipCLI.Services
             }
         }
 
-        public async Task<List<Intention>> GetAllIntents(bool verbose = false, bool justIds = false)
+        public async Task<List<Intention>> GetAllIntentsAsync(bool verbose = false, bool justIds = false)
         {
             var intentsList = new List<Intention>();
 
