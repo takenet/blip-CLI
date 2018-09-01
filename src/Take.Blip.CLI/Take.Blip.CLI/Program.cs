@@ -43,6 +43,16 @@ namespace Take.BlipCLI
                 pingCommand.HelpText("Ping a specific bot (node)");
                 pingCommand.Handler(pingHandler.Run);
 
+                var blipConfigurationHandler = ServiceProvider.GetService<BlipConfigurationHandler>();
+                var configurationCommand = app.Command("config");
+                blipConfigurationHandler.Verbose = _verbose;
+                blipConfigurationHandler.Node = configurationCommand.Parameter<string>("n").Alias("node").HelpText("Node to get QR Code for");
+                blipConfigurationHandler.Payload = configurationCommand.Parameter<string>("p").Alias("payload").HelpText("Payload QR Code will send to bot when activated");
+                blipConfigurationHandler.Download = app.Switch("d").Alias("download").HelpText("Saves qr.png copy of the QR Code");
+                blipConfigurationHandler.Authorization = configurationCommand.Parameter<string>("a").Alias("authorization").HelpText("Bot authorization key");
+                configurationCommand.HelpText("Generates a payload-compatible QR Code for Messenger Bots");
+                configurationCommand.Handler(blipConfigurationHandler.Run);
+
                 var nlpImportHandler = new NLPImportHandler();
                 var nlpImportCommand = app.Command("nlp-import");
                 nlpImportHandler.Node = nlpImportCommand.Parameter<string>("n").Alias("node").HelpText("Node to receive the data");
@@ -142,7 +152,8 @@ namespace Take.BlipCLI
                             .AddSingleton<NLPCompareHandler>()
                             .AddSingleton<CopyHandler>()
                             .AddSingleton<ExportHandler>()
-                            .AddSingleton<NLPAnalyseHandler>();
+                            .AddSingleton<NLPAnalyseHandler>()
+                            .AddSingleton<BlipConfigurationHandler>();
         }
 
         private static void RegisterBlipTypes()
@@ -154,6 +165,8 @@ namespace Take.BlipCLI
             TypeUtil.RegisterDocument<Question>();
 
             TypeUtil.RegisterDocument<Entity>();
+
+            TypeUtil.RegisterDocument<CallerResource>();
         }
 
     }
