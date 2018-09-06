@@ -50,11 +50,10 @@ namespace Take.BlipCLI.Services
 
         public async Task WriteAnalyseReportAsync(NLPAnalyseReport analyseReport)
         {
-            var sortedAnalysis = analyseReport.ResultData.OrderBy(a => a.Input);
             using (var writer = new StreamWriter(analyseReport.FullReportFileName))
             {
                 await writer.WriteLineAsync("Text\tIntentionId\tIntentionScore\tEntities\tAnswer");
-                foreach (var item in sortedAnalysis)
+                foreach (var item in analyseReport.ResultData)
                 {
                     await writer.WriteLineAsync(AnalysisResponseToString(item));
                 }

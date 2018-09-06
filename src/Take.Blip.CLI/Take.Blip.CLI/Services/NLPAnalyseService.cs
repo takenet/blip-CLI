@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Take.BlipCLI.Models;
@@ -143,7 +144,7 @@ namespace Take.BlipCLI.Services
 
                 if (content != null)
                 {
-                    resultData.Answer = content.Status == ContentResultStatus.NotMatch ? "NotMatch" : content.Contents.FirstOrDefault().ContentText;
+                    resultData.Answer = ExtractAnswer(content);
                 }
 
                 resultDataList.Add(resultData);
@@ -199,6 +200,19 @@ namespace Take.BlipCLI.Services
 
             await _fileService.WriteAnalyseReportAsync(report);
 
+        }
+
+        private string ExtractAnswer(ContentResult content)
+        {
+            return content.Status == ContentResultStatus.NotMatch ? "NotMatch" : GetContentText(content);
+        }
+
+        private string GetContentText(ContentResult content)
+        {
+            var text = content.Contents.FirstOrDefault().ContentText;
+            text = Regex.Replace(text, "[\n\r]+", " ", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            text = Regex.Replace(text, "\\s+", " ", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            return text;
         }
     }
 
