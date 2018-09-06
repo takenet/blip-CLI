@@ -37,13 +37,13 @@ namespace Take.BlipCLI
                 _verbose = app.Switch("v").Alias("verbose").HelpText("Enable verbose output.");
                 _force = app.Switch("force").HelpText("Enable force operation.");
 
-                var pingHandler = new PingHandler();
+                var pingHandler = ServiceProvider.GetService<PingHandler>();
                 var pingCommand = app.Command("ping");
                 pingHandler.Node = pingCommand.Parameter<string>("n").Alias("node").HelpText("Node to ping");
                 pingCommand.HelpText("Ping a specific bot (node)");
                 pingCommand.Handler(pingHandler.Run);
 
-                var nlpImportHandler = new NLPImportHandler();
+                var nlpImportHandler = ServiceProvider.GetService<NLPImportHandler>();
                 var nlpImportCommand = app.Command("nlp-import");
                 nlpImportHandler.Node = nlpImportCommand.Parameter<string>("n").Alias("node").HelpText("Node to receive the data");
                 nlpImportHandler.Authorization = nlpImportCommand.Parameter<string>("a").Alias("authorization").HelpText("Node Authorization to receive the data");
@@ -65,7 +65,7 @@ namespace Take.BlipCLI
                 copyCommand.HelpText("Copy data from source bot (node) to target bot (node)");
                 copyCommand.Handler(copyHandler.Run);
 
-                var saveNodeHandler = new SaveNodeHandler();
+                var saveNodeHandler = ServiceProvider.GetService<SaveNodeHandler>();
                 var saveNodeCommand = app.Command("saveNode");
                 saveNodeHandler.Node = saveNodeCommand.Parameter<string>("n").Alias("node").HelpText("Node (bot) to be saved");
                 saveNodeHandler.AccessKey = saveNodeCommand.Parameter<string>("k").Alias("accessKey").HelpText("Node accessKey");
@@ -73,7 +73,7 @@ namespace Take.BlipCLI
                 saveNodeCommand.HelpText("Save a node (bot) to be used next");
                 saveNodeCommand.Handler(saveNodeHandler.Run);
 
-                var formatKeyHandler = new FormatKeyHandler();
+                var formatKeyHandler = ServiceProvider.GetService<FormatKeyHandler>();
                 var formatKeyCommand = app.Command("formatKey").Alias("fk");
                 formatKeyHandler.Identifier = formatKeyCommand.Parameter<string>("i").Alias("identifier").HelpText("Bot identifier").Required();
                 formatKeyHandler.AccessKey = formatKeyCommand.Parameter<string>("k").Alias("accessKey").HelpText("Bot accessKey");
@@ -138,11 +138,17 @@ namespace Take.BlipCLI
                             .AddSingleton<IBucketExportService, ExportService>()
                             .AddSingleton<INLPModelExportService, ExportService>()
                             .AddSingleton<IExportServiceFactory, ExportServiceFactory>()
-                            .AddSingleton<ILogger>(new ConsoleLogger("blip-CLI", (s,l) => { return false; }, true)) // TODO: Configure that =D
+                            .AddSingleton<ILoggerProviderFactory, LoggerProviderFactory>()
+                            .AddSingleton<IInternalLogger, BlipCliLogger>()
                             .AddSingleton<NLPCompareHandler>()
                             .AddSingleton<CopyHandler>()
                             .AddSingleton<ExportHandler>()
-                            .AddSingleton<NLPAnalyseHandler>();
+                            .AddSingleton<NLPAnalyseHandler>()
+                            .AddSingleton<FormatKeyHandler>()
+                            .AddSingleton<SaveNodeHandler>()
+                            .AddSingleton<NLPImportHandler>()
+                            .AddSingleton<PingHandler>()
+                            ;
         }
 
         private static void RegisterBlipTypes()

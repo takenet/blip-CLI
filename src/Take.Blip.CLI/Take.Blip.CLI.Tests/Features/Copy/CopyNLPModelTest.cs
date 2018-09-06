@@ -46,8 +46,8 @@ namespace Take.Blip.Tests.Features.Copy
             blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(fromKey))).Returns(sourceBlipAIClient);
             blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(toKey))).Returns(targetBlipAIClient);
 
-
-            var handler = new CopyHandler(blipAIClientFactory);
+            var logger = Substitute.For<IInternalLogger>();
+            var handler = new CopyHandler(blipAIClientFactory, logger);
             handler.FromAuthorization = new MyNamedParameter<string> { Value = fromKey };
             handler.ToAuthorization = new MyNamedParameter<string> { Value = toKey };
             handler.From = new MyNamedParameter<string>();
@@ -85,7 +85,8 @@ namespace Take.Blip.Tests.Features.Copy
             blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(toKey))).Returns(targetBlipAIClient);
 
 
-            var handler = new CopyHandler(blipAIClientFactory);
+            var logger = Substitute.For<IInternalLogger>();
+            var handler = new CopyHandler(blipAIClientFactory, logger);
             handler.FromAuthorization = new MyNamedParameter<string> { Value = fromKey };
             handler.ToAuthorization = new MyNamedParameter<string> { Value = toKey };
             handler.From = new MyNamedParameter<string>();
@@ -121,8 +122,8 @@ namespace Take.Blip.Tests.Features.Copy
             blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(fromKey))).Returns(sourceBlipAIClient);
             blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(toKey))).Returns(targetBlipAIClient);
 
-
-            var handler = new CopyHandler(blipAIClientFactory);
+            var logger = Substitute.For<IInternalLogger>();
+            var handler = new CopyHandler(blipAIClientFactory, logger);
             handler.FromAuthorization = new MyNamedParameter<string> { Value = fromKey };
             handler.ToAuthorization = new MyNamedParameter<string> { Value = toKey };
             handler.From = new MyNamedParameter<string>();
@@ -182,8 +183,8 @@ namespace Take.Blip.Tests.Features.Copy
             blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(fromKey))).Returns(sourceBlipAIClient);
             blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(toKey))).Returns(targetBlipAIClient);
 
-
-            var handler = new CopyHandler(blipAIClientFactory);
+            var logger = Substitute.For<IInternalLogger>();
+            var handler = new CopyHandler(blipAIClientFactory, logger);
             handler.FromAuthorization = new MyNamedParameter<string> { Value = fromKey };
             handler.ToAuthorization = new MyNamedParameter<string> { Value = toKey };
             handler.From = new MyNamedParameter<string>();
@@ -246,8 +247,8 @@ namespace Take.Blip.Tests.Features.Copy
             blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(fromKey))).Returns(sourceBlipAIClient);
             blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(toKey))).Returns(targetBlipAIClient);
 
-
-            var handler = new CopyHandler(blipAIClientFactory);
+            var logger = Substitute.For<IInternalLogger>();
+            var handler = new CopyHandler(blipAIClientFactory, logger);
             handler.FromAuthorization = new MyNamedParameter<string> { Value = fromKey };
             handler.ToAuthorization = new MyNamedParameter<string> { Value = toKey };
             handler.From = new MyNamedParameter<string>();
@@ -312,8 +313,8 @@ namespace Take.Blip.Tests.Features.Copy
             blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(fromKey))).Returns(sourceBlipAIClient);
             blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(toKey))).Returns(targetBlipAIClient);
 
-
-            var handler = new CopyHandler(blipAIClientFactory);
+            var logger = Substitute.For<IInternalLogger>();
+            var handler = new CopyHandler(blipAIClientFactory, logger);
             handler.FromAuthorization = new MyNamedParameter<string> { Value = fromKey };
             handler.ToAuthorization = new MyNamedParameter<string> { Value = toKey };
             handler.From = new MyNamedParameter<string>();
@@ -379,8 +380,8 @@ namespace Take.Blip.Tests.Features.Copy
             blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(fromKey))).Returns(sourceBlipAIClient);
             blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(toKey))).Returns(targetBlipAIClient);
 
-
-            var handler = new CopyHandler(blipAIClientFactory);
+            var logger = Substitute.For<IInternalLogger>();
+            var handler = new CopyHandler(blipAIClientFactory, logger);
             handler.FromAuthorization = new MyNamedParameter<string> { Value = fromKey };
             handler.ToAuthorization = new MyNamedParameter<string> { Value = toKey };
             handler.From = new MyNamedParameter<string>();

@@ -20,13 +20,13 @@ namespace Take.BlipCLI.Handlers
         public INamedParameter<string> To { get; set; }
         public INamedParameter<string> ToAuthorization { get; set; }
         public INamedParameter<List<BucketNamespace>> Contents { get; set; }
-        
+
 
         private readonly ISettingsFile _settingsFile;
 
         private readonly IBlipClientFactory _blipAIClientFactory;
 
-        public CopyHandler(IBlipClientFactory blipAIClientFactory)
+        public CopyHandler(IBlipClientFactory blipAIClientFactory, IInternalLogger logger) : base(logger)
         {
             _settingsFile = new SettingsFile();
             _blipAIClientFactory = blipAIClientFactory;
@@ -232,9 +232,9 @@ namespace Take.BlipCLI.Handlers
             return null;
         }
 
-     
+
 
     }
 
-    
+
 }

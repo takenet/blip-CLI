@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Take.BlipCLI.Services;
+using Take.BlipCLI.Services.Interfaces;
 using Take.BlipCLI.Services.Settings;
 
 namespace Take.BlipCLI.Handlers
@@ -17,7 +18,7 @@ namespace Take.BlipCLI.Handlers
         public INamedParameter<string> Authorization { get; set; }
         private readonly ISettingsFile _settingsFile;
 
-        public SaveNodeHandler()
+        public SaveNodeHandler(IInternalLogger logger) : base(logger)
         {
             _settingsFile = new SettingsFile();
         }

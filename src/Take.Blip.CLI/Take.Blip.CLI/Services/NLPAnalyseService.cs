@@ -22,11 +22,14 @@ namespace Take.BlipCLI.Services
     {
         private readonly IBlipClientFactory _blipClientFactory;
         private readonly IFileManagerService _fileService;
-        private readonly ILogger _logger;
+        private readonly IInternalLogger _logger;
 
         private static object _locker = new object();
 
-        public NLPAnalyseService(IBlipClientFactory blipClientFactory, IFileManagerService fileService, ILogger logger)
+        public NLPAnalyseService(
+            IBlipClientFactory blipClientFactory, 
+            IFileManagerService fileService, 
+            IInternalLogger logger)
         {
             _blipClientFactory = blipClientFactory;
             _fileService = fileService;
@@ -149,7 +152,7 @@ namespace Take.BlipCLI.Services
 
                 resultDataList.Add(resultData);
 
-                _logger.LogDebug($"\"{resultData.Input}\"\t{resultData.Intent}:{resultData.Confidence:P}\t{resultData.Entities}\t{resultData.Answer}");
+                _logger.LogDebug($"\"{resultData.Input}\"\t{resultData.Intent}:{resultData.Confidence:P}\t{resultData.Entities}\t{resultData.Answer.Substring(0,50)}[...]");
             }
             #endregion
 

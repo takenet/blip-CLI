@@ -18,14 +18,14 @@ namespace Take.BlipCLI.Services
         private readonly IExcelGeneratorService _excelGeneratorService;
         private readonly ICSVGeneratorService _csvGeneratorService;
         private readonly IFileManagerService _fileManagerService;
-        private readonly ILogger _logger;
+        private readonly IInternalLogger _logger;
 
         public ExportService(
             IBlipClientFactory blipClientFactory,
             IExcelGeneratorService excelGeneratorService,
             ICSVGeneratorService csvGeneratorService,
             IFileManagerService fileManagerService,
-            ILogger logger)
+            IInternalLogger logger)
         {
             _blipClientFactory = blipClientFactory;
             _excelGeneratorService = excelGeneratorService;
