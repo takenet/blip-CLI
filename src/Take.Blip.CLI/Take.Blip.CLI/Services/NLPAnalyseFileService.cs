@@ -48,11 +48,12 @@ namespace Take.BlipCLI.Services
             return File.Exists(pathToFile);
         }
 
-        public async Task WriteAnalyseReportAsync(NLPAnalyseReport analyseReport)
+        public async Task WriteAnalyseReportAsync(NLPAnalyseReport analyseReport, bool append = false)
         {
-            using (var writer = new StreamWriter(analyseReport.FullReportFileName))
+            bool writeHeader = !File.Exists(analyseReport.FullReportFileName);
+            using (var writer = new StreamWriter(analyseReport.FullReportFileName, append))
             {
-                await writer.WriteLineAsync("Text\tIntentionId\tIntentionScore\tEntities\tAnswer");
+                if(writeHeader) await writer.WriteLineAsync("Text\tIntentionId\tIntentionScore\tEntities\tAnswer");
                 foreach (var item in analyseReport.ResultData)
                 {
                     await writer.WriteLineAsync(AnalysisResponseToString(item));

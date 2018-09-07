@@ -11,6 +11,7 @@ namespace Take.BlipCLI.Handlers
     {   
         public ISwitch Force { get; set; }
         public ISwitch Verbose { get; set; }
+        public ISwitch VeryVerbose { get; set; }
 
         protected readonly IInternalLogger _logger;
 
@@ -21,7 +22,7 @@ namespace Take.BlipCLI.Handlers
 
         public int Run(string[] args)
         {
-            _logger.SetLogLevelByVerbosity(Verbose.IsSet);
+            _logger.SetLogLevelByVerbosity(Verbose.IsSet, VeryVerbose.IsSet);
             return RunAsync(args).GetAwaiter().GetResult();
         }
 

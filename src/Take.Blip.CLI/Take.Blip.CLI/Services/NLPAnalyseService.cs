@@ -27,8 +27,8 @@ namespace Take.BlipCLI.Services
         private static object _locker = new object();
 
         public NLPAnalyseService(
-            IBlipClientFactory blipClientFactory, 
-            IFileManagerService fileService, 
+            IBlipClientFactory blipClientFactory,
+            IFileManagerService fileService,
             IInternalLogger logger)
         {
             _blipClientFactory = blipClientFactory;
@@ -47,17 +47,18 @@ namespace Take.BlipCLI.Services
             if (string.IsNullOrEmpty(reportOutput))
                 throw new ArgumentNullException("You must provide the full output's report file name for this action.");
 
+            _logger.LogDebug("COMEÇOU!");
+
             _fileService.CreateDirectoryIfNotExists(reportOutput);
 
             var bucketStorage = new BucketStorage("Key " + authorization);
             var contentProvider = new Take.ContentProvider.ContentProvider(bucketStorage, 5);
 
-            //var resultContent = contentProvider.GetAsync(intent.name, entities).Result;
-
-            int count = 0;
-
             var client = _blipClientFactory.GetInstanceForAI(authorization);
+
+            _logger.LogDebug("\tCarregando intencoes...");
             var allIntents = await client.GetAllIntentsAsync();
+            _logger.LogDebug("\tCarregadas!");
 
             bool isPhrase = false;
 
@@ -66,18 +67,18 @@ namespace Take.BlipCLI.Services
 
             if (isFile)
             {
-                _logger.LogDebug("\tÉ arquivo\n");
+                _logger.LogDebug("\tA entrada é um arquivo");
                 isPhrase = false;
             }
             else
             if (isDirectory)
             {
-                _logger.LogDebug("\tÉ diretório\n");
+                _logger.LogError("\tA entrada é um diretório");
                 throw new ArgumentNullException("You must provide the input source (phrase or file) for this action. Your input was a direcory.");
             }
             else
             {
-                _logger.LogDebug("\tÉ frase\n");
+                _logger.LogDebug("\tA entrada é uma frase");
                 isPhrase = true;
             }
 
@@ -121,15 +122,6 @@ namespace Take.BlipCLI.Services
 
             void BuildResult((string r, AnalysisResponse a, ContentResult c) tuple)
             {
-                lock(_locker)
-                {
-                    count++;
-                    if(count % 100 == 0)
-                    {
-                        Console.WriteLine($"Foi {count}");
-                    }
-                }
-
                 var input = tuple.r;
                 var analysis = tuple.a;
                 var content = tuple.c;
@@ -152,7 +144,7 @@ namespace Take.BlipCLI.Services
 
                 resultDataList.Add(resultData);
 
-                _logger.LogDebug($"\"{resultData.Input}\"\t{resultData.Intent}:{resultData.Confidence:P}\t{resultData.Entities}\t{resultData.Answer.Substring(0,50)}[...]");
+                _logger.LogTrace($"\"{resultData.Input}\"\t{resultData.Intent}:{resultData.Confidence:P}\t{resultData.Entities}\t{CropText(resultData.Answer, 50)}");
             }
             #endregion
 
@@ -180,29 +172,53 @@ namespace Take.BlipCLI.Services
                 PropagateCompletion = true
             });
 
-            if (isPhrase)
+
+            var inputList = await GetInputList(isPhrase, inputSource);
+            List<string> elements100;
+            int chunkSize = 5;
+            int skip = 0;
+            int total = 0;
+
+            while ((elements100 = inputList.Skip(skip).Take(chunkSize).ToList()).Any())
             {
-                await analyseBlock.SendAsync(inputSource);
-            }
-            else
-            {
-                var inputList = await _fileService.GetInputsToAnalyseAsync(inputSource);
-                foreach (var input in inputList)
+                skip += chunkSize;
+                total += elements100.Count;
+                _logger.LogDebug($"\t\tProcessando {elements100.Count} - {total}/{inputList.Count}");
+
+                resultDataList.Clear();
+
+                foreach (var input in elements100)
                 {
                     await analyseBlock.SendAsync(input);
                 }
+
+                analyseBlock.Complete();
+                await showResultBlock.Completion;
+
+                var report = new NLPAnalyseReport
+                {
+                    ResultData = resultDataList,
+                    FullReportFileName = reportOutput
+                };
+
+                await _fileService.WriteAnalyseReportAsync(report, true);
+                
             }
-            analyseBlock.Complete();
-            await showResultBlock.Completion;
 
-            var report = new NLPAnalyseReport
+            _logger.LogDebug("TERMINOU!");
+
+        }
+
+        private async Task<List<string>> GetInputList(bool isPhrase, string inputSource)
+        {
+            if (isPhrase)
             {
-                ResultData = resultDataList,
-                FullReportFileName = reportOutput
-            };
-
-            await _fileService.WriteAnalyseReportAsync(report);
-
+                return new List<string> { inputSource };
+            }
+            else
+            {
+                return await _fileService.GetInputsToAnalyseAsync(inputSource);
+            }
         }
 
         private string ExtractAnswer(ContentResult content)
@@ -217,7 +233,16 @@ namespace Take.BlipCLI.Services
             text = Regex.Replace(text, "\\s+", " ", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
             return text;
         }
+
+        private string CropText(string text, int size)
+        {
+            if (text.Length >= size)
+                return $"{text.Substring(0, size - 1)}[...]";
+            else
+                return text;
+        }
+
     }
 
-    
+
 }

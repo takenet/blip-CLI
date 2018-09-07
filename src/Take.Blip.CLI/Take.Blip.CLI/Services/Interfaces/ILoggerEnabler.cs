@@ -6,6 +6,6 @@ namespace Take.BlipCLI.Services.Interfaces
 {
     public interface ILoggerEnabler
     {
-        void SetLogLevelByVerbosity(bool verbose);
+        void SetLogLevelByVerbosity(bool verbose, bool veryVerbose);
     }
 }

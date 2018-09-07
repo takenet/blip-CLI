@@ -8,6 +8,6 @@ namespace Take.BlipCLI.Services.Interfaces
 {
     public interface INLPAnalyseFileWriter
     {
-        Task WriteAnalyseReportAsync(NLPAnalyseReport analyseReport);
+        Task WriteAnalyseReportAsync(NLPAnalyseReport analyseReport, bool append = false);
     }
 }

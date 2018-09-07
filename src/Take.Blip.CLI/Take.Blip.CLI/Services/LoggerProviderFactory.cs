@@ -9,14 +9,24 @@ namespace Take.BlipCLI.Services
 {
     public class LoggerProviderFactory : ILoggerProviderFactory
     {
-        public ILogger GetLoggerByVerbosity(bool verbose)
+        public ILogger GetLoggerByVerbosity(bool verbose, bool veryVerbose)
         {
-            if (verbose)
+            if (veryVerbose)
             {
                 return new ConsoleLogger("blip-CLI",
                     (input, logLevel) =>
                     {
                         return true;
+                    }, false);
+            }
+            else if (verbose)
+            {
+                return new ConsoleLogger("blip-CLI",
+                    (input, logLevel) =>
+                    {
+                        if (logLevel >= LogLevel.Debug)
+                            return true;
+                        return false;
                     }, false);
             }
             else

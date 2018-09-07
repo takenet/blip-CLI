@@ -36,24 +36,28 @@ namespace Take.BlipCLI.Services
             GetInstance().Log(logLevel, eventId, state, exception, formatter);
         }
 
-        public void SetLogLevelByVerbosity(bool verbose)
+        public void SetLogLevelByVerbosity(bool verbose, bool veryVerbose)
         {
-            _mininumLogLevel = verbose ? LogLevel.Trace : LogLevel.Warning;
+            _mininumLogLevel = veryVerbose ? LogLevel.Trace : verbose ? LogLevel.Debug : LogLevel.Warning;
         }
         private ILogger GetInstance()
         {
             if(_logger == null)
             {
-                _logger = _loggerProviderFactory.GetLoggerByVerbosity(IsVerbose());
+                _logger = _loggerProviderFactory.GetLoggerByVerbosity(IsVerbose(), IsVeryVerbose());
             }
             return _logger;
         }
         
         private bool IsVerbose()
         {
+            return _mininumLogLevel == LogLevel.Debug;
+        }
+
+        private bool IsVeryVerbose()
+        {
             return _mininumLogLevel == LogLevel.Trace;
         }
 
-        
     }
 }

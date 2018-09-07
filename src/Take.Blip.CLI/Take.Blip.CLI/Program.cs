@@ -16,6 +16,7 @@ namespace Take.BlipCLI
     public class Program
     {
         private static ISwitch _verbose;
+        private static ISwitch _veryVerbose;
         private static ISwitch _force;
 
         public static ServiceProvider ServiceProvider = null;
@@ -34,7 +35,8 @@ namespace Take.BlipCLI
                 app.FromAssembly(typeof(Program).GetTypeInfo().Assembly);
                 app.HelpText("BLiP Command Line Interface");
 
-                _verbose = app.Switch("v").Alias("verbose").HelpText("Enable verbose output.");
+                _verbose = app.Switch("v").Alias("verbose").HelpText("Enable debug verbose output.");
+                _veryVerbose = app.Switch("vv").Alias("veryverbose").HelpText("Enable trace verbose output.");
                 _force = app.Switch("force").HelpText("Enable force operation.");
 
                 var pingHandler = ServiceProvider.GetService<PingHandler>();
@@ -61,6 +63,7 @@ namespace Take.BlipCLI
                 copyHandler.ToAuthorization = copyCommand.Parameter<string>("ta").Alias("toAuthorization").HelpText("Authorization key of target bot");
                 copyHandler.Contents = copyCommand.Parameter<List<BucketNamespace>>("c").Alias("contents").HelpText($"Define which contents will be copied. Examples: '{copyHandler.GetTypesListAsString<BucketNamespace>()}'").ParseUsing(copyHandler.CustomNamespaceParser);
                 copyHandler.Verbose = _verbose;
+                copyHandler.VeryVerbose = _veryVerbose;
                 copyHandler.Force = _force;
                 copyCommand.HelpText("Copy data from source bot (node) to target bot (node)");
                 copyCommand.Handler(copyHandler.Run);
@@ -88,6 +91,7 @@ namespace Take.BlipCLI
                 nlpAnalyseHandler.ReportOutput = nlpAnalyseCommand.Parameter<string>("o").Alias("report").Alias("output").HelpText("Report's file fullname (path + name)");
                 nlpAnalyseHandler.Force = _force;
                 nlpAnalyseHandler.Verbose = _verbose;
+                nlpAnalyseHandler.VeryVerbose = _veryVerbose;
                 nlpAnalyseCommand.HelpText("Analyse some text or file using a bot IA model");
                 nlpAnalyseCommand.Handler(nlpAnalyseHandler.Run);
 
@@ -98,6 +102,7 @@ namespace Take.BlipCLI
                 exportHandler.OutputFilePath = exportCommand.Parameter<string>("o").Alias("output").Alias("path").HelpText("Output file path. Please use a full path.");
                 exportHandler.Model = exportCommand.Parameter<ExportModel>("m").Alias("model").HelpText($"Model to be exported. Examples: \'{exportHandler.GetTypesListAsString<ExportModel>()}\'").ParseUsing(exportHandler.CustomParser);
                 exportHandler.Verbose = _verbose;
+                exportHandler.VeryVerbose = _veryVerbose;
                 exportHandler.Excel = exportCommand.Parameter<string>("x").Alias("excel").HelpText("Export content in a excel file. Please specify the file name (without extension)");
                 exportCommand.HelpText("Export some BLiP model");
                 exportCommand.Handler(exportHandler.Run);
@@ -111,6 +116,7 @@ namespace Take.BlipCLI
                 compareHandler.OutputFilePath = compareCommand.Parameter<string>("o").Alias("output").Alias("path").HelpText("Output file path");
                 compareHandler.Method = compareCommand.Parameter<ComparisonMethod>("m").Alias("method").HelpText("Comparison method (exact, levenshtein)").ParseUsing(compareHandler.CustomMethodParser);
                 compareHandler.Verbose = _verbose;
+                compareHandler.VeryVerbose = _veryVerbose;
                 compareCommand.HelpText("Compare two knowledgebases");
                 compareCommand.Handler(compareHandler.Run);
 
