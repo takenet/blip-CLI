@@ -1,10 +1,12 @@
-﻿using NUnit.Framework;
+﻿using NSubstitute;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Take.BlipCLI.Services;
+using Take.BlipCLI.Services.Interfaces;
 
 namespace Take.Blip.CLI.Tests.Services
 {
@@ -30,7 +32,8 @@ namespace Take.Blip.CLI.Tests.Services
         public async Task When_ReadFile_Should_Works()
         {
             //Arrange
-            var fileReader = new NLPAnalyseFileService();
+            var logger = Substitute.For<IInternalLogger>();
+            var fileReader = new NLPAnalyseFileService(logger);
             
             var file = "file.txt";
             var collection = new List<string> { "a", "b", "c", "d", "e" };

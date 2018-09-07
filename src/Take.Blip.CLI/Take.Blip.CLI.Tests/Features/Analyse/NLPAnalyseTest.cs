@@ -82,7 +82,9 @@ namespace Take.Blip.CLI.Tests.Features.Analyse
                 Authorization = new MyNamedParameter<string> { Value = authKey },
                 Input = new MyNamedParameter<string> { Value = null },
                 ReportOutput = new MyNamedParameter<string> { Value = string.Empty },
-                Verbose = new MySwitch { IsSet = false }
+                Verbose = new MySwitch { IsSet = false },
+                VeryVerbose = new MySwitch { IsSet = false },
+                DoContentCheck = new MySwitch { IsSet = false }
             };
 
             //Act
@@ -127,7 +129,8 @@ namespace Take.Blip.CLI.Tests.Features.Analyse
                 Authorization = new MyNamedParameter<string> { Value = authKey },
                 Input = new MyNamedParameter<string> { Value = string.Empty },
                 ReportOutput = new MyNamedParameter<string> { Value = string.Empty },
-                Verbose = new MySwitch { IsSet = false }
+                Verbose = new MySwitch { IsSet = false },
+                DoContentCheck = new MySwitch { IsSet = false },
             };
 
             //Act
@@ -174,7 +177,9 @@ namespace Take.Blip.CLI.Tests.Features.Analyse
                 Authorization = new MyNamedParameter<string> { Value = authKey },
                 Input = new MyNamedParameter<string> { Value = input },
                 ReportOutput = new MyNamedParameter<string> { Value = string.Empty },
-                Verbose = new MySwitch { IsSet = false }
+                Verbose = new MySwitch { IsSet = false },
+                VeryVerbose = new MySwitch { IsSet = false },
+                DoContentCheck = new MySwitch { IsSet = false },
             };
 
             //Act
@@ -225,7 +230,9 @@ namespace Take.Blip.CLI.Tests.Features.Analyse
                 Authorization = new MyNamedParameter<string> { Value = authKey },
                 Input = new MyNamedParameter<string> { Value = input },
                 ReportOutput = new MyNamedParameter<string> { Value = output },
-                Verbose = new MySwitch { IsSet = false }
+                Verbose = new MySwitch { IsSet = false },
+                VeryVerbose = new MySwitch { IsSet = false },
+                DoContentCheck = new MySwitch { IsSet = false }
             };
 
             //Act
@@ -267,7 +274,8 @@ namespace Take.Blip.CLI.Tests.Features.Analyse
                 Authorization = new MyNamedParameter<string> { Value = authKey },
                 Input = new MyNamedParameter<string> { Value = input },
                 ReportOutput = new MyNamedParameter<string> { Value = output },
-                Verbose = new MySwitch { IsSet = false }
+                Verbose = new MySwitch { IsSet = false },
+                DoContentCheck = new MySwitch { IsSet = false }
             };
 
             //Act

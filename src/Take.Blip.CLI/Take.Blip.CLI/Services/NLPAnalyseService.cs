@@ -39,7 +39,7 @@ namespace Take.BlipCLI.Services
             _logger = logger;
         }
 
-        public async Task AnalyseAsync(string authorization, string inputSource, string reportOutput)
+        public async Task AnalyseAsync(string authorization, string inputSource, string reportOutput, bool doContentCheck = false)
         {
             if (string.IsNullOrEmpty(authorization))
                 throw new ArgumentNullException("You must provide the target bot (node) for this action.");
@@ -56,7 +56,6 @@ namespace Take.BlipCLI.Services
 
             var bucketStorage = new BucketStorage("Key " + authorization);
             var contentProvider = new Take.ContentProvider.ContentProvider(bucketStorage, 5);
-            var doContentCheck = true;
             var client = _blipClientFactory.GetInstanceForAI(authorization);
 
             _logger.LogDebug("\tCarregando intencoes...");
@@ -227,6 +226,8 @@ namespace Take.BlipCLI.Services
 
         private string CropText(string text, int size)
         {
+            if (string.IsNullOrEmpty(text))
+                return string.Empty;
             if (text.Length >= size)
                 return $"{text.Substring(0, size - 1)}[...]";
             else

@@ -89,6 +89,7 @@ namespace Take.BlipCLI
                 nlpAnalyseHandler.Input = nlpAnalyseCommand.Parameter<string>("i").Alias("input").HelpText("Input to be analysed. Works with a single phrase or with a text file (new line separator).");
                 nlpAnalyseHandler.Authorization = nlpAnalyseCommand.Parameter<string>("a").Alias("authorization").HelpText("Bot authorization key");
                 nlpAnalyseHandler.ReportOutput = nlpAnalyseCommand.Parameter<string>("o").Alias("report").Alias("output").HelpText("Report's file fullname (path + name)");
+                nlpAnalyseHandler.DoContentCheck = nlpAnalyseCommand.Switch("c").Alias("check").HelpText("Do a content check (Avaiable for bots using Take.ContentProvider)");
                 nlpAnalyseHandler.Force = _force;
                 nlpAnalyseHandler.Verbose = _verbose;
                 nlpAnalyseHandler.VeryVerbose = _veryVerbose;
