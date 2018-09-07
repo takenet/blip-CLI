@@ -58,10 +58,13 @@ namespace Take.BlipCLI.Services
             var contentProvider = new Take.ContentProvider.ContentProvider(bucketStorage, 5);
             var client = _blipClientFactory.GetInstanceForAI(authorization);
 
-            _logger.LogDebug("\tCarregando intencoes...");
-            var allIntents = await client.GetAllIntentsAsync();
-            _logger.LogDebug("\tCarregadas!");
-
+            var allIntents = new List<Intention>();
+            if (doContentCheck)
+            {
+                _logger.LogDebug("\tCarregando intencoes...");
+                allIntents = await client.GetAllIntentsAsync();
+                _logger.LogDebug("\tCarregadas!");
+            }
             bool isPhrase = false;
 
             var isDirectory = _fileService.IsDirectory(inputSource);
