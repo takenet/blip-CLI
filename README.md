@@ -38,8 +38,11 @@ Main features
 | **formatKey** | Returns authorization key (or access key) from an access key (authorization key)  | `blip formatKey -i testehttppost -a some-authorization-key` |
 | **saveNode** | Save nodes informations to reuse on next requests. (Saved only locally) | `blip saveNode -n papagaio@msging.net -a some-authorization-key` |
 | **copy**   | Copy data (like documents, bucket, IA) from a bot to another | `blip copy -f papagaio --fromAuthorization some-authorization-key -t papagaio --toAuthorization some-authorization-key -c document` |
-| **export**   | Download the chatbot's data (like NLP model, tracks*, bucket*) to given directory. * not implemented yet| `blip export -a some-authorization-key -m nlpModel -o directory/to/download/` |
-| **export to excel** | Export chatbot data (like NLP model, tracks*, bucket*) to given directory in excel format. * not implemented yet| `blip export -a some-authorization-key -m nlpModel -o directory/to/download/ --excel file name (without extension) ` |
+| **export**   | Download the chatbot's data (like NLP model, tracks*, bucket*) to given directory. * not implemented yet | `blip export -a some-authorization-key -m nlpModel -o directory/to/download/` |
+| **export to excel** | Export chatbot data (like NLP model, tracks*, bucket*) to given directory in excel format. * not implemented yet | `blip export -a some-authorization-key -m nlpModel -o directory/to/download/ --excel file name (without extension) ` |
+| **nlp import** | Import a NLP model from local files to given chatbot in BLiP. | `blip nlp-import -a some-authorization-key --ip intents-file --ep entities-file --ap intents-anwsers-file` |
+| **nlp analyse** | Test your chatbot NLP model using a newline separated phrases as input, reporting results (intents and entitites) in local file | `blip analyse -a some-authorization-key -i input-file -o report-output-file` |
+| **nlp analyse with content** | (Only for chatbot using Take.ContentProvider) Test your chatbot NLP model using a newline separated phrases as input, reporting results (intents, entitites and **answers**) in local file | `blip analyse -a some-authorization-key -i input-file -o report-output-file --check` |
 
 Building from source
 --------------------
