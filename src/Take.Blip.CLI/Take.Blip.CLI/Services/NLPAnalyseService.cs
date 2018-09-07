@@ -12,6 +12,7 @@ using Take.BlipCLI.Models;
 using Take.BlipCLI.Services;
 using Take.BlipCLI.Services.Interfaces;
 using Take.ContentProvider.Domain.Contract.Enums;
+using Take.ContentProvider.Domain.Contract.Interfaces;
 using Take.ContentProvider.Domain.Contract.Model;
 using Take.ContentProvider.Infra.Bucket;
 using Takenet.Iris.Messaging.Resources.ArtificialIntelligence;
@@ -25,6 +26,8 @@ namespace Take.BlipCLI.Services
         private readonly IInternalLogger _logger;
 
         private static object _locker = new object();
+        private static int _count = 0;
+        private static int _total = 0;
 
         public NLPAnalyseService(
             IBlipClientFactory blipClientFactory,
@@ -53,7 +56,7 @@ namespace Take.BlipCLI.Services
 
             var bucketStorage = new BucketStorage("Key " + authorization);
             var contentProvider = new Take.ContentProvider.ContentProvider(bucketStorage, 5);
-
+            var doContentCheck = true;
             var client = _blipClientFactory.GetInstanceForAI(authorization);
 
             _logger.LogDebug("\tCarregando intencoes...");
@@ -82,142 +85,130 @@ namespace Take.BlipCLI.Services
                 isPhrase = true;
             }
 
-            var resultDataList = new List<AnalysisResultData>();
-
-            string EntitiesToString(List<EntityResponse> entities)
-            {
-                if (entities == null || entities.Count < 1)
-                    return string.Empty;
-                var toString = string.Join(", ", entities.Select(e => $"{e.Id}:{e.Value}"));
-                return toString;
-            }
-
-            #region Methods
-            async Task<(string, AnalysisResponse)> AnalyseForMetrics(string request)
-            {
-                var response = await client.AnalyseForMetrics(request);
-                return (request, response);
-            }
-
-            (string, AnalysisResponse) CheckResponse((string request, AnalysisResponse response) tuple)
-            {
-                var item = tuple.response;
-                if (item == null)
-                {
-                    _logger.LogError($"Error when analysing: \"{tuple.request}\"");
-                    return tuple;
-                }
-                return tuple;
-            }
-
-            async Task<(string, AnalysisResponse, ContentResult)> GetContent((string request, AnalysisResponse response) tuple)
-            {
-                var intentId = tuple.response.Intentions?[0].Id;
-                var intentName = allIntents.FirstOrDefault(i => i.Id == intentId)?.Name;
-                var entites = tuple.response.Entities?.Select(e => e.Value).ToList();
-                var content = await contentProvider.GetAsync(intentName, entites);
-
-                return (tuple.request, tuple.response, content);
-            }
-
-            void BuildResult((string r, AnalysisResponse a, ContentResult c) tuple)
-            {
-                var input = tuple.r;
-                var analysis = tuple.a;
-                var content = tuple.c;
-
-                if (analysis == null)
-                    return;
-
-                var resultData = new AnalysisResultData
-                {
-                    Input = input,
-                    Intent = analysis.Intentions?[0].Id,
-                    Confidence = analysis.Intentions?[0].Score,
-                    Entities = EntitiesToString(analysis.Entities?.ToList()),
-                };
-
-                if (content != null)
-                {
-                    resultData.Answer = ExtractAnswer(content);
-                }
-
-                resultDataList.Add(resultData);
-
-                _logger.LogTrace($"\"{resultData.Input}\"\t{resultData.Intent}:{resultData.Confidence:P}\t{resultData.Entities}\t{CropText(resultData.Answer, 50)}");
-            }
-            #endregion
-
             var options = new ExecutionDataflowBlockOptions
             {
                 BoundedCapacity = DataflowBlockOptions.Unbounded,
-                MaxDegreeOfParallelism = 20
+                MaxDegreeOfParallelism = 20,
+                
             };
 
-            var analyseBlock = new TransformBlock<string, (string, AnalysisResponse)>((Func<string, Task<(string, AnalysisResponse)>>)AnalyseForMetrics, options);
-            var checkBlock = new TransformBlock<(string, AnalysisResponse), (string, AnalysisResponse)>((Func<(string, AnalysisResponse), (string, AnalysisResponse)>)CheckResponse, options);
-            var contentBlock = new TransformBlock<(string, AnalysisResponse), (string, AnalysisResponse, ContentResult)>((Func<(string, AnalysisResponse), Task<(string, AnalysisResponse, ContentResult)>>)GetContent, options);
-            var showResultBlock = new ActionBlock<(string, AnalysisResponse, ContentResult)>((Action<(string, AnalysisResponse, ContentResult)>)BuildResult, options);
-
-            analyseBlock.LinkTo(checkBlock, new DataflowLinkOptions
+            var analyseBlock = new TransformBlock<NLPAnalyseDataBlock, NLPAnalyseDataBlock>((Func<NLPAnalyseDataBlock, Task<NLPAnalyseDataBlock>>)AnalyseForMetrics, options);
+            var checkBlock = new TransformBlock<NLPAnalyseDataBlock, NLPAnalyseDataBlock>((Func<NLPAnalyseDataBlock, NLPAnalyseDataBlock>)CheckResponse, options);
+            var contentBlock = new TransformBlock<NLPAnalyseDataBlock, NLPAnalyseDataBlock>((Func<NLPAnalyseDataBlock, Task<NLPAnalyseDataBlock>>)GetContent, options);
+            var showResultBlock = new ActionBlock<NLPAnalyseDataBlock>(BuildResult, new ExecutionDataflowBlockOptions
             {
-                PropagateCompletion = true
-            });
-            checkBlock.LinkTo(contentBlock, new DataflowLinkOptions
-            {
-                PropagateCompletion = true
-            });
-            contentBlock.LinkTo(showResultBlock, new DataflowLinkOptions
-            {
-                PropagateCompletion = true
+                BoundedCapacity = DataflowBlockOptions.Unbounded,
+                MaxMessagesPerTask = 1
             });
 
+            analyseBlock.LinkTo(checkBlock, new DataflowLinkOptions { PropagateCompletion = true });
+            checkBlock.LinkTo(contentBlock, new DataflowLinkOptions { PropagateCompletion = true });
+            contentBlock.LinkTo(showResultBlock, new DataflowLinkOptions { PropagateCompletion = true });
 
-            var inputList = await GetInputList(isPhrase, inputSource);
-            List<string> elements100;
-            int chunkSize = 5;
-            int skip = 0;
-            int total = 0;
+            _count = 0;
 
-            while ((elements100 = inputList.Skip(skip).Take(chunkSize).ToList()).Any())
+            var inputList = await GetInputList(isPhrase, inputSource, client, reportOutput, allIntents, contentProvider, doContentCheck);
+            _total = inputList.Count;
+            foreach (var input in inputList)
             {
-                skip += chunkSize;
-                total += elements100.Count;
-                _logger.LogDebug($"\t\tProcessando {elements100.Count} - {total}/{inputList.Count}");
-
-                resultDataList.Clear();
-
-                foreach (var input in elements100)
-                {
-                    await analyseBlock.SendAsync(input);
-                }
-
-                analyseBlock.Complete();
-                await showResultBlock.Completion;
-
-                var report = new NLPAnalyseReport
-                {
-                    ResultData = resultDataList,
-                    FullReportFileName = reportOutput
-                };
-
-                await _fileService.WriteAnalyseReportAsync(report, true);
-                
+                await analyseBlock.SendAsync(input);
             }
+
+            analyseBlock.Complete();
+            await showResultBlock.Completion;
 
             _logger.LogDebug("TERMINOU!");
 
         }
 
-        private async Task<List<string>> GetInputList(bool isPhrase, string inputSource)
+
+        #region DataFlow Block Methods
+        private async Task<NLPAnalyseDataBlock> AnalyseForMetrics(NLPAnalyseDataBlock dataBlock)
+        {
+            var response = await dataBlock.AIClient.AnalyseForMetrics(dataBlock.Input);
+            dataBlock.NLPAnalysisResponse = response;
+            return dataBlock;
+        }
+
+        private NLPAnalyseDataBlock CheckResponse(NLPAnalyseDataBlock dataBlock)
+        {
+            var item = dataBlock.NLPAnalysisResponse;
+            if (item == null)
+            {
+                _logger.LogError($"Error when analysing: \"{dataBlock.Input}\"");
+                return dataBlock;
+            }
+            return dataBlock;
+        }
+
+        private async Task<NLPAnalyseDataBlock> GetContent(NLPAnalyseDataBlock dataBlock)
+        {
+            if (dataBlock.DoContentCheck)
+            {
+                var intentId = dataBlock.NLPAnalysisResponse.Intentions?[0].Id;
+                var intentName = dataBlock.AllIntents.FirstOrDefault(i => i.Id == intentId)?.Name;
+                var entites = dataBlock.NLPAnalysisResponse.Entities?.Select(e => e.Value).ToList();
+                dataBlock.ContentFromProvider = await dataBlock.ContentProvider.GetAsync(intentName, entites);
+            }
+            return dataBlock;
+        }
+
+        private async Task BuildResult(NLPAnalyseDataBlock dataBlock)
+        {
+            lock(_locker)
+            {
+                _count++;
+                if(_count % 100 == 0)
+                {
+                    _logger.LogDebug($"{_count}/{_total}");
+                }
+            }
+
+            var input = dataBlock.Input;
+            var analysis = dataBlock.NLPAnalysisResponse;
+            var content = dataBlock.ContentFromProvider;
+
+            if (analysis == null)
+                return;
+
+            var resultData = new NLPAnalyseReportDataLine
+            {
+                Id = dataBlock.Id,
+                Input = input,
+                Intent = analysis.Intentions?[0].Id,
+                Confidence = analysis.Intentions?[0].Score,
+                Entities = analysis.Entities?.ToList().ToReportString(),
+            };
+
+            if (content != null)
+            {
+                resultData.Answer = ExtractAnswer(content);
+            }
+
+            var report = new NLPAnalyseReport
+            {
+                ReportDataLines = new List<NLPAnalyseReportDataLine> { resultData },
+                FullReportFileName = dataBlock.ReportOutputFile
+            };
+
+            await _fileService.WriteAnalyseReportAsync(report, true);
+
+            _logger.LogTrace($"\"{resultData.Input}\"\t{resultData.Intent}:{resultData.Confidence:P}\t{resultData.Entities}\t{CropText(resultData.Answer, 50)}");
+        }
+        #endregion
+
+        private async Task<List<NLPAnalyseDataBlock>> GetInputList(bool isPhrase, string inputSource, IBlipAIClient client, string reportOutput, List<Intention> intentions, IContentProvider provider, bool doContentCheck)
         {
             if (isPhrase)
             {
-                return new List<string> { inputSource };
+                return new List<NLPAnalyseDataBlock> { NLPAnalyseDataBlock.GetInstance(1, inputSource, client, reportOutput, doContentCheck, intentions, provider) };
             }
             else
             {
-                return await _fileService.GetInputsToAnalyseAsync(inputSource);
+                var inputListAsString = await _fileService.GetInputsToAnalyseAsync(inputSource);
+                return inputListAsString
+                    .Select((s, i) => NLPAnalyseDataBlock.GetInstance(i + 1, s, client, reportOutput, doContentCheck, intentions, provider))
+                    .ToList();
             }
         }
 

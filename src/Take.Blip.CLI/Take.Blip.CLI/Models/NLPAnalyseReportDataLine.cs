@@ -4,8 +4,9 @@ using System.Text;
 
 namespace Take.BlipCLI.Models
 {
-    public class AnalysisResultData
+    public class NLPAnalyseReportDataLine
     {
+        public int Id { get; set; }
         public string Input { get; set; }
         public string Intent { get; set; }
         public double? Confidence { get; set; }
