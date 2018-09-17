@@ -44,14 +44,14 @@ namespace Take.BlipCLI
                 pingCommand.Handler(pingHandler.Run);
 
                 var blipConfigurationHandler = ServiceProvider.GetService<BlipConfigurationHandler>();
-                var configurationCommand = app.Command("config");
+                var qrCodeCommand = app.Command("qrcode");
                 blipConfigurationHandler.Verbose = _verbose;
-                blipConfigurationHandler.Node = configurationCommand.Parameter<string>("n").Alias("node").HelpText("Node to get QR Code for");
-                blipConfigurationHandler.Payload = configurationCommand.Parameter<string>("p").Alias("payload").HelpText("Payload QR Code will send to bot when activated");
+                blipConfigurationHandler.Node = qrCodeCommand.Parameter<string>("n").Alias("node").HelpText("Node to get QR Code for");
+                blipConfigurationHandler.Payload = qrCodeCommand.Parameter<string>("p").Alias("payload").HelpText("Payload QR Code will send to bot when activated");
                 blipConfigurationHandler.Download = app.Switch("d").Alias("download").HelpText("Saves qr.png copy of the QR Code");
-                blipConfigurationHandler.Authorization = configurationCommand.Parameter<string>("a").Alias("authorization").HelpText("Bot authorization key");
-                configurationCommand.HelpText("Generates a payload-compatible QR Code for Messenger Bots");
-                configurationCommand.Handler(blipConfigurationHandler.Run);
+                blipConfigurationHandler.Authorization = qrCodeCommand.Parameter<string>("a").Alias("authorization").HelpText("Bot authorization key");
+                qrCodeCommand.HelpText("Generates a payload-compatible QR Code for Messenger Bots");
+                qrCodeCommand.Handler(blipConfigurationHandler.Run);
 
                 var nlpImportHandler = new NLPImportHandler();
                 var nlpImportCommand = app.Command("nlp-import");
