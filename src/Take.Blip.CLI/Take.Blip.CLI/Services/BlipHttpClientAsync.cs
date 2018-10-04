@@ -420,7 +420,7 @@ namespace Take.BlipCLI.Services
                         }
 
                         //Questions
-                        uri = Uri.EscapeUriString($"/intentions/{intention.Id}/questions");
+                        uri = Uri.EscapeUriString($"/intentions/{intention.Id}/questions?$take=5000");
                         commandBase.Uri = new LimeUri(uri);
                         envelopeResult = await GetCommandResultAsync(commandBase);
                         if (envelopeResult.Status != CommandStatus.Failure)
