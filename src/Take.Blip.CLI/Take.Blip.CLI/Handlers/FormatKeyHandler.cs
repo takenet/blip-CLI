@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using Take.BlipCLI.Services;
+using Take.BlipCLI.Services.Interfaces;
 
 namespace Take.BlipCLI.Handlers
 {
@@ -12,6 +13,11 @@ namespace Take.BlipCLI.Handlers
         public INamedParameter<string> Identifier { get; set; }
         public INamedParameter<string> AccessKey { get; set; }
         public INamedParameter<string> Authorization { get; set; }
+
+        public FormatKeyHandler(IInternalLogger logger) : base(logger)
+        {
+
+        }
 
         public override Task<int> RunAsync(string[] args)
         {

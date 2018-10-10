@@ -24,9 +24,9 @@ You can download the BLiP CLI as a zip file. The zip file contains both the .NET
 
 | Platform | Latest Build <br>*master*<br> |
 | -------- | :----------------------------: |
-| **Windows x64** | [zip](https://github.com/takenet/blip-CLI/releases/tag/0.1.0) |
-| **Windows x86** | [zip](https://github.com/takenet/blip-CLI/releases/tag/0.1.0) |
-| **Linux x64** | [Ubuntu zip](https://github.com/takenet/blip-CLI/releases/tag/0.1.0) |
+| **Windows x64** | [zip](https://github.com/takenet/blip-CLI/releases/tag/0.2.0) |
+| **Windows x86** | [zip](https://github.com/takenet/blip-CLI/releases/tag/0.2.0) |
+| **Linux x64** | [Ubuntu zip](https://github.com/takenet/blip-CLI/releases/tag/0.2.0) |
 | **macOS** | *coming soon* |
 
 
@@ -38,6 +38,11 @@ Main features
 | **formatKey** | Returns authorization key (or access key) from an access key (authorization key)  | `blip formatKey -i testehttppost -a some-authorization-key` |
 | **saveNode** | Save nodes informations to reuse on next requests. (Saved only locally) | `blip saveNode -n papagaio@msging.net -a some-authorization-key` |
 | **copy**   | Copy data (like documents, bucket, IA) from a bot to another | `blip copy -f papagaio --fromAuthorization some-authorization-key -t papagaio --toAuthorization some-authorization-key -c document` |
+| **export**   | Download the chatbot's data (like NLP model, tracks*, bucket*) to given directory. * not implemented yet | `blip export -a some-authorization-key -m nlpModel -o directory/to/download/` |
+| **export to excel** | Export chatbot data (like NLP model, tracks*, bucket*) to given directory in excel format. * not implemented yet | `blip export -a some-authorization-key -m nlpModel -o directory/to/download/ --excel file name (without extension) ` |
+| **nlp import** | Import a NLP model from local files to given chatbot in BLiP. | `blip nlp-import -a some-authorization-key --ip intents-file --ep entities-file --ap intents-anwsers-file` |
+| **nlp analyse** | Test your chatbot NLP model using a newline separated phrases as input, reporting results (intents and entitites) in local file **cause costs, check your provider** | `blip analyse -a some-authorization-key -i input-file -o report-output-file` |
+| **nlp analyse with content** | (Only for chatbot using Take.ContentProvider) Test your chatbot NLP model using a newline separated phrases as input, reporting results (intents, entitites and **answers**) in local file **cause costs, check your provider** | `blip analyse -a some-authorization-key -i input-file -o report-output-file --check` |
 | **export**   | Download the chatbot's data (like NLP model, tracks*, bucket*) to given directory. * not implemented yet| `blip export -a some-authorization-key -m nlpModel -o directory/to/download/` |
 | **export to excel** | Export chatbot data (like NLP model, tracks*, bucket*) to given directory in excel format. * not implemented yet| `blip export -a some-authorization-key -m nlpModel -o directory/to/download/ --excel file name (without extension) ` |
 | **qrcode** | Generates a payload-enabled (optional) QR Code for a chatbot published on Facebook Messenger. `-d` downloads a copy of the QR Code | `blip qrcode -a [botKey] -n [botIdentifier] -p [payload] -d` |

@@ -378,7 +378,7 @@ namespace Take.BlipCLI.Services
             }
         }
 
-        public async Task<List<Intention>> GetAllIntents(bool verbose = false, bool justIds = false)
+        public async Task<List<Intention>> GetAllIntentsAsync(bool verbose = false, bool justIds = false)
         {
             var intentsList = new List<Intention>();
 
@@ -423,7 +423,7 @@ namespace Take.BlipCLI.Services
                         }
 
                         //Questions
-                        uri = Uri.EscapeUriString($"/intentions/{intention.Id}/questions");
+                        uri = Uri.EscapeUriString($"/intentions/{intention.Id}/questions?$take=5000");
                         commandBase.Uri = new LimeUri(uri);
                         envelopeResult = await GetCommandResultAsync(commandBase);
                         if (envelopeResult.Status != CommandStatus.Failure)

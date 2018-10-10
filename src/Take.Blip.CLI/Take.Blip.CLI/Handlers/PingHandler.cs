@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using Take.BlipCLI.Services;
+using Take.BlipCLI.Services.Interfaces;
 
 namespace Take.BlipCLI.Handlers
 {
@@ -11,6 +12,11 @@ namespace Take.BlipCLI.Handlers
     {
         private string VALID_AUTHORIZATION = "dGVzdGVodHRwcG9zdDpzQ3Q4RkEwT3ZMQ1J0UVlHaGd4SA==";
         public INamedParameter<string> Node { get; set; }
+
+        public PingHandler(IInternalLogger logger) : base(logger)
+        {
+
+        }
 
         public override async Task<int> RunAsync(string[] args)
         {

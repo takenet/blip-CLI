@@ -20,8 +20,10 @@ namespace Take.BlipCLI.Handlers
         public INamedParameter<string> Input { get; set; }
         public INamedParameter<string> Authorization { get; set; }
         public INamedParameter<string> ReportOutput { get; set; }
+        public ISwitch DoContentCheck { get; set; }
+        
 
-        public NLPAnalyseHandler(INLPAnalyseService analyseService)
+        public NLPAnalyseHandler(INLPAnalyseService analyseService, IInternalLogger logger) : base(logger)
         {
             _analyseService = analyseService;
         }
@@ -36,12 +38,13 @@ namespace Take.BlipCLI.Handlers
 
             if (!ReportOutput.IsSet)
                 throw new ArgumentNullException("You must provide the full output's report file name for this action. Use '-o' [--output] parameters");
-
+            
             var authorization = Authorization.Value;
             var inputData = Input.Value;
             var fullFileName = ReportOutput.Value;
+            var doContentCheck = DoContentCheck.IsSet;
 
-            await _analyseService.AnalyseAsync(authorization, inputData, fullFileName);
+            await _analyseService.AnalyseAsync(authorization, inputData, fullFileName, doContentCheck);
 
             return 0;
         }

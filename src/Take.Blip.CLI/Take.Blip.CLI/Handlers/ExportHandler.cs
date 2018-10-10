@@ -28,7 +28,8 @@ namespace Take.BlipCLI.Handlers
         public ExportHandler(
             IBlipClientFactory blipClientFactory,
             IExcelGeneratorService excelGeneratorService,
-            IExportServiceFactory exportServiceFactory)
+            IExportServiceFactory exportServiceFactory,
+            IInternalLogger logger) : base(logger)
         {
             _settingsFile = new SettingsFile();
             BlipClientFactory = blipClientFactory;

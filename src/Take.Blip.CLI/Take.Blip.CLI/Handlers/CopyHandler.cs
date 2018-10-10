@@ -20,13 +20,13 @@ namespace Take.BlipCLI.Handlers
         public INamedParameter<string> To { get; set; }
         public INamedParameter<string> ToAuthorization { get; set; }
         public INamedParameter<List<BucketNamespace>> Contents { get; set; }
-        
+
 
         private readonly ISettingsFile _settingsFile;
 
         private readonly IBlipClientFactory _blipAIClientFactory;
 
-        public CopyHandler(IBlipClientFactory blipAIClientFactory)
+        public CopyHandler(IBlipClientFactory blipAIClientFactory, IInternalLogger logger) : base(logger)
         {
             _settingsFile = new SettingsFile();
             _blipAIClientFactory = blipAIClientFactory;
@@ -91,7 +91,7 @@ namespace Take.BlipCLI.Handlers
                 LogVerboseLine("\t> Deleting all entities and intents from target");
 
                 var tEntities = await targetBlipAIClient.GetAllEntities();
-                var tIntents = await targetBlipAIClient.GetAllIntents(justIds: true);
+                var tIntents = await targetBlipAIClient.GetAllIntentsAsync(justIds: true);
 
                 await DeleteEntitiesAsync(targetBlipAIClient, tEntities);
                 await DeleteIntentsAsync(targetBlipAIClient, tIntents);
@@ -102,7 +102,7 @@ namespace Take.BlipCLI.Handlers
             LogVerbose("\t>>> ");
             var entities = await sourceBlipAIClient.GetAllEntities(verbose: Verbose.IsSet);
             LogVerbose("\t>>> ");
-            var intents = await sourceBlipAIClient.GetAllIntents(verbose: Verbose.IsSet);
+            var intents = await sourceBlipAIClient.GetAllIntentsAsync(verbose: Verbose.IsSet);
 
             LogVerboseLine("\t> Copying AI Model to target: ");
 
@@ -232,9 +232,9 @@ namespace Take.BlipCLI.Handlers
             return null;
         }
 
-     
+
 
     }
 
-    
+
 }

@@ -19,11 +19,11 @@ namespace Take.BlipCLI.Handlers
         public INamedParameter<string> IntentsFilePath { get; set; }
         public INamedParameter<string> EntitiesFilePath { get; set; }
         public INamedParameter<string> AnswersFilePath { get; set; }
-        
+
         private readonly ISettingsFile _settingsFile;
         private IBlipAIClient _blipAIClient;
 
-        public NLPImportHandler()
+        public NLPImportHandler(IInternalLogger logger) : base(logger)
         {
             _settingsFile = new SettingsFile();
         }
@@ -158,7 +158,7 @@ namespace Take.BlipCLI.Handlers
             foreach (var intentionKey in answersMap.Keys)
             {
                 var intention = intentions.FirstOrDefault(i => i.Name == intentionKey);
-                if(intention == null)
+                if (intention == null)
                 {
                     Console.WriteLine($"{intentionKey} not present in intentions list.");
                     continue;
@@ -170,7 +170,7 @@ namespace Take.BlipCLI.Handlers
                 await _blipAIClient.AddAnswers(intention.Id, answersArray);
 
             }
-            
+
         }
 
         private async Task ImportEntities()
@@ -183,7 +183,7 @@ namespace Take.BlipCLI.Handlers
                 //  Prior to loading the CSV file, indicate that the 1st row
                 //  should be treated as column names:
                 HasColumnNames = true,
-                
+
             };
 
             //  Load the CSV records from the entites file:
@@ -208,7 +208,7 @@ namespace Take.BlipCLI.Handlers
                 var entity = new EntityValues
                 {
                     Name = value,
-                    Synonymous = synonymousList.Length == 0 ?  null : synonymousList.ToArray()
+                    Synonymous = synonymousList.Length == 0 ? null : synonymousList.ToArray()
                 };
 
                 entitiesValuesList.Add(entity);

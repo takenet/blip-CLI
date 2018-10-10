@@ -25,9 +25,12 @@ namespace Take.BlipCLI.Handlers
         public INamedParameter<string> Bot2Path { get; internal set; }
         public bool IsVerbose { get => Verbose.IsSet; }
 
-        public NLPCompareHandler(IStringService stringService)
+        public NLPCompareHandler(
+            IStringService stringService,
+            IInternalLogger logger
+            ) : base(logger)
         {
-            this._stringService = stringService;
+            _stringService = stringService;
         }
 
         public override async Task<int> RunAsync(string[] args)
@@ -55,21 +58,21 @@ namespace Take.BlipCLI.Handlers
 
             var fileFullName = $"report_{now.ToString("yyyyMMdd_hhmm")}.txt";
             Directory.CreateDirectory(OutputFilePath.Value);
-            var sw = new StreamWriter(Path.Combine(OutputFilePath.Value, fileFullName));
-            foreach (var result in report)
+            using (var sw = new StreamWriter(Path.Combine(OutputFilePath.Value, fileFullName)))
             {
-                sw.WriteLine($"Intention \"{result.Element1}\" is close to \"{result.Element2}\"");
-                sw.WriteLine($"Because: ");
-                foreach (var reason in result.Reasons)
+                foreach (var result in report)
                 {
-                    foreach (var example in reason.Examples)
+                    sw.WriteLine($"Intention \"{result.Element1}\" is close to \"{result.Element2}\"");
+                    sw.WriteLine($"Because: ");
+                    foreach (var reason in result.Reasons)
                     {
-                        sw.WriteLine($"\t{Enum.GetName(typeof(NLPModelComparationResultReasonType), reason.Reason)}:\t{example}");
+                        foreach (var example in reason.Examples)
+                        {
+                            sw.WriteLine($"\t{Enum.GetName(typeof(NLPModelComparationResultReasonType), reason.Reason)}:\t{example}");
+                        }
                     }
                 }
             }
-            sw.Close();
-
 
             return 0;
         }
@@ -178,7 +181,7 @@ namespace Take.BlipCLI.Handlers
             IBlipAIClient blipAIClient = new BlipHttpClientAsync(authKey);
 
             var entities = await blipAIClient.GetAllEntities(verbose: IsVerbose);
-            var intents = await blipAIClient.GetAllIntents(verbose: IsVerbose);
+            var intents = await blipAIClient.GetAllIntentsAsync(verbose: IsVerbose);
 
             return new NLPModel { BotId = authKey, Entities = entities, Intents = intents };
         }

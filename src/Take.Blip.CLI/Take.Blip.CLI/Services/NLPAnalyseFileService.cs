@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -12,6 +13,13 @@ namespace Take.BlipCLI.Services
 {
     public class NLPAnalyseFileService : IFileManagerService
     {
+        private readonly IInternalLogger _logger;
+
+        public NLPAnalyseFileService(IInternalLogger logger)
+        {
+            _logger = logger;
+        }
+
         public void CreateDirectoryIfNotExists(string fullFileName)
         {
             var path = Path.GetDirectoryName(fullFileName);
@@ -21,21 +29,29 @@ namespace Take.BlipCLI.Services
 
         public async Task<List<string>> GetInputsToAnalyseAsync(string pathToFile)
         {
-            var inputToAnalyse = new List<string>();
+            int totalLines = 0;
+            int totalInputs = 0;
+            int totalDistincts = 0;
+            var inputsToAnalyse = new List<string>();
             using (var reader = new StreamReader(pathToFile, detectEncodingFromByteOrderMarks: true))
             {
                 var line = "";
                 while ((line = (await reader.ReadLineAsync())) != null)
                 {
+                    totalLines++;
                     line = line.Trim();
-                    if (string.IsNullOrWhiteSpace(line))
+                    if (string.IsNullOrWhiteSpace(line)) 
                         continue;
-                    inputToAnalyse.Add(line);
+                    totalInputs++;
+                    inputsToAnalyse.Add(line);
                 }
             }
-            inputToAnalyse = inputToAnalyse.Distinct().ToList();
+            inputsToAnalyse = inputsToAnalyse.Distinct().ToList();
+            totalDistincts = inputsToAnalyse.Count;
 
-            return inputToAnalyse;
+            _logger.LogDebug($"Distinct/Inputs: {totalDistincts}/{totalInputs} - Total Lines: {totalLines}");
+
+            return inputsToAnalyse;
         }
 
         public bool IsDirectory(string pathToFile)
@@ -48,24 +64,24 @@ namespace Take.BlipCLI.Services
             return File.Exists(pathToFile);
         }
 
-        public async Task WriteAnalyseReportAsync(NLPAnalyseReport analyseReport)
+        public async Task WriteAnalyseReportAsync(NLPAnalyseReport analyseReport, bool append = false)
         {
-            var sortedAnalysis = analyseReport.AnalysisResponses.OrderBy(a => a.Text);
-            using (var writer = new StreamWriter(analyseReport.FullReportFileName))
+            bool writeHeader = !File.Exists(analyseReport.FullReportFileName);
+            using (var writer = new StreamWriter(analyseReport.FullReportFileName, append))
             {
-                await writer.WriteLineAsync("Text\tIntentionId\tIntentionScore\tEntities");
-                foreach (var item in sortedAnalysis)
+                if(writeHeader) await writer.WriteLineAsync("Id\tText\tIntentionId\tIntentionScore\tEntities\tAnswer");
+                foreach (var item in analyseReport.ReportDataLines)
                 {
                     await writer.WriteLineAsync(AnalysisResponseToString(item));
                 }
             }
         }
 
-        private string AnalysisResponseToString(AnalysisResponse analysis)
+        private string AnalysisResponseToString(NLPAnalyseReportDataLine reportDataLine)
         {
-            var intention = analysis.Intentions?[0];
-            var entities = analysis.Entities;
-            return $"{analysis.Text}\t{intention?.Id}\t{intention?.Score:P}\t{EntitiesToString(entities?.ToList())}";
+            var intention = reportDataLine.Intent;
+            var entities = reportDataLine.Entities;
+            return $"{reportDataLine.Id}\t{reportDataLine.Input}\t{intention}\t{reportDataLine.Confidence:P}\t{entities}\t\"{reportDataLine.Answer}\"";
         }
 
         private string EntitiesToString(List<EntityResponse> entities)

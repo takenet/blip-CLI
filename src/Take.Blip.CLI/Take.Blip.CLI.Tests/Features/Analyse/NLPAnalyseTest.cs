@@ -30,10 +30,10 @@ namespace Take.Blip.CLI.Tests.Features.Analyse
             blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(authKey))).Returns(blipAIClient);
             var fileService = Substitute.For<IFileManagerService>();
 
-            var logger = Substitute.For<ILogger>();
+            var logger = Substitute.For<IInternalLogger>();
             var analyseService = new NLPAnalyseService(blipAIClientFactory, fileService, logger);
 
-            var handler = new NLPAnalyseHandler(analyseService)
+            var handler = new NLPAnalyseHandler(analyseService, logger)
             {
                 Authorization = new MyNamedParameter<string> { Value = null },
                 Input = new MyNamedParameter<string> { Value = null },
@@ -74,15 +74,17 @@ namespace Take.Blip.CLI.Tests.Features.Analyse
             blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(authKey))).Returns(blipAIClient);
             var fileService = Substitute.For<IFileManagerService>();
 
-            var logger = Substitute.For<ILogger>();
+            var logger = Substitute.For<IInternalLogger>();
             var analyseService = new NLPAnalyseService(blipAIClientFactory, fileService, logger);
 
-            var handler = new NLPAnalyseHandler(analyseService)
+            var handler = new NLPAnalyseHandler(analyseService, logger)
             {
                 Authorization = new MyNamedParameter<string> { Value = authKey },
                 Input = new MyNamedParameter<string> { Value = null },
                 ReportOutput = new MyNamedParameter<string> { Value = string.Empty },
-                Verbose = new MySwitch { IsSet = false }
+                Verbose = new MySwitch { IsSet = false },
+                VeryVerbose = new MySwitch { IsSet = false },
+                DoContentCheck = new MySwitch { IsSet = false }
             };
 
             //Act
@@ -119,15 +121,16 @@ namespace Take.Blip.CLI.Tests.Features.Analyse
             blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(authKey))).Returns(blipAIClient);
             var fileService = Substitute.For<IFileManagerService>();
 
-            var logger = Substitute.For<ILogger>();
+            var logger = Substitute.For<IInternalLogger>();
             var analyseService = new NLPAnalyseService(blipAIClientFactory, fileService, logger);
 
-            var handler = new NLPAnalyseHandler(analyseService)
+            var handler = new NLPAnalyseHandler(analyseService, logger)
             {
                 Authorization = new MyNamedParameter<string> { Value = authKey },
                 Input = new MyNamedParameter<string> { Value = string.Empty },
                 ReportOutput = new MyNamedParameter<string> { Value = string.Empty },
-                Verbose = new MySwitch { IsSet = false }
+                Verbose = new MySwitch { IsSet = false },
+                DoContentCheck = new MySwitch { IsSet = false },
             };
 
             //Act
@@ -166,15 +169,17 @@ namespace Take.Blip.CLI.Tests.Features.Analyse
             fileService.IsDirectory(input).Returns(true);
             fileService.IsFile(input).Returns(false);
 
-            var logger = Substitute.For<ILogger>();
+            var logger = Substitute.For<IInternalLogger>();
             var analyseService = new NLPAnalyseService(blipAIClientFactory, fileService, logger);
 
-            var handler = new NLPAnalyseHandler(analyseService)
+            var handler = new NLPAnalyseHandler(analyseService, logger)
             {
                 Authorization = new MyNamedParameter<string> { Value = authKey },
                 Input = new MyNamedParameter<string> { Value = input },
                 ReportOutput = new MyNamedParameter<string> { Value = string.Empty },
-                Verbose = new MySwitch { IsSet = false }
+                Verbose = new MySwitch { IsSet = false },
+                VeryVerbose = new MySwitch { IsSet = false },
+                DoContentCheck = new MySwitch { IsSet = false },
             };
 
             //Act
@@ -217,15 +222,17 @@ namespace Take.Blip.CLI.Tests.Features.Analyse
             blipAIClientFactory.GetInstanceForAI(Arg.Is<string>(s => s.Equals(authKey))).Returns(blipAIClient);
             var fileService = Substitute.For<IFileManagerService>();
 
-            var logger = Substitute.For<ILogger>();
+            var logger = Substitute.For<IInternalLogger>();
             var analyseService = new NLPAnalyseService(blipAIClientFactory, fileService, logger);
 
-            var handler = new NLPAnalyseHandler(analyseService)
+            var handler = new NLPAnalyseHandler(analyseService, logger)
             {
                 Authorization = new MyNamedParameter<string> { Value = authKey },
                 Input = new MyNamedParameter<string> { Value = input },
                 ReportOutput = new MyNamedParameter<string> { Value = output },
-                Verbose = new MySwitch { IsSet = false }
+                Verbose = new MySwitch { IsSet = false },
+                VeryVerbose = new MySwitch { IsSet = false },
+                DoContentCheck = new MySwitch { IsSet = false }
             };
 
             //Act
@@ -259,15 +266,16 @@ namespace Take.Blip.CLI.Tests.Features.Analyse
             fileService.IsFile(input).Returns(true);
             fileService.GetInputsToAnalyseAsync(input).Returns(inputList);
 
-            var logger = Substitute.For<ILogger>();
+            var logger = Substitute.For<IInternalLogger>();
             var analyseService = new NLPAnalyseService(blipAIClientFactory, fileService, logger);
 
-            var handler = new NLPAnalyseHandler(analyseService)
+            var handler = new NLPAnalyseHandler(analyseService, logger)
             {
                 Authorization = new MyNamedParameter<string> { Value = authKey },
                 Input = new MyNamedParameter<string> { Value = input },
                 ReportOutput = new MyNamedParameter<string> { Value = output },
-                Verbose = new MySwitch { IsSet = false }
+                Verbose = new MySwitch { IsSet = false },
+                DoContentCheck = new MySwitch { IsSet = false }
             };
 
             //Act
