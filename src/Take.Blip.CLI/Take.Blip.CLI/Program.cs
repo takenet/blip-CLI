@@ -166,9 +166,8 @@ namespace Take.BlipCLI
                             .AddSingleton<SaveNodeHandler>()
                             .AddSingleton<NLPImportHandler>()
                             .AddSingleton<PingHandler>()
-                            ;
-                            .AddSingleton<NLPAnalyseHandler>()
                             .AddSingleton<BlipConfigurationHandler>();
+                            ;
         }
 
         private static void RegisterBlipTypes()
