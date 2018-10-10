@@ -41,14 +41,16 @@ namespace Take.BlipCLI
 
                 var pingHandler = ServiceProvider.GetService<PingHandler>();
                 var pingCommand = app.Command("ping");
+                pingHandler.VeryVerbose = _veryVerbose;
+                pingHandler.Verbose = _verbose;
                 pingHandler.Node = pingCommand.Parameter<string>("n").Alias("node").HelpText("Node to ping");
                 pingCommand.HelpText("Ping a specific bot (node)");
                 pingCommand.Handler(pingHandler.Run);
 
-                var nlpImportHandler = ServiceProvider.GetService<NLPImportHandler>();
                 var blipConfigurationHandler = ServiceProvider.GetService<BlipConfigurationHandler>();
                 var qrCodeCommand = app.Command("qrcode");
                 blipConfigurationHandler.Verbose = _verbose;
+                blipConfigurationHandler.VeryVerbose = _veryVerbose;
                 blipConfigurationHandler.Node = qrCodeCommand.Parameter<string>("n").Alias("node").HelpText("Node to get QR Code for");
                 blipConfigurationHandler.Payload = qrCodeCommand.Parameter<string>("p").Alias("payload").HelpText("Payload QR Code will send to bot when activated");
                 blipConfigurationHandler.Download = app.Switch("d").Alias("download").HelpText("Saves qr.png copy of the QR Code");
@@ -56,8 +58,10 @@ namespace Take.BlipCLI
                 qrCodeCommand.HelpText("Generates a payload-compatible QR Code for Messenger Bots");
                 qrCodeCommand.Handler(blipConfigurationHandler.Run);
 
-                var nlpImportHandler = new NLPImportHandler();
+                var nlpImportHandler = ServiceProvider.GetService<NLPImportHandler>();
                 var nlpImportCommand = app.Command("nlp-import");
+                nlpImportHandler.VeryVerbose = _veryVerbose;
+                nlpImportHandler.Verbose = _verbose;
                 nlpImportHandler.Node = nlpImportCommand.Parameter<string>("n").Alias("node").HelpText("Node to receive the data");
                 nlpImportHandler.Authorization = nlpImportCommand.Parameter<string>("a").Alias("authorization").HelpText("Node Authorization to receive the data");
                 nlpImportHandler.EntitiesFilePath = nlpImportCommand.Parameter<string>("ep").Alias("entities").HelpText("Path to entities file in CSV format");
@@ -68,19 +72,21 @@ namespace Take.BlipCLI
 
                 var copyHandler = ServiceProvider.GetService<CopyHandler>();
                 var copyCommand = app.Command("copy");
+                copyHandler.VeryVerbose = _veryVerbose;
+                copyHandler.Verbose = _verbose;
                 copyHandler.From = copyCommand.Parameter<string>("f").Alias("from").HelpText("Node (bot) source.");
                 copyHandler.To = copyCommand.Parameter<string>("t").Alias("to").HelpText("Node (bot) target");
                 copyHandler.FromAuthorization = copyCommand.Parameter<string>("fa").Alias("fromAuthorization").HelpText("Authorization key of source bot");
                 copyHandler.ToAuthorization = copyCommand.Parameter<string>("ta").Alias("toAuthorization").HelpText("Authorization key of target bot");
                 copyHandler.Contents = copyCommand.Parameter<List<BucketNamespace>>("c").Alias("contents").HelpText($"Define which contents will be copied. Examples: '{copyHandler.GetTypesListAsString<BucketNamespace>()}'").ParseUsing(copyHandler.CustomNamespaceParser);
-                copyHandler.Verbose = _verbose;
-                copyHandler.VeryVerbose = _veryVerbose;
                 copyHandler.Force = _force;
                 copyCommand.HelpText("Copy data from source bot (node) to target bot (node)");
                 copyCommand.Handler(copyHandler.Run);
 
                 var saveNodeHandler = ServiceProvider.GetService<SaveNodeHandler>();
                 var saveNodeCommand = app.Command("saveNode");
+                saveNodeHandler.VeryVerbose = _veryVerbose;
+                saveNodeHandler.Verbose = _verbose;
                 saveNodeHandler.Node = saveNodeCommand.Parameter<string>("n").Alias("node").HelpText("Node (bot) to be saved");
                 saveNodeHandler.AccessKey = saveNodeCommand.Parameter<string>("k").Alias("accessKey").HelpText("Node accessKey");
                 saveNodeHandler.Authorization = saveNodeCommand.Parameter<string>("a").Alias("authorization").HelpText("Node authoriaztion header");
@@ -89,6 +95,8 @@ namespace Take.BlipCLI
 
                 var formatKeyHandler = ServiceProvider.GetService<FormatKeyHandler>();
                 var formatKeyCommand = app.Command("formatKey").Alias("fk");
+                formatKeyHandler.VeryVerbose = _veryVerbose;
+                formatKeyHandler.Verbose = _verbose;
                 formatKeyHandler.Identifier = formatKeyCommand.Parameter<string>("i").Alias("identifier").HelpText("Bot identifier").Required();
                 formatKeyHandler.AccessKey = formatKeyCommand.Parameter<string>("k").Alias("accessKey").HelpText("Bot accessKey");
                 formatKeyHandler.Authorization = formatKeyCommand.Parameter<string>("a").Alias("authorization").HelpText("Bot authoriaztion header");
@@ -166,7 +174,7 @@ namespace Take.BlipCLI
                             .AddSingleton<SaveNodeHandler>()
                             .AddSingleton<NLPImportHandler>()
                             .AddSingleton<PingHandler>()
-                            .AddSingleton<BlipConfigurationHandler>();
+                            .AddSingleton<BlipConfigurationHandler>()
                             ;
         }
 

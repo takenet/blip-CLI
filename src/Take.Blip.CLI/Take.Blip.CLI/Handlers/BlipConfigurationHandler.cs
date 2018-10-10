@@ -15,7 +15,7 @@ namespace Take.BlipCLI.Handlers
         public INamedParameter<string> Payload { get; set; }
         public ISwitch Download { get; set; }
 
-        public BlipConfigurationHandler(IBlipClientFactory blipClientFactory)
+        public BlipConfigurationHandler(IBlipClientFactory blipClientFactory, IInternalLogger logger) : base(logger)
         {
             _blipClientFactory = blipClientFactory;
         }
