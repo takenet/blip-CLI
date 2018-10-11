@@ -43,6 +43,7 @@ Main features
 | **nlp import** | Import a NLP model from local files to given chatbot in BLiP. | `blip nlp-import -a some-authorization-key --ip intents-file --ep entities-file --ap intents-anwsers-file` |
 | **nlp analyse** | Test your chatbot NLP model using a newline separated phrases as input, reporting results (intents and entitites) in local file **cause costs, check your provider** | `blip analyse -a some-authorization-key -i input-file -o report-output-file` |
 | **nlp analyse with content** | (Only for chatbot using Take.ContentProvider) Test your chatbot NLP model using a newline separated phrases as input, reporting results (intents, entitites and **answers**) in local file **cause costs, check your provider** | `blip analyse -a some-authorization-key -i input-file -o report-output-file --check` |
+| **qrcode** | Generates a payload-enabled (optional) QR Code for a chatbot published on Facebook Messenger. `-d` downloads a copy of the QR Code | `blip qrcode -a [botKey] -n [botIdentifier] -p [payload] -d` |
 
 Building from source
 --------------------

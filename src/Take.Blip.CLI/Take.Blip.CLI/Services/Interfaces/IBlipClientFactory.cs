@@ -8,5 +8,6 @@ namespace Take.BlipCLI.Services.Interfaces
     {
         IBlipAIClient GetInstanceForAI(string authorizationKey);
         IBlipBucketClient GetInstanceForBucket(string authorizationKey);
+        IBlipConfigurationClient GetInstanceForConfiguration(string authorizationKey);
     }
 }
