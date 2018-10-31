@@ -1,4 +1,5 @@
 ﻿using ITGlobal.CommandLine;
+using Lime.Protocol;
 using Lime.Protocol.Serialization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -161,11 +162,9 @@ namespace Take.BlipCLI
         private static void RegisterBlipTypes()
         {
             TypeUtil.RegisterDocument<AnalysisResponse>();
-
             TypeUtil.RegisterDocument<Intention>();
             TypeUtil.RegisterDocument<Answer>();
             TypeUtil.RegisterDocument<Question>();
-
             TypeUtil.RegisterDocument<Entity>();
         }
 

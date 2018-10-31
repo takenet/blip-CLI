@@ -216,7 +216,7 @@ namespace Take.BlipCLI.Services
 
         private string ExtractAnswer(ContentResult content)
         {
-            return content.Status == ContentResultStatus.NotMatch ? "NotMatch" : GetContentText(content);
+            return content.Status == ContentResultStatus.Match ? GetContentText(content) : "NotMatch";
         }
 
         private string GetContentText(ContentResult content)
