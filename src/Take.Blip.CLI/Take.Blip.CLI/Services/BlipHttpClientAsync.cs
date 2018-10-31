@@ -2,9 +2,12 @@
 using Lime.Protocol;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
+using Newtonsoft.Json;
+using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -16,7 +19,7 @@ using Takenet.Iris.Messaging.Resources.ArtificialIntelligence;
 
 namespace Take.BlipCLI.Services
 {
-    public class BlipHttpClientAsync : IBlipBucketClient, IBlipAIClient
+    public class BlipHttpClientAsync : IBlipBucketClient, IBlipAIClient, IBlipConfigurationClient
     {
         private string _authorizationKey;
         private HttpClient _client = new HttpClient();
@@ -420,7 +423,7 @@ namespace Take.BlipCLI.Services
                         }
 
                         //Questions
-                        uri = Uri.EscapeUriString($"/intentions/{intention.Id}/questions");
+                        uri = Uri.EscapeUriString($"/intentions/{intention.Id}/questions?$take=5000");
                         commandBase.Uri = new LimeUri(uri);
                         envelopeResult = await GetCommandResultAsync(commandBase);
                         if (envelopeResult.Status != CommandStatus.Failure)
@@ -475,6 +478,61 @@ namespace Take.BlipCLI.Services
             }
         }
 
+        public async Task<string> GetMessengerQRCodeAsync(string node, bool verbose = false, string payload = "", bool download = false)
+        {
+            // BlipCommand to get advanced configurations
+            var blipCommand = new Command
+            {
+                To = Node.Parse("postmaster@msging.net"),
+                Id = EnvelopeId.NewId(),
+                Uri = new LimeUri($"lime://{node}@msging.net/configuration/caller"),
+                Method = CommandMethod.Get
+            };
+
+            var blipResponse = await RunCommandAsync(blipCommand);
+            var items = ((blipResponse.Resource as DocumentCollection).Items);
+            var pageAccessToken = string.Empty;
+
+            // Finds PageAccessToken from array
+            foreach(var i in items)
+            {
+                var item = (i as CallerResource);
+                if (item.Name.Equals("PageAccessToken"))
+                {
+                    pageAccessToken = item.Value;
+                    break;
+                }
+            }
+            if (pageAccessToken.IsNullOrEmpty())
+            {
+                throw new Exception("Bot has no Facebook Messenger Access Token.");
+            }
+            if (verbose) Console.WriteLine($"\tPageAccessToken:\t{pageAccessToken}");
+
+            // Get QR Code from Facebook API
+            var client = new RestClient($"https://graph.facebook.com/v2.6/me/messenger_codes?access_token={pageAccessToken}");
+            var request = new RestRequest(Method.POST);
+            request.AddHeader("Content-Type", "application/json");
+            var body = "{\r\n  \"type\": \"standard\",\r\n  \"data\": {\r\n    \"ref\":\"" + payload + "\"\r\n  },\r\n  \"image_size\": 1000\r\n}";
+            request.AddParameter("undefined", $"{body}", ParameterType.RequestBody);
+            IRestResponse response = client.Execute(request);
+
+            var qrCode = JsonConvert.DeserializeObject<FacebookQrCodeResponse>(response.Content);
+            Console.WriteLine();
+            Console.WriteLine($"\tQR Code URL:\t{qrCode.Uri}");
+            Console.WriteLine();
+
+            if (download)
+            {
+                WebClient webClient = new WebClient();
+                webClient.DownloadFile(qrCode.Uri, "qr.png");
+                Console.WriteLine("Successfully saved file \"qr.png\" locally.");
+                Console.WriteLine();
+            }
+
+            return qrCode.Uri;
+        }
+
         public void Dispose()
         {
             _client.Dispose();
@@ -493,10 +551,21 @@ namespace Take.BlipCLI.Services
             using (var httpContent = new StringContent(commandString, Encoding.UTF8, "application/json"))
             {
 
-                var response = await _client.PostAsync("/commands", httpContent);
-                response.EnsureSuccessStatusCode();
-                var responseBody = await response.Content.ReadAsStringAsync();
-                return (Command)_envelopeSerializer.Deserialize(responseBody);
+                try
+                {
+                    var response = await _client.PostAsync("/commands", httpContent);
+                    response.EnsureSuccessStatusCode();
+                    var responseBody = await response.Content.ReadAsStringAsync();
+                    return (Command)_envelopeSerializer.Deserialize(responseBody);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("INNER");
+                    Console.WriteLine(ex.InnerException);
+                    Console.WriteLine();
+                    Console.WriteLine();
+                    throw;
+                }
             }
         }
 
@@ -539,8 +608,6 @@ namespace Take.BlipCLI.Services
 
             return @namespace;
         }
-
-
     }
 
 }

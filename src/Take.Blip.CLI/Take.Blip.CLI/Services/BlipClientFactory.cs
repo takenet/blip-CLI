@@ -16,5 +16,10 @@ namespace Take.BlipCLI.Services
         {
             return new BlipHttpClientAsync(authorizationKey);
         }
+
+        public IBlipConfigurationClient GetInstanceForConfiguration(string authorizationKey)
+        {
+            return new BlipHttpClientAsync(authorizationKey);
+        }
     }
 }
