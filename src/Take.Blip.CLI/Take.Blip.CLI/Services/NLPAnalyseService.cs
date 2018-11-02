@@ -57,7 +57,7 @@ namespace Take.BlipCLI.Services
             var bucketStorage = new BucketStorage("Key " + authorization);
             var contentProvider = new Take.ContentProvider.ContentProvider(bucketStorage, 5);
             var client = _blipClientFactory.GetInstanceForAI(authorization);
-
+            IContentManagerApiClient contentClient = new ContentManagerApiClient(authorization);
             var allIntents = new List<Intention>();
             if (doContentCheck)
             {
@@ -109,7 +109,7 @@ namespace Take.BlipCLI.Services
 
             _count = 0;
 
-            var inputList = await GetInputList(isPhrase, inputSource, client, reportOutput, allIntents, contentProvider, doContentCheck);
+            var inputList = await GetInputList(isPhrase, inputSource, client, contentClient, reportOutput, allIntents, contentProvider, doContentCheck);
             _total = inputList.Count;
             foreach (var input in inputList)
             {
@@ -149,8 +149,8 @@ namespace Take.BlipCLI.Services
             {
                 var intentId = dataBlock.NLPAnalysisResponse.Intentions?[0].Id;
                 var intentName = dataBlock.AllIntents.FirstOrDefault(i => i.Id == intentId)?.Name;
-                var entites = dataBlock.NLPAnalysisResponse.Entities?.Select(e => e.Value).ToList();
-                dataBlock.ContentFromProvider = await dataBlock.ContentProvider.GetAsync(intentName, entites);
+                var entities = dataBlock.NLPAnalysisResponse.Entities?.Select(e => e.Value).ToList();
+                dataBlock.ContentFromProvider = await dataBlock.ContentClient.GetAnswerAsync(intentName, entities);
             }
             return dataBlock;
         }
@@ -199,27 +199,36 @@ namespace Take.BlipCLI.Services
         }
         #endregion
 
-        private async Task<List<NLPAnalyseDataBlock>> GetInputList(bool isPhrase, string inputSource, IBlipAIClient client, string reportOutput, List<Intention> intentions, IContentProvider provider, bool doContentCheck)
+        private async Task<List<NLPAnalyseDataBlock>> GetInputList(
+            bool isPhrase, 
+            string inputSource, 
+            IBlipAIClient client, 
+            IContentManagerApiClient contentClient, 
+            string reportOutput, 
+            List<Intention> intentions, 
+            IContentProvider provider, 
+            bool doContentCheck)
         {
             if (isPhrase)
             {
-                return new List<NLPAnalyseDataBlock> { NLPAnalyseDataBlock.GetInstance(1, inputSource, client, reportOutput, doContentCheck, intentions, provider) };
+                return new List<NLPAnalyseDataBlock> { NLPAnalyseDataBlock.GetInstance(1, inputSource, client, contentClient, reportOutput, doContentCheck, intentions, provider) };
             }
             else
             {
                 var inputListAsString = await _fileService.GetInputsToAnalyseAsync(inputSource);
                 return inputListAsString
-                    .Select((s, i) => NLPAnalyseDataBlock.GetInstance(i + 1, s, client, reportOutput, doContentCheck, intentions, provider))
+                    .Select((s, i) => NLPAnalyseDataBlock.GetInstance(i + 1, s, client, contentClient, reportOutput, doContentCheck, intentions, provider))
                     .ToList();
             }
         }
 
-        private string ExtractAnswer(ContentResult content)
+        private string ExtractAnswer(ContentManagerContentResult content)
         {
-            return content.Status == ContentResultStatus.Match ? GetContentText(content) : "NotMatch";
+            //Status = 0 -> ExactMatch
+            return content.Status == 0 ? GetContentText(content) : "NotMatch";
         }
 
-        private string GetContentText(ContentResult content)
+        private string GetContentText(ContentManagerContentResult content)
         {
             var text = content.Contents.FirstOrDefault().ContentText;
             text = Regex.Replace(text, "[\n\r]+", " ", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);

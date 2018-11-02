@@ -14,6 +14,7 @@ namespace Take.BlipCLI.Models
         public int Id { get; private set; }
         public string Input { get; private set; }
         public IBlipAIClient AIClient { get; private set; }
+        public IContentManagerApiClient ContentClient { get; private set; }
         public string ReportOutputFile { get; private set; }
         #endregion
 
@@ -25,24 +26,24 @@ namespace Take.BlipCLI.Models
 
         #region Results
         public AnalysisResponse NLPAnalysisResponse { get; internal set; }
-        public ContentResult ContentFromProvider { get; internal set; }
+        public ContentManagerContentResult ContentFromProvider { get; internal set; }
         #endregion
 
-        public static NLPAnalyseDataBlock GetInstance(int id, string input, IBlipAIClient aiClient, string reportOutput)
+        public static NLPAnalyseDataBlock GetInstance(int id, string input, IBlipAIClient aiClient, IContentManagerApiClient contentClient, string reportOutput)
         {
             return new NLPAnalyseDataBlock
             {
                 Id = id,
                 Input = input,
                 AIClient = aiClient,
-                ReportOutputFile = reportOutput
-
+                ReportOutputFile = reportOutput,
+                ContentClient = contentClient
             };
         }
 
-        public static NLPAnalyseDataBlock GetInstance(int id, string input, IBlipAIClient aiClient, string reportOutput, bool doCheck, List<Intention> intents, IContentProvider provider )
+        public static NLPAnalyseDataBlock GetInstance(int id, string input, IBlipAIClient aiClient, IContentManagerApiClient contentClient, string reportOutput, bool doCheck, List<Intention> intents, IContentProvider provider )
         {
-            var instance = GetInstance(id, input, aiClient, reportOutput);
+            var instance = GetInstance(id, input, aiClient, contentClient, reportOutput);
             instance.DoContentCheck = doCheck;
             instance.AllIntents = intents;
             instance.ContentProvider = provider;
