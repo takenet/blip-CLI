@@ -17,7 +17,6 @@ namespace Take.BlipCLI.Services
         private string _authorizationKey;
         private HttpClient _client = new HttpClient();
 
-        //https://hmg-az-infobots.take.net/contentproviderapi/content/answer?input=adam%20grant
         public ContentManagerApiClient(string authorizationKey)
         {
             _authorizationKey = authorizationKey;
@@ -40,19 +39,27 @@ namespace Take.BlipCLI.Services
 
         public async Task<ContentManagerContentResult> GetAnswerAsync(string intent, List<string> entities)
         {
-
-            var localIntent = Uri.EscapeDataString(intent) ?? string.Empty;
-            var localEntities = entities ?? new List<string>();
-            localEntities = localEntities.Select(e => Uri.EscapeDataString(e)).ToList();
-            var uri = $"/contentproviderapi/content/test?intent={localIntent}&entities={string.Join(',', localEntities)}";
-            using (var response = await _client.GetAsync(uri))
+            try
             {
-                response.EnsureSuccessStatusCode();
-                var responseBody = await response.Content.ReadAsStringAsync();
-                return JsonConvert.DeserializeObject<ContentManagerContentResult>(responseBody);
+                var localIntent = Uri.EscapeDataString(intent) ?? string.Empty;
+                var localEntities = entities ?? new List<string>();
+                localEntities = localEntities.Select(e => Uri.EscapeDataString(e)).ToList();
+                var uri = $"/contentproviderapi/content/test?intent={localIntent}";
+                if (localEntities.Count > 0)
+                    uri = $"{uri}&entities={string.Join(',', localEntities)}";
+
+                using (var response = await _client.GetAsync(uri))
+                {
+                    response.EnsureSuccessStatusCode();
+                    var responseBody = await response.Content.ReadAsStringAsync();
+                    return JsonConvert.DeserializeObject<ContentManagerContentResult>(responseBody);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw;
             }
 
-            throw new NotImplementedException();
         }
     }
 }

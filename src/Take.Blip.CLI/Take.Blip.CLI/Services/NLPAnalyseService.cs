@@ -91,7 +91,7 @@ namespace Take.BlipCLI.Services
             {
                 BoundedCapacity = DataflowBlockOptions.Unbounded,
                 MaxDegreeOfParallelism = 20,
-                
+
             };
 
             var analyseBlock = new TransformBlock<NLPAnalyseDataBlock, NLPAnalyseDataBlock>((Func<NLPAnalyseDataBlock, Task<NLPAnalyseDataBlock>>)AnalyseForMetrics, options);
@@ -157,56 +157,63 @@ namespace Take.BlipCLI.Services
 
         private async Task BuildResult(NLPAnalyseDataBlock dataBlock)
         {
-            lock(_locker)
+            lock (_locker)
             {
                 _count++;
-                if(_count % 100 == 0)
+                if (_count % 100 == 0)
                 {
                     _logger.LogDebug($"{_count}/{_total}");
                 }
             }
 
-            var input = dataBlock.Input;
-            var analysis = dataBlock.NLPAnalysisResponse;
-            var content = dataBlock.ContentFromProvider;
-
-            if (analysis == null)
-                return;
-
-            var resultData = new NLPAnalyseReportDataLine
+            try
             {
-                Id = dataBlock.Id,
-                Input = input,
-                Intent = analysis.Intentions?[0].Id,
-                Confidence = analysis.Intentions?[0].Score,
-                Entities = analysis.Entities?.ToList().ToReportString(),
-            };
+                var input = dataBlock.Input;
+                var analysis = dataBlock.NLPAnalysisResponse;
+                var content = dataBlock.ContentFromProvider;
 
-            if (content != null)
+                if (analysis == null)
+                    return;
+
+                var resultData = new NLPAnalyseReportDataLine
+                {
+                    Id = dataBlock.Id,
+                    Input = input,
+                    Intent = analysis.Intentions?[0].Id,
+                    Confidence = analysis.Intentions?[0].Score,
+                    Entities = analysis.Entities?.ToList().ToReportString(),
+                };
+
+                if (content != null)
+                {
+                    resultData.Answer = ExtractAnswer(content);
+                }
+
+                var report = new NLPAnalyseReport
+                {
+                    ReportDataLines = new List<NLPAnalyseReportDataLine> { resultData },
+                    FullReportFileName = dataBlock.ReportOutputFile
+                };
+
+                await _fileService.WriteAnalyseReportAsync(report, true);
+                _logger.LogTrace($"\"{resultData.Input}\"\t{resultData.Intent}:{resultData.Confidence:P}\t{resultData.Entities}\t{CropText(resultData.Answer, 50)}");
+            }
+            catch (Exception ex)
             {
-                resultData.Answer = ExtractAnswer(content);
+                throw;
             }
 
-            var report = new NLPAnalyseReport
-            {
-                ReportDataLines = new List<NLPAnalyseReportDataLine> { resultData },
-                FullReportFileName = dataBlock.ReportOutputFile
-            };
-
-            await _fileService.WriteAnalyseReportAsync(report, true);
-
-            _logger.LogTrace($"\"{resultData.Input}\"\t{resultData.Intent}:{resultData.Confidence:P}\t{resultData.Entities}\t{CropText(resultData.Answer, 50)}");
         }
         #endregion
 
         private async Task<List<NLPAnalyseDataBlock>> GetInputList(
-            bool isPhrase, 
-            string inputSource, 
-            IBlipAIClient client, 
-            IContentManagerApiClient contentClient, 
-            string reportOutput, 
-            List<Intention> intentions, 
-            IContentProvider provider, 
+            bool isPhrase,
+            string inputSource,
+            IBlipAIClient client,
+            IContentManagerApiClient contentClient,
+            string reportOutput,
+            List<Intention> intentions,
+            IContentProvider provider,
             bool doContentCheck)
         {
             if (isPhrase)
@@ -231,6 +238,7 @@ namespace Take.BlipCLI.Services
         private string GetContentText(ContentManagerContentResult content)
         {
             var text = content.Contents.FirstOrDefault().ContentText;
+            if (string.IsNullOrEmpty(text)) return text;
             text = Regex.Replace(text, "[\n\r]+", " ", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
             text = Regex.Replace(text, "\\s+", " ", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
             return text;
