@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Take.BlipCLI.Models
+namespace Take.BlipCLI.Models.NLPAnalyse
 {
-    public class NLPAnalyseReportDataLine
+    public class ReportDataLine
     {
         public int Id { get; set; }
         public string Input { get; set; }

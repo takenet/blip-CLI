@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Take.BlipCLI.Models;
+using Take.BlipCLI.Models.NLPAnalyse;
 using Take.BlipCLI.Services.Interfaces;
 using Takenet.Iris.Messaging.Resources.ArtificialIntelligence;
 
@@ -64,7 +65,7 @@ namespace Take.BlipCLI.Services
             return File.Exists(pathToFile);
         }
 
-        public async Task WriteAnalyseReportAsync(NLPAnalyseReport analyseReport, bool append = false)
+        public async Task WriteAnalyseReportAsync(Report analyseReport, bool append = false)
         {
             bool writeHeader = !File.Exists(analyseReport.FullReportFileName);
             using (var writer = new StreamWriter(analyseReport.FullReportFileName, append))
@@ -77,7 +78,7 @@ namespace Take.BlipCLI.Services
             }
         }
 
-        private string AnalysisResponseToString(NLPAnalyseReportDataLine reportDataLine)
+        private string AnalysisResponseToString(ReportDataLine reportDataLine)
         {
             var intention = reportDataLine.Intent;
             var entities = reportDataLine.Entities;

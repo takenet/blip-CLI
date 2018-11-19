@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Take.BlipCLI.Models;
+using Take.BlipCLI.Models.NLPAnalyse;
 using Take.BlipCLI.Services;
 using Take.BlipCLI.Services.Interfaces;
 using Take.ContentProvider.Domain.Contract.Enums;
@@ -65,8 +66,8 @@ namespace Take.BlipCLI.Services
                 allIntents = await client.GetAllIntentsAsync();
                 _logger.LogDebug("\tCarregadas!");
             }
-            bool isPhrase = false;
 
+            bool isPhrase = false;
             var isDirectory = _fileService.IsDirectory(inputSource);
             var isFile = _fileService.IsFile(inputSource);
 
@@ -87,6 +88,7 @@ namespace Take.BlipCLI.Services
                 isPhrase = true;
             }
 
+
             var options = new ExecutionDataflowBlockOptions
             {
                 BoundedCapacity = DataflowBlockOptions.Unbounded,
@@ -94,10 +96,10 @@ namespace Take.BlipCLI.Services
 
             };
 
-            var analyseBlock = new TransformBlock<NLPAnalyseDataBlock, NLPAnalyseDataBlock>((Func<NLPAnalyseDataBlock, Task<NLPAnalyseDataBlock>>)AnalyseForMetrics, options);
-            var checkBlock = new TransformBlock<NLPAnalyseDataBlock, NLPAnalyseDataBlock>((Func<NLPAnalyseDataBlock, NLPAnalyseDataBlock>)CheckResponse, options);
-            var contentBlock = new TransformBlock<NLPAnalyseDataBlock, NLPAnalyseDataBlock>((Func<NLPAnalyseDataBlock, Task<NLPAnalyseDataBlock>>)GetContent, options);
-            var showResultBlock = new ActionBlock<NLPAnalyseDataBlock>(BuildResult, new ExecutionDataflowBlockOptions
+            var analyseBlock = new TransformBlock<DataBlock, DataBlock>((Func<DataBlock, Task<DataBlock>>)AnalyseForMetrics, options);
+            var checkBlock = new TransformBlock<DataBlock, DataBlock>((Func<DataBlock, DataBlock>)CheckResponse, options);
+            var contentBlock = new TransformBlock<DataBlock, DataBlock>((Func<DataBlock, Task<DataBlock>>)GetContent, options);
+            var showResultBlock = new ActionBlock<DataBlock>(BuildResult, new ExecutionDataflowBlockOptions
             {
                 BoundedCapacity = DataflowBlockOptions.Unbounded,
                 MaxMessagesPerTask = 1
@@ -125,14 +127,14 @@ namespace Take.BlipCLI.Services
 
 
         #region DataFlow Block Methods
-        private async Task<NLPAnalyseDataBlock> AnalyseForMetrics(NLPAnalyseDataBlock dataBlock)
+        private async Task<DataBlock> AnalyseForMetrics(DataBlock dataBlock)
         {
             var response = await dataBlock.AIClient.AnalyseForMetrics(dataBlock.Input);
             dataBlock.NLPAnalysisResponse = response;
             return dataBlock;
         }
 
-        private NLPAnalyseDataBlock CheckResponse(NLPAnalyseDataBlock dataBlock)
+        private DataBlock CheckResponse(DataBlock dataBlock)
         {
             var item = dataBlock.NLPAnalysisResponse;
             if (item == null)
@@ -143,7 +145,7 @@ namespace Take.BlipCLI.Services
             return dataBlock;
         }
 
-        private async Task<NLPAnalyseDataBlock> GetContent(NLPAnalyseDataBlock dataBlock)
+        private async Task<DataBlock> GetContent(DataBlock dataBlock)
         {
             if (dataBlock.DoContentCheck)
             {
@@ -155,7 +157,7 @@ namespace Take.BlipCLI.Services
             return dataBlock;
         }
 
-        private async Task BuildResult(NLPAnalyseDataBlock dataBlock)
+        private async Task BuildResult(DataBlock dataBlock)
         {
             lock (_locker)
             {
@@ -175,7 +177,7 @@ namespace Take.BlipCLI.Services
                 if (analysis == null)
                     return;
 
-                var resultData = new NLPAnalyseReportDataLine
+                var resultData = new ReportDataLine
                 {
                     Id = dataBlock.Id,
                     Input = input,
@@ -189,9 +191,9 @@ namespace Take.BlipCLI.Services
                     resultData.Answer = ExtractAnswer(content);
                 }
 
-                var report = new NLPAnalyseReport
+                var report = new Report
                 {
-                    ReportDataLines = new List<NLPAnalyseReportDataLine> { resultData },
+                    ReportDataLines = new List<ReportDataLine> { resultData },
                     FullReportFileName = dataBlock.ReportOutputFile
                 };
 
@@ -200,13 +202,14 @@ namespace Take.BlipCLI.Services
             }
             catch (Exception ex)
             {
-                throw;
+                _logger.LogError(ex, $"Unexpected error BuildResult for {dataBlock}");
+                throw ex;
             }
 
         }
         #endregion
 
-        private async Task<List<NLPAnalyseDataBlock>> GetInputList(
+        private async Task<List<DataBlock>> GetInputList(
             bool isPhrase,
             string inputSource,
             IBlipAIClient client,
@@ -218,13 +221,13 @@ namespace Take.BlipCLI.Services
         {
             if (isPhrase)
             {
-                return new List<NLPAnalyseDataBlock> { NLPAnalyseDataBlock.GetInstance(1, inputSource, client, contentClient, reportOutput, doContentCheck, intentions, provider) };
+                return new List<DataBlock> { DataBlock.GetInstance(1, inputSource, client, contentClient, reportOutput, doContentCheck, intentions, provider) };
             }
             else
             {
                 var inputListAsString = await _fileService.GetInputsToAnalyseAsync(inputSource);
                 return inputListAsString
-                    .Select((s, i) => NLPAnalyseDataBlock.GetInstance(i + 1, s, client, contentClient, reportOutput, doContentCheck, intentions, provider))
+                    .Select((s, i) => DataBlock.GetInstance(i + 1, s, client, contentClient, reportOutput, doContentCheck, intentions, provider))
                     .ToList();
             }
         }

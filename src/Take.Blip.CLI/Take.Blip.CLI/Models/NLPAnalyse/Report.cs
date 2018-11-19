@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Text;
 using Takenet.Iris.Messaging.Resources.ArtificialIntelligence;
 
-namespace Take.BlipCLI.Models
+namespace Take.BlipCLI.Models.NLPAnalyse
 {
-    public class NLPAnalyseReport
+    public class Report
     {
         public string FullReportFileName { get; set; }
-        public List<NLPAnalyseReportDataLine> ReportDataLines { get; internal set; }
+        public List<ReportDataLine> ReportDataLines { get; internal set; }
     }
 }

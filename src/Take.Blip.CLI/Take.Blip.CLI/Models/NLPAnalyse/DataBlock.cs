@@ -6,9 +6,9 @@ using Take.ContentProvider.Domain.Contract.Interfaces;
 using Take.ContentProvider.Domain.Contract.Model;
 using Takenet.Iris.Messaging.Resources.ArtificialIntelligence;
 
-namespace Take.BlipCLI.Models
+namespace Take.BlipCLI.Models.NLPAnalyse
 {
-    class NLPAnalyseDataBlock
+    class DataBlock
     {
         #region Required
         public int Id { get; private set; }
@@ -29,9 +29,9 @@ namespace Take.BlipCLI.Models
         public ContentManagerContentResult ContentFromProvider { get; internal set; }
         #endregion
 
-        public static NLPAnalyseDataBlock GetInstance(int id, string input, IBlipAIClient aiClient, IContentManagerApiClient contentClient, string reportOutput)
+        public static DataBlock GetInstance(int id, string input, IBlipAIClient aiClient, IContentManagerApiClient contentClient, string reportOutput)
         {
-            return new NLPAnalyseDataBlock
+            return new DataBlock
             {
                 Id = id,
                 Input = input,
@@ -41,13 +41,18 @@ namespace Take.BlipCLI.Models
             };
         }
 
-        public static NLPAnalyseDataBlock GetInstance(int id, string input, IBlipAIClient aiClient, IContentManagerApiClient contentClient, string reportOutput, bool doCheck, List<Intention> intents, IContentProvider provider )
+        public static DataBlock GetInstance(int id, string input, IBlipAIClient aiClient, IContentManagerApiClient contentClient, string reportOutput, bool doCheck, List<Intention> intents, IContentProvider provider )
         {
             var instance = GetInstance(id, input, aiClient, contentClient, reportOutput);
             instance.DoContentCheck = doCheck;
             instance.AllIntents = intents;
             instance.ContentProvider = provider;
             return instance;
+        }
+
+        public override string ToString()
+        {
+            return $"{Id}:{Input}";
         }
 
     }
