@@ -2,6 +2,7 @@
 using Lime.Protocol;
 using Lime.Protocol.Serialization;
 using Lime.Protocol.Serialization.Newtonsoft;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RestSharp;
 using System;
@@ -22,13 +23,15 @@ namespace Take.BlipCLI.Services
     public class BlipHttpClientAsync : IBlipBucketClient, IBlipAIClient, IBlipConfigurationClient
     {
         private string _authorizationKey;
+        private readonly IInternalLogger _logger;
         private HttpClient _client = new HttpClient();
         private JsonNetSerializer _envelopeSerializer;
 
-        public BlipHttpClientAsync(string authorizationKey)
+        public BlipHttpClientAsync(string authorizationKey, IInternalLogger logger)
         {
             _envelopeSerializer = new JsonNetSerializer();
             _authorizationKey = authorizationKey;
+            _logger = logger;
             _client.BaseAddress = new Uri("https://msging.net");
             _client.DefaultRequestHeaders.Accept.Clear();
             _client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
@@ -60,8 +63,8 @@ namespace Take.BlipCLI.Services
             }
             catch (HttpRequestException e)
             {
-                Console.WriteLine("\nException Caught!");
-                Console.WriteLine("Message :{0} ", e.Message);
+                _logger.LogError(e, "\nException Caught!");
+                _logger.LogError(e, "Message :{0} ", e.Message);
                 return null;
             }
         }
@@ -108,8 +111,8 @@ namespace Take.BlipCLI.Services
             }
             catch (HttpRequestException e)
             {
-                Console.WriteLine("\nException Caught!");
-                Console.WriteLine("Message :{0} ", e.Message);
+                _logger.LogError(e, "\nException Caught!");
+                _logger.LogError(e, "Message :{0} ", e.Message);
             }
         }
 
@@ -132,8 +135,8 @@ namespace Take.BlipCLI.Services
             }
             catch (HttpRequestException e)
             {
-                Console.WriteLine("\nException Caught!");
-                Console.WriteLine("Message :{0} ", e.Message);
+                _logger.LogError(e, "\nException Caught!");
+                _logger.LogError(e, "Message :{0} ", e.Message);
                 return null;
             }
         }
@@ -168,8 +171,8 @@ namespace Take.BlipCLI.Services
             }
             catch (HttpRequestException e)
             {
-                Console.WriteLine("\nException Caught!");
-                Console.WriteLine("Message :{0} ", e.Message);
+                _logger.LogError(e, "\nException Caught!");
+                _logger.LogError(e, "Message :{0} ", e.Message);
                 return null;
             }
         }
@@ -198,8 +201,8 @@ namespace Take.BlipCLI.Services
             }
             catch (HttpRequestException e)
             {
-                Console.WriteLine("\nException Caught!");
-                Console.WriteLine("Message :{0} ", e.Message);
+                _logger.LogError(e, "\nException Caught!");
+                _logger.LogError(e, "Message :{0} ", e.Message);
                 return null;
             }
         }
@@ -220,8 +223,8 @@ namespace Take.BlipCLI.Services
             }
             catch (HttpRequestException e)
             {
-                Console.WriteLine("\nException Caught!");
-                Console.WriteLine("Message :{0} ", e.Message);
+                _logger.LogError(e, "\nException Caught!");
+                _logger.LogError(e, "Message :{0} ", e.Message);
             }
         }
 
@@ -241,8 +244,8 @@ namespace Take.BlipCLI.Services
             }
             catch (HttpRequestException e)
             {
-                Console.WriteLine("\nException Caught!");
-                Console.WriteLine("Message :{0} ", e.Message);
+                _logger.LogError(e, "\nException Caught!");
+                _logger.LogError(e, "Message :{0} ", e.Message);
             }
         }
 
@@ -274,8 +277,8 @@ namespace Take.BlipCLI.Services
             }
             catch (Exception e)
             {
-                Console.WriteLine("\nException Caught!");
-                Console.WriteLine("Message: {0} ", e.Message);
+                _logger.LogError(e, "\nException Caught!");
+                _logger.LogError(e, "Message: {0} ", e.Message);
                 return null;
             }
         }
@@ -304,8 +307,8 @@ namespace Take.BlipCLI.Services
             }
             catch (HttpRequestException e)
             {
-                Console.WriteLine("\nException Caught!");
-                Console.WriteLine("Message :{0} ", e.Message);
+                _logger.LogError(e, "\nException Caught!");
+                _logger.LogError(e, "Message :{0} ", e.Message);
                 throw;
             }
         }
@@ -334,8 +337,8 @@ namespace Take.BlipCLI.Services
             }
             catch (HttpRequestException e)
             {
-                Console.WriteLine("\nException Caught!");
-                Console.WriteLine("Message :{0} ", e.Message);
+                _logger.LogError(e, "\nException Caught!");
+                _logger.LogError(e, "Message :{0} ", e.Message);
                 throw;
             }
         }
@@ -372,8 +375,8 @@ namespace Take.BlipCLI.Services
             }
             catch (HttpRequestException e)
             {
-                Console.WriteLine("\nException Caught!");
-                Console.WriteLine("Message :{0} ", e.Message);
+                _logger.LogError(e, "\nException Caught!");
+                _logger.LogError(e, "Message :{0} ", e.Message);
                 return null;
             }
         }
@@ -441,8 +444,8 @@ namespace Take.BlipCLI.Services
             }
             catch (HttpRequestException e)
             {
-                Console.WriteLine("\nException Caught!");
-                Console.WriteLine("Message :{0} ", e.Message);
+                _logger.LogError(e, "\nException Caught!");
+                _logger.LogError(e, "Message :{0} ", e.Message);
                 return null;
             }
         }
@@ -472,8 +475,8 @@ namespace Take.BlipCLI.Services
             }
             catch (HttpRequestException e)
             {
-                Console.WriteLine("\nException Caught!");
-                Console.WriteLine("Message :{0} ", e.Message);
+                _logger.LogError(e, "\nException Caught!");
+                _logger.LogError(e, "Message :{0} ", e.Message);
                 return null;
             }
         }
@@ -494,7 +497,7 @@ namespace Take.BlipCLI.Services
             var pageAccessToken = string.Empty;
 
             // Finds PageAccessToken from array
-            foreach(var i in items)
+            foreach (var i in items)
             {
                 var item = (i as CallerResource);
                 if (item.Name.Equals("PageAccessToken"))
@@ -507,7 +510,8 @@ namespace Take.BlipCLI.Services
             {
                 throw new Exception("Bot has no Facebook Messenger Access Token.");
             }
-            if (verbose) Console.WriteLine($"\tPageAccessToken:\t{pageAccessToken}");
+
+            LogVerboseLine(verbose, $"\tPageAccessToken:\t{pageAccessToken}");
 
             // Get QR Code from Facebook API
             var client = new RestClient($"https://graph.facebook.com/v2.6/me/messenger_codes?access_token={pageAccessToken}");
@@ -518,16 +522,13 @@ namespace Take.BlipCLI.Services
             IRestResponse response = client.Execute(request);
 
             var qrCode = JsonConvert.DeserializeObject<FacebookQrCodeResponse>(response.Content);
-            Console.WriteLine();
-            Console.WriteLine($"\tQR Code URL:\t{qrCode.Uri}");
-            Console.WriteLine();
+            LogVerboseLine(verbose, $"\tQR Code URL:\t{qrCode.Uri}");
 
             if (download)
             {
                 WebClient webClient = new WebClient();
                 webClient.DownloadFile(qrCode.Uri, "qr.png");
-                Console.WriteLine("Successfully saved file \"qr.png\" locally.");
-                Console.WriteLine();
+                LogVerboseLine(verbose, "Successfully saved file \"qr.png\" locally.");
             }
 
             return qrCode.Uri;
@@ -560,26 +561,23 @@ namespace Take.BlipCLI.Services
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("INNER");
-                    Console.WriteLine(ex.InnerException);
-                    Console.WriteLine();
-                    Console.WriteLine();
-                    throw;
+                    _logger.LogError(ex, "Failed to run command");
+                    throw ex;
                 }
             }
         }
 
-        private static void LogVerbose(bool verbose, string message)
+        private void LogVerbose(bool verbose, string message)
         {
-            if (verbose) Console.Write(message);
+            if (verbose) _logger.LogDebug(message);
         }
 
-        private static void LogVerboseLine(bool verbose, string message)
+        private void LogVerboseLine(bool verbose, string message)
         {
-            if (verbose) Console.WriteLine(message);
+            if (verbose) _logger.LogDebug(message + "\n");
         }
 
-        private static void EnsureCommandSuccess(Command envelopeResult)
+        private void EnsureCommandSuccess(Command envelopeResult)
         {
             if (envelopeResult.Status == CommandStatus.Failure)
                 throw new Exception($"Command failed: {envelopeResult.Reason.Description}({envelopeResult.Reason.Code})");

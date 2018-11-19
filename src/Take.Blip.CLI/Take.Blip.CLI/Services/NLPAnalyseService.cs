@@ -22,6 +22,7 @@ namespace Take.BlipCLI.Services
 {
     public class NLPAnalyseService : INLPAnalyseService
     {
+        private const string BOT_KEY_PREFIX = "BotKey:";
         private readonly IBlipClientFactory _blipClientFactory;
         private readonly IFileManagerService _fileService;
         private readonly IInternalLogger _logger;
@@ -67,27 +68,8 @@ namespace Take.BlipCLI.Services
                 _logger.LogDebug("\tCarregadas!");
             }
 
-            bool isPhrase = false;
-            var isDirectory = _fileService.IsDirectory(inputSource);
-            var isFile = _fileService.IsFile(inputSource);
-
-            if (isFile)
-            {
-                _logger.LogDebug("\tA entrada é um arquivo");
-                isPhrase = false;
-            }
-            else
-            if (isDirectory)
-            {
-                _logger.LogError("\tA entrada é um diretório");
-                throw new ArgumentNullException("You must provide the input source (phrase or file) for this action. Your input was a direcory.");
-            }
-            else
-            {
-                _logger.LogDebug("\tA entrada é uma frase");
-                isPhrase = true;
-            }
-
+            var inputType = InputType.Phrase;
+            inputType = DetectInputType(inputSource);
 
             var options = new ExecutionDataflowBlockOptions
             {
@@ -111,7 +93,7 @@ namespace Take.BlipCLI.Services
 
             _count = 0;
 
-            var inputList = await GetInputList(isPhrase, inputSource, client, contentClient, reportOutput, allIntents, contentProvider, doContentCheck);
+            var inputList = await GetInputList(inputType, inputSource, client, contentClient, reportOutput, allIntents, contentProvider, doContentCheck);
             _total = inputList.Count;
             foreach (var input in inputList)
             {
@@ -124,7 +106,6 @@ namespace Take.BlipCLI.Services
             _logger.LogDebug("TERMINOU!");
 
         }
-
 
         #region DataFlow Block Methods
         private async Task<DataBlock> AnalyseForMetrics(DataBlock dataBlock)
@@ -210,7 +191,7 @@ namespace Take.BlipCLI.Services
         #endregion
 
         private async Task<List<DataBlock>> GetInputList(
-            bool isPhrase,
+            InputType inputType,
             string inputSource,
             IBlipAIClient client,
             IContentManagerApiClient contentClient,
@@ -219,17 +200,31 @@ namespace Take.BlipCLI.Services
             IContentProvider provider,
             bool doContentCheck)
         {
-            if (isPhrase)
+            switch (inputType)
             {
-                return new List<DataBlock> { DataBlock.GetInstance(1, inputSource, client, contentClient, reportOutput, doContentCheck, intentions, provider) };
+                case InputType.Phrase:
+                    return new List<DataBlock> { DataBlock.GetInstance(1, inputSource, client, contentClient, reportOutput, doContentCheck, intentions, provider) };
+                case InputType.File:
+                    var inputListAsString = await _fileService.GetInputsToAnalyseAsync(inputSource);
+                    return inputListAsString
+                        .Select((s, i) => DataBlock.GetInstance(i + 1, s, client, contentClient, reportOutput, doContentCheck, intentions, provider))
+                        .ToList();
+                case InputType.Bot:
+                    var botSource = inputSource.Replace(BOT_KEY_PREFIX, "").Trim();
+                    var localClient = _blipClientFactory.GetInstanceForAI(botSource);
+                    var allIntents = new List<Intention>();
+                    if (doContentCheck)
+                    {
+                        _logger.LogDebug("\tCarregando intenções do bot fonte...");
+                        allIntents = await client.GetAllIntentsAsync();
+                        _logger.LogDebug("\tIntenções carregadas!");
+                    }
+                    //allIntents.Select(e => e.Questions).ToList().Select()
+                    break;
+                default:
+                    throw new ArgumentException($"Unexpected value {inputType}.", "inputType");
             }
-            else
-            {
-                var inputListAsString = await _fileService.GetInputsToAnalyseAsync(inputSource);
-                return inputListAsString
-                    .Select((s, i) => DataBlock.GetInstance(i + 1, s, client, contentClient, reportOutput, doContentCheck, intentions, provider))
-                    .ToList();
-            }
+            
         }
 
         private string ExtractAnswer(ContentManagerContentResult content)
@@ -256,6 +251,43 @@ namespace Take.BlipCLI.Services
             else
                 return text;
         }
+
+        private InputType DetectInputType(string inputSource)
+        {
+            InputType inputType;
+            var isDirectory = _fileService.IsDirectory(inputSource);
+            var isFile = _fileService.IsFile(inputSource);
+
+            if (isFile)
+            {
+                _logger.LogDebug("\tA entrada é um arquivo");
+                inputType = InputType.File;
+            }
+            else
+            if (isDirectory)
+            {
+                _logger.LogError("\tA entrada é um diretório");
+                throw new ArgumentNullException("You must provide the input source (phrase or file) for this action. Your input was a direcory.");
+            }
+            else
+            {
+                if (inputSource.StartsWith(BOT_KEY_PREFIX))
+                {
+                    _logger.LogDebug("\tA entrada é um bot");
+                    inputType = InputType.Bot;
+                }
+                else
+                {
+                    _logger.LogDebug("\tA entrada é uma frase");
+                    inputType = InputType.Phrase;
+                }
+
+            }
+
+            return inputType;
+        }
+
+
 
     }
 

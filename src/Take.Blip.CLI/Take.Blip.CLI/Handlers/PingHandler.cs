@@ -11,11 +11,15 @@ namespace Take.BlipCLI.Handlers
     public class PingHandler : HandlerAsync
     {
         private string VALID_AUTHORIZATION = "dGVzdGVodHRwcG9zdDpzQ3Q4RkEwT3ZMQ1J0UVlHaGd4SA==";
+        private readonly IBlipClientFactory _blipClientFactory;
+
         public INamedParameter<string> Node { get; set; }
 
-        public PingHandler(IInternalLogger logger) : base(logger)
+        public PingHandler(
+            IBlipClientFactory blipClientFactory,
+            IInternalLogger logger) : base(logger)
         {
-
+            _blipClientFactory = blipClientFactory;
         }
 
         public override async Task<int> RunAsync(string[] args)
@@ -23,7 +27,7 @@ namespace Take.BlipCLI.Handlers
             bool success;
             var watch = System.Diagnostics.Stopwatch.StartNew();
 
-            var client = new BlipHttpClientAsync(VALID_AUTHORIZATION);
+            var client = _blipClientFactory.GetInstanceForConfiguration(VALID_AUTHORIZATION);
 
             using (var spinner = CLI.Spinner("Sending..."))
             {

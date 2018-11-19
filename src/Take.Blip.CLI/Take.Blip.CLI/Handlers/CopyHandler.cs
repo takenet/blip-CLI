@@ -24,12 +24,12 @@ namespace Take.BlipCLI.Handlers
 
         private readonly ISettingsFile _settingsFile;
 
-        private readonly IBlipClientFactory _blipAIClientFactory;
+        private readonly IBlipClientFactory _blipClientFactory;
 
-        public CopyHandler(IBlipClientFactory blipAIClientFactory, IInternalLogger logger) : base(logger)
+        public CopyHandler(IBlipClientFactory blipClientFactory, IInternalLogger logger) : base(logger)
         {
             _settingsFile = new SettingsFile();
-            _blipAIClientFactory = blipAIClientFactory;
+            _blipClientFactory = blipClientFactory;
         }
 
         public async override Task<int> RunAsync(string[] args)
@@ -50,11 +50,11 @@ namespace Take.BlipCLI.Handlers
                 toAuthorization = _settingsFile.GetNodeCredentials(Node.Parse(To.Value)).Authorization;
             }
 
-            IBlipBucketClient sourceBlipBucketClient = new BlipHttpClientAsync(fromAuthorization);
-            IBlipBucketClient targetBlipBucketClient = new BlipHttpClientAsync(toAuthorization);
+            IBlipBucketClient sourceBlipBucketClient = _blipClientFactory.GetInstanceForBucket(fromAuthorization);
+            IBlipBucketClient targetBlipBucketClient = _blipClientFactory.GetInstanceForBucket(toAuthorization);
 
-            IBlipAIClient sourceBlipAIClient = _blipAIClientFactory.GetInstanceForAI(fromAuthorization);
-            IBlipAIClient targetBlipAIClient = _blipAIClientFactory.GetInstanceForAI(toAuthorization);
+            IBlipAIClient sourceBlipAIClient = _blipClientFactory.GetInstanceForAI(fromAuthorization);
+            IBlipAIClient targetBlipAIClient = _blipClientFactory.GetInstanceForAI(toAuthorization);
 
             foreach (var content in Contents.Value)
             {

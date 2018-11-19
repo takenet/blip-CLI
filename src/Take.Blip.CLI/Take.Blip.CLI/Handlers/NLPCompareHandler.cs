@@ -16,6 +16,7 @@ namespace Take.BlipCLI.Handlers
     public class NLPCompareHandler : HandlerAsync
     {
         private readonly IStringService _stringService;
+        private readonly IBlipClientFactory _blipClientFactory;
 
         public INamedParameter<string> Authorization1 { get; internal set; }
         public INamedParameter<string> Authorization2 { get; internal set; }
@@ -27,10 +28,12 @@ namespace Take.BlipCLI.Handlers
 
         public NLPCompareHandler(
             IStringService stringService,
-            IInternalLogger logger
+            IInternalLogger logger,
+            IBlipClientFactory blipClientFactory
             ) : base(logger)
         {
             _stringService = stringService;
+            _blipClientFactory = blipClientFactory;
         }
 
         public override async Task<int> RunAsync(string[] args)
@@ -178,7 +181,7 @@ namespace Take.BlipCLI.Handlers
 
         private async Task<NLPModel> GetBotModelFromAPI(string authKey)
         {
-            IBlipAIClient blipAIClient = new BlipHttpClientAsync(authKey);
+            IBlipAIClient blipAIClient = _blipClientFactory.GetInstanceForAI(authKey);
 
             var entities = await blipAIClient.GetAllEntities(verbose: IsVerbose);
             var intents = await blipAIClient.GetAllIntentsAsync(verbose: IsVerbose);

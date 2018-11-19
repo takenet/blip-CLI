@@ -21,11 +21,15 @@ namespace Take.BlipCLI.Handlers
         public INamedParameter<string> AnswersFilePath { get; set; }
 
         private readonly ISettingsFile _settingsFile;
+        private readonly IBlipClientFactory _blipClientFactory;
         private IBlipAIClient _blipAIClient;
 
-        public NLPImportHandler(IInternalLogger logger) : base(logger)
+        public NLPImportHandler(
+            IBlipClientFactory blipClientFactory, 
+            IInternalLogger logger) : base(logger)
         {
             _settingsFile = new SettingsFile();
+            _blipClientFactory = blipClientFactory;
         }
 
         public override async Task<int> RunAsync(string[] args)
@@ -40,7 +44,7 @@ namespace Take.BlipCLI.Handlers
                 authorization = _settingsFile.GetNodeCredentials(Lime.Protocol.Node.Parse(Node.Value)).Authorization;
             }
 
-            _blipAIClient = new BlipHttpClientAsync(authorization);
+            _blipAIClient = _blipClientFactory.GetInstanceForAI(authorization);
 
             var intents = new List<Intention>();
             if (IntentsFilePath.IsSet)
