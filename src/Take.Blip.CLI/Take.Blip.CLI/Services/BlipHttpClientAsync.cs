@@ -360,20 +360,24 @@ namespace Take.BlipCLI.Services
                     Method = CommandMethod.Get,
                 };
 
-                LogVerbose("Entities: ");
+                _logger.LogDebug("Start get entities");
 
                 var envelopeResult = await RunCommandAsync(command);
                 var entities = envelopeResult.Resource as DocumentCollection ?? new DocumentCollection { Items = Enumerable.Empty<Document>().ToArray() };
 
-                LogVerbose($"{entities.Total} - ");
-
+                var counter = 0;
+                var totalEntities = entities.Total;
+                var str = BuildProcessBarLog(totalEntities, counter);
+                _logger.LogTrace(str.ToString());
                 foreach (var entity in entities)
                 {
-                    LogVerbose("*");
                     entitiesList.Add(entity as Entity);
+                    counter++;
+                    str = BuildProcessBarLog(totalEntities, counter);
+                    _logger.LogTrace(str.ToString());
                 }
+                _logger.LogDebug("Finish get entities");
 
-                LogVerboseLine("|");
                 return entitiesList;
             }
             catch (HttpRequestException e)
@@ -404,15 +408,15 @@ namespace Take.BlipCLI.Services
                     Method = CommandMethod.Get,
                 };
 
-                LogVerbose("Intents: ");
+                _logger.LogDebug("Start get intents");
 
                 var envelopeResult = await RunCommandAsync(command);
                 var intents = envelopeResult.Resource as DocumentCollection ?? new DocumentCollection { Items = Enumerable.Empty<Document>().ToArray() };
 
                 var totalIntents = intents.Total;
                 var counter = 0;
-                StringBuilder str = BuildProcessBarLog(totalIntents, counter);
-                LogVerbose(str.ToString());
+                var str = BuildProcessBarLog(totalIntents, counter);
+                _logger.LogTrace(str.ToString());
                 foreach (var intent in intents)
                 {
                     counter++;
@@ -444,8 +448,10 @@ namespace Take.BlipCLI.Services
                     intentsList.Add(intention);
 
                     str = BuildProcessBarLog(totalIntents, counter);
-                    LogVerbose(str.ToString());
+                    _logger.LogTrace(str.ToString());
                 }
+
+                _logger.LogDebug("Finish get intents");
 
                 return intentsList;
             }

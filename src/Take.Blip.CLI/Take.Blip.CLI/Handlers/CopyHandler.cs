@@ -10,14 +10,13 @@ using Take.BlipCLI.Services.Settings;
 using System.Globalization;
 using Takenet.Iris.Messaging.Resources.ArtificialIntelligence;
 using Take.BlipCLI.Models;
+using Microsoft.Extensions.Logging;
 
 namespace Take.BlipCLI.Handlers
 {
     public class CopyHandler : HandlerAsync
     {
-        public INamedParameter<string> From { get; set; }
         public INamedParameter<string> FromAuthorization { get; set; }
-        public INamedParameter<string> To { get; set; }
         public INamedParameter<string> ToAuthorization { get; set; }
         public INamedParameter<List<BucketNamespace>> Contents { get; set; }
 
@@ -34,21 +33,11 @@ namespace Take.BlipCLI.Handlers
 
         public async override Task<int> RunAsync(string[] args)
         {
-            if ((!From.IsSet && !FromAuthorization.IsSet) || (!To.IsSet && !ToAuthorization.IsSet))
+            if ((!FromAuthorization.IsSet) || (!ToAuthorization.IsSet))
                 throw new ArgumentNullException("You must provide from and to parameters for this action. Use '-f' [--from] (or '--fa' [--fromAuthorization]) and '-t' [--to] (or '--ta' [--toAuthorization]) parameters");
 
             string fromAuthorization = FromAuthorization.Value;
             string toAuthorization = ToAuthorization.Value;
-
-            if (From.IsSet && string.IsNullOrEmpty(fromAuthorization))
-            {
-                fromAuthorization = _settingsFile.GetNodeCredentials(Node.Parse(From.Value)).Authorization;
-            }
-
-            if (To.IsSet && string.IsNullOrEmpty(toAuthorization))
-            {
-                toAuthorization = _settingsFile.GetNodeCredentials(Node.Parse(To.Value)).Authorization;
-            }
 
             IBlipBucketClient sourceBlipBucketClient = _blipClientFactory.GetInstanceForBucket(fromAuthorization);
             IBlipBucketClient targetBlipBucketClient = _blipClientFactory.GetInstanceForBucket(toAuthorization);
@@ -83,44 +72,44 @@ namespace Take.BlipCLI.Handlers
 
         private async Task CopyAIModelAsync(string fromAuthorization, string toAuthorization, IBlipAIClient sourceBlipAIClient, IBlipAIClient targetBlipAIClient)
         {
-            LogVerboseLine($"COPY AIMODEL: {fromAuthorization} to {toAuthorization}");
+            _logger.LogDebug($"COPY AIMODEL: {fromAuthorization} to {toAuthorization}");
 
             if (Force.IsSet)
             {
-                LogVerboseLine("Force MODE");
-                LogVerboseLine("\t> Deleting all entities and intents from target");
+                _logger.LogDebug("COPY AIMODEL - Force MODE: Deleting all entities and intents from target");
 
                 var tEntities = await targetBlipAIClient.GetAllEntities();
                 var tIntents = await targetBlipAIClient.GetAllIntentsAsync(justIds: true);
 
                 await DeleteEntitiesAsync(targetBlipAIClient, tEntities);
                 await DeleteIntentsAsync(targetBlipAIClient, tIntents);
+
+                _logger.LogDebug("COPY AIMODEL - Force MODE: Intents and Entities deleted");
+
             }
 
-            LogVerboseLine("COPY: ");
-            LogVerboseLine("\t> Getting AI Model from source: ");
-            LogVerbose("\t>>> ");
+            _logger.LogDebug("COPY AIMODEL - Getting AI Model from source: START");
             var entities = await sourceBlipAIClient.GetAllEntities(verbose: Verbose.IsSet);
-            LogVerbose("\t>>> ");
             var intents = await sourceBlipAIClient.GetAllIntentsAsync(verbose: Verbose.IsSet);
+            _logger.LogDebug("COPY AIMODEL - Getting AI Model from source: FINISH");
 
-            LogVerboseLine("\t> Copying AI Model to target: ");
-
+            _logger.LogDebug("COPY AIMODEL - Copying AI Model to target: START");
             await CopyEntitiesAsync(targetBlipAIClient, entities);
             await CopyIntentsAsync(targetBlipAIClient, intents);
-
-            LogVerbose($"> DONE");
+            _logger.LogDebug("COPY AIMODEL - Copying AI Model to target: FINISH");
+            _logger.LogDebug("COPY AIMODEL - DONE");
         }
 
         private async Task CopyIntentsAsync(IBlipAIClient blipAIClient, List<Intention> intents)
         {
             if (intents == null || intents.Count <= 0)
             {
-                LogVerbose($"\t>>> No Intents");
+                _logger.LogDebug($"No Intents");
             }
             else
             {
-                LogVerbose($"\t>>> Intents: {intents.Count} - ");
+                var counter = 0;
+                _logger.LogTrace($"Copying intents");
                 foreach (var intent in intents)
                 {
                     intent.Name = intent.Name.RemoveDiacritics().RemoveSpecialCharacters();
@@ -130,9 +119,10 @@ namespace Take.BlipCLI.Handlers
                         if (intent.Questions != null) await blipAIClient.AddQuestions(id, intent.Questions);
                         if (intent.Answers != null) await blipAIClient.AddAnswers(id, intent.Answers);
                     }
-                    LogVerbose("*");
+                    counter++;
+                    _logger.LogTrace($"Copying intents: {counter}/{intents.Count}");
                 }
-                LogVerboseLine("|");
+                _logger.LogDebug($"Intents copied");
             }
         }
 
@@ -140,17 +130,19 @@ namespace Take.BlipCLI.Handlers
         {
             if (entities == null || entities.Count <= 0)
             {
-                LogVerbose($"\t>>> No Entities");
+                _logger.LogDebug($"No Entities");
             }
             else
             {
-                LogVerbose($"\t>>> Entities: {entities.Count} - ");
+                var counter = 0;
+                _logger.LogTrace($"Copying entities");
                 foreach (var entity in entities)
                 {
                     await blipAIClient.AddEntity(entity);
-                    LogVerbose("*");
+                    counter++;
+                    _logger.LogTrace($"Copying entities: {counter}/{entities.Count}");
                 }
-                LogVerboseLine("|");
+                _logger.LogDebug($"Entities copied");
             }
         }
 
@@ -158,17 +150,19 @@ namespace Take.BlipCLI.Handlers
         {
             if (tIntents == null || tIntents.Count <= 0)
             {
-                LogVerbose($"\t>>> No Intent");
+                _logger.LogDebug($"No Intents");
             }
             else
             {
-                LogVerbose($"\t>>> Intent: {tIntents.Count} - ");
+                _logger.LogTrace($"Deleting intents");
+                var counter = 0;
                 foreach (var intent in tIntents)
                 {
                     await blipAIClient.DeleteIntent(intent.Id);
-                    LogVerbose("*");
+                    counter++;
+                    _logger.LogTrace($"Deleting intents: {counter}/{tIntents.Count}");
                 }
-                LogVerboseLine("|");
+                _logger.LogDebug($"Intents deleted");
             }
         }
 
@@ -176,17 +170,19 @@ namespace Take.BlipCLI.Handlers
         {
             if (tEntities == null || tEntities.Count <= 0)
             {
-                LogVerbose($"\t>>> No Entities");
+                _logger.LogDebug($"No Entities");
             }
             else
             {
-                LogVerbose($"\t>>> Entities: {tEntities.Count} - ");
+                _logger.LogTrace($"Deleting entities");
+                var counter = 0;
                 foreach (var entity in tEntities)
                 {
                     await blipAIClient.DeleteEntity(entity.Id);
-                    LogVerbose("*");
+                    counter++;
+                    _logger.LogTrace($"Deleting entities: {counter}/{tEntities.Count}");
                 }
-                LogVerboseLine("|");
+                _logger.LogDebug($"Entities deleted");
             }
         }
 

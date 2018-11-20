@@ -74,10 +74,8 @@ namespace Take.BlipCLI
                 var copyCommand = app.Command("copy");
                 copyHandler.VeryVerbose = _veryVerbose;
                 copyHandler.Verbose = _verbose;
-                copyHandler.From = copyCommand.Parameter<string>("f").Alias("from").HelpText("Node (bot) source.");
-                copyHandler.To = copyCommand.Parameter<string>("t").Alias("to").HelpText("Node (bot) target");
-                copyHandler.FromAuthorization = copyCommand.Parameter<string>("fa").Alias("fromAuthorization").HelpText("Authorization key of source bot");
-                copyHandler.ToAuthorization = copyCommand.Parameter<string>("ta").Alias("toAuthorization").HelpText("Authorization key of target bot");
+                copyHandler.FromAuthorization = copyCommand.Parameter<string>("f").Alias("from").Alias("fromAuthorization").HelpText("Authorization key of source bot");
+                copyHandler.ToAuthorization = copyCommand.Parameter<string>("t").Alias("to").Alias("toAuthorization").HelpText("Authorization key of target bot");
                 copyHandler.Contents = copyCommand.Parameter<List<BucketNamespace>>("c").Alias("contents").HelpText($"Define which contents will be copied. Examples: '{copyHandler.GetTypesListAsString<BucketNamespace>()}'").ParseUsing(copyHandler.CustomNamespaceParser);
                 copyHandler.Force = _force;
                 copyCommand.HelpText("Copy data from source bot (node) to target bot (node)");

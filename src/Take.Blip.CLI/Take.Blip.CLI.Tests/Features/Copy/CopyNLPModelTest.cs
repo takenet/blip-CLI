@@ -50,8 +50,6 @@ namespace Take.Blip.Tests.Features.Copy
             var handler = new CopyHandler(blipAIClientFactory, logger);
             handler.FromAuthorization = new MyNamedParameter<string> { Value = fromKey };
             handler.ToAuthorization = new MyNamedParameter<string> { Value = toKey };
-            handler.From = new MyNamedParameter<string>();
-            handler.To = new MyNamedParameter<string>();
             handler.Verbose = new MySwitch { IsSet = false };
             handler.Force = new MySwitch { IsSet = false };
             handler.Contents = new MyNamedParameter<List<BucketNamespace>> { Value = new List<BucketNamespace> { BucketNamespace.AIModel } };
@@ -89,8 +87,6 @@ namespace Take.Blip.Tests.Features.Copy
             var handler = new CopyHandler(blipAIClientFactory, logger);
             handler.FromAuthorization = new MyNamedParameter<string> { Value = fromKey };
             handler.ToAuthorization = new MyNamedParameter<string> { Value = toKey };
-            handler.From = new MyNamedParameter<string>();
-            handler.To = new MyNamedParameter<string>();
             handler.Verbose = new MySwitch { IsSet = false };
             handler.Force = new MySwitch { IsSet = false };
             handler.Contents = new MyNamedParameter<List<BucketNamespace>> { Value = new List<BucketNamespace> { BucketNamespace.AIModel } };
@@ -126,8 +122,6 @@ namespace Take.Blip.Tests.Features.Copy
             var handler = new CopyHandler(blipAIClientFactory, logger);
             handler.FromAuthorization = new MyNamedParameter<string> { Value = fromKey };
             handler.ToAuthorization = new MyNamedParameter<string> { Value = toKey };
-            handler.From = new MyNamedParameter<string>();
-            handler.To = new MyNamedParameter<string>();
             handler.Verbose = new MySwitch { IsSet = false };
             handler.Force = new MySwitch { IsSet = true };
             handler.Contents = new MyNamedParameter<List<BucketNamespace>> { Value = new List<BucketNamespace> { BucketNamespace.AIModel } };
@@ -187,8 +181,8 @@ namespace Take.Blip.Tests.Features.Copy
             var handler = new CopyHandler(blipAIClientFactory, logger);
             handler.FromAuthorization = new MyNamedParameter<string> { Value = fromKey };
             handler.ToAuthorization = new MyNamedParameter<string> { Value = toKey };
-            handler.From = new MyNamedParameter<string>();
-            handler.To = new MyNamedParameter<string>();
+            
+            
             handler.Verbose = new MySwitch { IsSet = false };
             handler.Force = new MySwitch { IsSet = false };
             handler.Contents = new MyNamedParameter<List<BucketNamespace>> { Value = new List<BucketNamespace> { BucketNamespace.AIModel } };
@@ -251,8 +245,8 @@ namespace Take.Blip.Tests.Features.Copy
             var handler = new CopyHandler(blipAIClientFactory, logger);
             handler.FromAuthorization = new MyNamedParameter<string> { Value = fromKey };
             handler.ToAuthorization = new MyNamedParameter<string> { Value = toKey };
-            handler.From = new MyNamedParameter<string>();
-            handler.To = new MyNamedParameter<string>();
+            
+            
             handler.Verbose = new MySwitch { IsSet = false };
             handler.Force = new MySwitch { IsSet = true };
             handler.Contents = new MyNamedParameter<List<BucketNamespace>> { Value = new List<BucketNamespace> { BucketNamespace.AIModel } };
@@ -317,8 +311,8 @@ namespace Take.Blip.Tests.Features.Copy
             var handler = new CopyHandler(blipAIClientFactory, logger);
             handler.FromAuthorization = new MyNamedParameter<string> { Value = fromKey };
             handler.ToAuthorization = new MyNamedParameter<string> { Value = toKey };
-            handler.From = new MyNamedParameter<string>();
-            handler.To = new MyNamedParameter<string>();
+            
+            
             handler.Verbose = new MySwitch { IsSet = false };
             handler.Force = new MySwitch { IsSet = true };
             handler.Contents = new MyNamedParameter<List<BucketNamespace>> { Value = new List<BucketNamespace> { BucketNamespace.AIModel } };
@@ -384,8 +378,8 @@ namespace Take.Blip.Tests.Features.Copy
             var handler = new CopyHandler(blipAIClientFactory, logger);
             handler.FromAuthorization = new MyNamedParameter<string> { Value = fromKey };
             handler.ToAuthorization = new MyNamedParameter<string> { Value = toKey };
-            handler.From = new MyNamedParameter<string>();
-            handler.To = new MyNamedParameter<string>();
+            
+            
             handler.Verbose = new MySwitch { IsSet = false };
             handler.Force = new MySwitch { IsSet = false };
             handler.Contents = new MyNamedParameter<List<BucketNamespace>> { Value = new List<BucketNamespace> { BucketNamespace.AIModel } };
