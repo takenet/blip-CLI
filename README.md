@@ -24,9 +24,9 @@ You can download the BLiP CLI as a zip file. The zip file contains both the .NET
 
 | Platform | Latest Build <br>*master*<br> |
 | -------- | :----------------------------: |
-| **Windows x64** | [zip](https://github.com/takenet/blip-CLI/releases/tag/0.2.0) |
-| **Windows x86** | [zip](https://github.com/takenet/blip-CLI/releases/tag/0.2.0) |
-| **Linux x64** | [Ubuntu zip](https://github.com/takenet/blip-CLI/releases/tag/0.2.0) |
+| **Windows x64** | [zip](https://github.com/takenet/blip-CLI/releases/tag/0.3.0) |
+| **Windows x86** | [zip](https://github.com/takenet/blip-CLI/releases/tag/0.3.0) |
+| **Linux x64** | [Ubuntu zip](https://github.com/takenet/blip-CLI/releases/tag/0.3.0) |
 | **macOS** | *coming soon* |
 
 
@@ -41,7 +41,7 @@ Main features
 | **export**   | Download the chatbot's data (like NLP model, tracks*, bucket*) to given directory. * not implemented yet | `blip export -a some-authorization-key -m nlpModel -o directory/to/download/` |
 | **export to excel** | Export chatbot data (like NLP model, tracks*, bucket*) to given directory in excel format. * not implemented yet | `blip export -a some-authorization-key -m nlpModel -o directory/to/download/ --excel file name (without extension) ` |
 | **nlp import** | Import a NLP model from local files to given chatbot in BLiP. | `blip nlp-import -a some-authorization-key --ip intents-file --ep entities-file --ap intents-anwsers-file` |
-| **nlp analyse** | Test your chatbot NLP model using a newline separated phrases as input, reporting results (intents and entitites) in local file **cause costs, check your provider** | `blip analyse -a some-authorization-key -i input-file -o report-output-file` |
+| **nlp analyse** | Test your chatbot NLP model using a newline separated phrases as input, reporting results (intents and entitites) in local file. [Check more here](#nlp-analyse-command) **cause costs, check your provider** | `blip analyse -a some-authorization-key -i input-file -o report-output-file` |
 | **nlp analyse with content** | (Only for chatbot using Take.ContentProvider) Test your chatbot NLP model using a newline separated phrases as input, reporting results (intents, entitites and **answers**) in local file **cause costs, check your provider** | `blip analyse -a some-authorization-key -i input-file -o report-output-file --check` |
 | **qrcode** | Generates a payload-enabled (optional) QR Code for a chatbot published on Facebook Messenger. `-d` downloads a copy of the QR Code | `blip qrcode -a [botKey] -n [botIdentifier] -p [payload] -d` |
 
@@ -96,3 +96,13 @@ For all feedback, use the Issues on this repository.
 License
 -------
 [Apache 2.0 License](https://github.com/takenet/blip-sdk-csharp/blob/master/LICENSE)
+
+
+NLP Analyse Command
+-------------------
+
+The NLP Analyse command main goal is help blip developers to test their AI models quickly. 
+It have three differents ways to use:
+- **Analyse single phrase**: `analyse -a {bot_key} -i "Test phrase!" -o D:\Path\To\Output\File.txt`
+- **Analyse file with phrases**: `analyse -a {bot_key} -i D:\Path\To\Input\File.txt -o D:\Path\To\Output\File.txt`
+- **Analyse using another chatbot model**: `analyse -a {bot_key} -i BotKey:{another_bot_ket} -o D:\Path\To\Output\File.txt`
