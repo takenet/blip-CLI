@@ -24,7 +24,6 @@ namespace Take.BlipCLI
 
         public static int Main(string[] args)
         {
-            RegisterBlipTypes();
             if (ServiceProvider == null)
                 ServiceProvider = GetServiceProvider();
 
@@ -154,6 +153,7 @@ namespace Take.BlipCLI
 
         public static IServiceCollection GetServiceCollection()
         {
+            var typeResolver = RegisterBlipTypes();
             return new ServiceCollection()
                             .AddSingleton<IStringService, StringService>()
                             .AddSingleton<IBlipClientFactory, BlipClientFactory>()
@@ -176,18 +176,20 @@ namespace Take.BlipCLI
                             .AddSingleton<NLPImportHandler>()
                             .AddSingleton<PingHandler>()
                             .AddSingleton<BlipConfigurationHandler>()
+                            .AddSingleton<IDocumentTypeResolver>(typeResolver)
                             ;
         }
 
-        private static void RegisterBlipTypes()
+        private static IDocumentTypeResolver RegisterBlipTypes()
         {
-            TypeUtil.RegisterDocument<AnalysisResponse>();
-            TypeUtil.RegisterDocument<Intention>();
-            TypeUtil.RegisterDocument<Answer>();
-            TypeUtil.RegisterDocument<Question>();
-            TypeUtil.RegisterDocument<Entity>();
-
-            TypeUtil.RegisterDocument<CallerResource>();
+            IDocumentTypeResolver typeResolver = new DocumentTypeResolver();
+            typeResolver.RegisterDocument<AnalysisResponse>();
+            typeResolver.RegisterDocument<Intention>();
+            typeResolver.RegisterDocument<Answer>();
+            typeResolver.RegisterDocument<Question>();
+            typeResolver.RegisterDocument<Entity>();
+            typeResolver.RegisterDocument<CallerResource>();
+            return typeResolver;
         }
 
     }

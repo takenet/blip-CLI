@@ -212,15 +212,18 @@ namespace Take.BlipCLI.Services
                 case InputType.Bot:
                     var botSource = inputSource.Replace(BOT_KEY_PREFIX, "").Trim();
                     var localClient = _blipClientFactory.GetInstanceForAI(botSource);
-                    var allIntents = new List<Intention>();
-                    if (doContentCheck)
+                    
+                    _logger.LogDebug("\tCarregando intenções do bot fonte...");
+                    var allIntents = await localClient.GetAllIntentsAsync();
+                    var questionListAsString = new List<string>();
+                    foreach (var intent in allIntents)
                     {
-                        _logger.LogDebug("\tCarregando intenções do bot fonte...");
-                        allIntents = await client.GetAllIntentsAsync();
-                        _logger.LogDebug("\tIntenções carregadas!");
+                        questionListAsString.AddRange(intent.Questions.Select(q => q.Text));
                     }
-                    //allIntents.Select(e => e.Questions).ToList().Select()
-                    break;
+                    _logger.LogDebug("\tIntenções carregadas!");
+                    return questionListAsString
+                        .Select((s, i) => DataBlock.GetInstance(i + 1, s, client, contentClient, reportOutput, doContentCheck, intentions, provider))
+                        .ToList();
                 default:
                     throw new ArgumentException($"Unexpected value {inputType}.", "inputType");
             }

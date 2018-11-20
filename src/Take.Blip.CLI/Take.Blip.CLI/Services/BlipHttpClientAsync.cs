@@ -25,11 +25,14 @@ namespace Take.BlipCLI.Services
         private string _authorizationKey;
         private readonly IInternalLogger _logger;
         private HttpClient _client = new HttpClient();
-        private JsonNetSerializer _envelopeSerializer;
+        private IEnvelopeSerializer _envelopeSerializer;
 
-        public BlipHttpClientAsync(string authorizationKey, IInternalLogger logger)
+        public BlipHttpClientAsync(
+            string authorizationKey, 
+            IInternalLogger logger,
+            IDocumentTypeResolver typeResolver)
         {
-            _envelopeSerializer = new JsonNetSerializer();
+            _envelopeSerializer = new EnvelopeSerializer(typeResolver);
             _authorizationKey = authorizationKey;
             _logger = logger;
             _client.BaseAddress = new Uri("https://msging.net");
@@ -272,7 +275,7 @@ namespace Take.BlipCLI.Services
                     return createdIntention.Id;
                 }
 
-                LogVerboseLine(verbose, $"{intentName}: {envelopeResult.Status} - {envelopeResult.Reason.Code} = {envelopeResult.Reason.Description}");
+                LogVerboseLine($"{intentName}: {envelopeResult.Status} - {envelopeResult.Reason.Code} = {envelopeResult.Reason.Description}");
                 return null;
             }
             catch (Exception e)
@@ -357,20 +360,20 @@ namespace Take.BlipCLI.Services
                     Method = CommandMethod.Get,
                 };
 
-                LogVerbose(verbose, "Entities: ");
+                LogVerbose("Entities: ");
 
                 var envelopeResult = await RunCommandAsync(command);
                 var entities = envelopeResult.Resource as DocumentCollection ?? new DocumentCollection { Items = Enumerable.Empty<Document>().ToArray() };
 
-                LogVerbose(verbose, $"{entities.Total} - ");
+                LogVerbose($"{entities.Total} - ");
 
                 foreach (var entity in entities)
                 {
-                    LogVerbose(verbose, "*");
+                    LogVerbose("*");
                     entitiesList.Add(entity as Entity);
                 }
 
-                LogVerboseLine(verbose, "|");
+                LogVerboseLine("|");
                 return entitiesList;
             }
             catch (HttpRequestException e)
@@ -401,16 +404,18 @@ namespace Take.BlipCLI.Services
                     Method = CommandMethod.Get,
                 };
 
-                LogVerbose(verbose, "Intents: ");
+                LogVerbose("Intents: ");
 
                 var envelopeResult = await RunCommandAsync(command);
                 var intents = envelopeResult.Resource as DocumentCollection ?? new DocumentCollection { Items = Enumerable.Empty<Document>().ToArray() };
 
-                LogVerbose(verbose, $"{intents.Total} - ");
-
+                var totalIntents = intents.Total;
+                var counter = 0;
+                StringBuilder str = BuildProcessBarLog(totalIntents, counter);
+                LogVerbose(str.ToString());
                 foreach (var intent in intents)
                 {
-                    LogVerbose(verbose, "*");
+                    counter++;
                     var intention = intent as Intention;
 
                     if (!justIds)
@@ -437,9 +442,11 @@ namespace Take.BlipCLI.Services
                     }
 
                     intentsList.Add(intention);
+
+                    str = BuildProcessBarLog(totalIntents, counter);
+                    LogVerbose(str.ToString());
                 }
 
-                LogVerboseLine(verbose, "|");
                 return intentsList;
             }
             catch (HttpRequestException e)
@@ -450,6 +457,7 @@ namespace Take.BlipCLI.Services
             }
         }
 
+       
         public async Task<KeyValuePair<string, Document>?> GetDocumentAsync(string key, BucketNamespace bucketNamespace)
         {
             try
@@ -511,7 +519,7 @@ namespace Take.BlipCLI.Services
                 throw new Exception("Bot has no Facebook Messenger Access Token.");
             }
 
-            LogVerboseLine(verbose, $"\tPageAccessToken:\t{pageAccessToken}");
+            LogVerboseLine($"\tPageAccessToken:\t{pageAccessToken}");
 
             // Get QR Code from Facebook API
             var client = new RestClient($"https://graph.facebook.com/v2.6/me/messenger_codes?access_token={pageAccessToken}");
@@ -522,13 +530,13 @@ namespace Take.BlipCLI.Services
             IRestResponse response = client.Execute(request);
 
             var qrCode = JsonConvert.DeserializeObject<FacebookQrCodeResponse>(response.Content);
-            LogVerboseLine(verbose, $"\tQR Code URL:\t{qrCode.Uri}");
+            LogVerboseLine($"\tQR Code URL:\t{qrCode.Uri}");
 
             if (download)
             {
                 WebClient webClient = new WebClient();
                 webClient.DownloadFile(qrCode.Uri, "qr.png");
-                LogVerboseLine(verbose, "Successfully saved file \"qr.png\" locally.");
+                LogVerboseLine("Successfully saved file \"qr.png\" locally.");
             }
 
             return qrCode.Uri;
@@ -567,14 +575,14 @@ namespace Take.BlipCLI.Services
             }
         }
 
-        private void LogVerbose(bool verbose, string message)
+        private void LogVerbose(string message)
         {
-            if (verbose) _logger.LogDebug(message);
+            _logger.LogDebug(message);
         }
 
-        private void LogVerboseLine(bool verbose, string message)
+        private void LogVerboseLine(string message)
         {
-            if (verbose) _logger.LogDebug(message + "\n");
+            _logger.LogDebug(message + "\n");
         }
 
         private void EnsureCommandSuccess(Command envelopeResult)
@@ -606,6 +614,22 @@ namespace Take.BlipCLI.Services
 
             return @namespace;
         }
+
+        private static StringBuilder BuildProcessBarLog(int totalIntents, int counter)
+        {
+            var str = new StringBuilder($"{counter}/{totalIntents}: ");
+            for (int j = 0; j < counter; j++)
+            {
+                str.Append("*");
+            }
+            for (int j = counter; j < totalIntents; j++)
+            {
+                str.Append("_");
+            }
+            str.Append("|");
+            return str;
+        }
+
     }
 
 }
