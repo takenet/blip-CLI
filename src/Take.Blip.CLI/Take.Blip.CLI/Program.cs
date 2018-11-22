@@ -165,6 +165,8 @@ namespace Take.BlipCLI
                             .AddSingleton<IExportServiceFactory, ExportServiceFactory>()
                             .AddSingleton<ILoggerProviderFactory, LoggerProviderFactory>()
                             .AddSingleton<IInternalLogger, BlipCliLogger>()
+                            .AddSingleton<IUniformProbabilityChecker, UniformProbabilityChecker>()
+                            .AddSingleton<IJitterService, JitterService>()
                             .AddSingleton<NLPCompareHandler>()
                             .AddSingleton<CopyHandler>()
                             .AddSingleton<ExportHandler>()

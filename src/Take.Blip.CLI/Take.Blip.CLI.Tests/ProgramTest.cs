@@ -26,7 +26,7 @@ namespace Take.Blip.CLI.Tests
         public void Copy_Command()
         {
             //Arrange
-            var args = new string[] { "copy", "--ta", "bla", "--fa", "bla", "-c", "AIModel" };
+            var args = new string[] { "copy", "-t", "bla", "-f", "bla", "-c", "AIModel" };
             var serviceProvider = Program.GetServiceCollection();
 
             var fromKey = "key1";
