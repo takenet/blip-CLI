@@ -51,7 +51,7 @@ namespace Take.Blip.CLI.Tests.Services
             //Assert
             for (int i = 0; i < collection.Count; i++)
             {
-                Assert.AreEqual(collection[i], inputList[i]);
+                Assert.AreEqual(collection[i], inputList[i].Input);
             }
             
         }

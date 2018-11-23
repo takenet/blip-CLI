@@ -3,10 +3,12 @@ using NSubstitute;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Take.Blip.CLI.Tests.Models;
 using Take.BlipCLI.Handlers;
+using Take.BlipCLI.Models.NLPAnalyse;
 using Take.BlipCLI.Services;
 using Take.BlipCLI.Services.Interfaces;
 using Takenet.Iris.Messaging.Resources.ArtificialIntelligence;
@@ -131,6 +133,7 @@ namespace Take.Blip.CLI.Tests.Features.Analyse
                 ReportOutput = new MyNamedParameter<string> { Value = string.Empty },
                 Verbose = new MySwitch { IsSet = false },
                 DoContentCheck = new MySwitch { IsSet = false },
+                Raw = new MySwitch { IsSet = false },
             };
 
             //Act
@@ -180,6 +183,7 @@ namespace Take.Blip.CLI.Tests.Features.Analyse
                 Verbose = new MySwitch { IsSet = false },
                 VeryVerbose = new MySwitch { IsSet = false },
                 DoContentCheck = new MySwitch { IsSet = false },
+                Raw = new MySwitch { IsSet = false },
             };
 
             //Act
@@ -232,7 +236,8 @@ namespace Take.Blip.CLI.Tests.Features.Analyse
                 ReportOutput = new MyNamedParameter<string> { Value = output },
                 Verbose = new MySwitch { IsSet = false },
                 VeryVerbose = new MySwitch { IsSet = false },
-                DoContentCheck = new MySwitch { IsSet = false }
+                DoContentCheck = new MySwitch { IsSet = false },
+                Raw = new MySwitch { IsSet = false },
             };
 
             //Act
@@ -256,7 +261,7 @@ namespace Take.Blip.CLI.Tests.Features.Analyse
                 Intentions = new List<IntentionResponse> { new IntentionResponse { Id = "a", Score = 0.5f } }.ToArray(),
                 Entities = new List<EntityResponse> { new EntityResponse { Id = "e", Value = "v" } }.ToArray()
             };
-            var inputList = new List<string> { "a", "b", "c" };
+            var inputList = InputWithTags.FromTextList(new List<string> { "a", "b", "c" });
             var blipAIClient = Substitute.For<IBlipAIClient>();
             blipAIClient.AnalyseForMetrics(Arg.Any<string>()).Returns(Task.FromResult(analysisResponse));
             var blipAIClientFactory = Substitute.For<IBlipClientFactory>();
@@ -264,7 +269,7 @@ namespace Take.Blip.CLI.Tests.Features.Analyse
             var fileService = Substitute.For<IFileManagerService>();
             fileService.IsDirectory(input).Returns(true);
             fileService.IsFile(input).Returns(true);
-            fileService.GetInputsToAnalyseAsync(input).Returns(inputList);
+            fileService.GetInputsToAnalyseAsync(input).Returns(inputList.ToList());
 
             var logger = Substitute.For<IInternalLogger>();
             var analyseService = new NLPAnalyseService(blipAIClientFactory, fileService, logger);
@@ -275,7 +280,8 @@ namespace Take.Blip.CLI.Tests.Features.Analyse
                 Input = new MyNamedParameter<string> { Value = input },
                 ReportOutput = new MyNamedParameter<string> { Value = output },
                 Verbose = new MySwitch { IsSet = false },
-                DoContentCheck = new MySwitch { IsSet = false }
+                DoContentCheck = new MySwitch { IsSet = false },
+                Raw = new MySwitch { IsSet = false },
             };
 
             //Act
@@ -284,9 +290,9 @@ namespace Take.Blip.CLI.Tests.Features.Analyse
             //Assert
             foreach (var item in inputList)
             {
-                blipAIClient.Received().AnalyseForMetrics(item);
+                blipAIClient.Received().AnalyseForMetrics(item.Input);
             }
-            blipAIClient.Received(inputList.Count).AnalyseForMetrics(Arg.Any<string>());
+            blipAIClient.Received(inputList.ToList().Count).AnalyseForMetrics(Arg.Any<string>());
         }
     }
 }

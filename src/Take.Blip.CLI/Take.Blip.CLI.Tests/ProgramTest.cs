@@ -3,9 +3,11 @@ using NSubstitute;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Take.BlipCLI;
+using Take.BlipCLI.Models.NLPAnalyse;
 using Take.BlipCLI.Services.Interfaces;
 using Takenet.Iris.Messaging.Resources.ArtificialIntelligence;
 
@@ -70,7 +72,7 @@ namespace Take.Blip.CLI.Tests
                 Intentions = new List<IntentionResponse> { new IntentionResponse { Id = "a", Score = 0.5f } }.ToArray(),
                 Entities = new List<EntityResponse> { new EntityResponse { Id = "e", Value = "v" } }.ToArray()
             };
-            var inputList = new List<string> { "a", "b", "c" };
+            var inputList = InputWithTags.FromTextList(new List<string> { "a", "b", "c" });
             var blipAIClient = Substitute.For<IBlipAIClient>();
             blipAIClient.AnalyseForMetrics(Arg.Any<string>()).Returns(Task.FromResult(analysisResponse));
             var blipAIClientFactory = Substitute.For<IBlipClientFactory>();
@@ -78,7 +80,7 @@ namespace Take.Blip.CLI.Tests
             var fileService = Substitute.For<IFileManagerService>();
             fileService.IsDirectory(input).Returns(true);
             fileService.IsFile(input).Returns(true);
-            fileService.GetInputsToAnalyseAsync(input).Returns(inputList);
+            fileService.GetInputsToAnalyseAsync(input).Returns(inputList.ToList());
 
             serviceProvider.AddSingleton<IBlipClientFactory>(blipAIClientFactory);
             serviceProvider.AddSingleton<IFileManagerService>(fileService);
