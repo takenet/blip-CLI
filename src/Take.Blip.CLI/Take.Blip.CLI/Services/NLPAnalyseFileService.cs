@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Take.BlipCLI.Extensions;
 using Take.BlipCLI.Models;
 using Take.BlipCLI.Models.NLPAnalyse;
 using Take.BlipCLI.Services.Interfaces;
@@ -71,10 +72,10 @@ namespace Take.BlipCLI.Services
             bool writeHeader = !File.Exists(analyseReport.FullReportFileName);
             using (var writer = new StreamWriter(analyseReport.FullReportFileName, append))
             {
-                if(writeHeader) await writer.WriteLineAsync("Id\tText\tIntentionId\tIntentionScore\tEntities\tAnswer");
+                if(writeHeader) await writer.WriteLineAsync("Id\tText\tIntentionId\tIntentionScore\tEntities\tAnswer\tRawResponse");
                 foreach (var item in analyseReport.ReportDataLines)
                 {
-                    await writer.WriteLineAsync(AnalysisResponseToString(item));
+                    await writer.WriteLineAsync(AnalysisResponseToString(item, analyseReport.WriteRawContent));
                 }
             }
         }
@@ -150,11 +151,12 @@ namespace Take.BlipCLI.Services
             }
         }
 
-        private string AnalysisResponseToString(ReportDataLine reportDataLine)
+        private string AnalysisResponseToString(ReportDataLine reportDataLine, bool writeRawContent)
         {
             var intention = reportDataLine.Intent;
             var entities = reportDataLine.Entities;
-            return $"{reportDataLine.Id}\t{reportDataLine.Input.Input}\t{intention}\t{reportDataLine.Confidence:N2}\t{entities}\t\"{reportDataLine.Answer}\"";
+            var rawContent = writeRawContent ? reportDataLine.AnalysisResponse.Intentions.ToJson() : string.Empty;
+            return $"{reportDataLine.Id}\t{reportDataLine.Input.Input}\t{intention}\t{reportDataLine.Confidence:N2}\t{entities}\t\"{reportDataLine.Answer}\"\t{rawContent}";
         }
 
         private string EntitiesToString(List<EntityResponse> entities)

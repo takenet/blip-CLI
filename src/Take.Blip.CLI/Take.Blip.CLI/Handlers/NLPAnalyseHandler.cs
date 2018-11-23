@@ -21,7 +21,8 @@ namespace Take.BlipCLI.Handlers
         public INamedParameter<string> Authorization { get; set; }
         public INamedParameter<string> ReportOutput { get; set; }
         public ISwitch DoContentCheck { get; set; }
-        
+        public ISwitch Raw { get; set; }
+
 
         public NLPAnalyseHandler(INLPAnalyseService analyseService, IInternalLogger logger) : base(logger)
         {
@@ -43,8 +44,9 @@ namespace Take.BlipCLI.Handlers
             var inputData = Input.Value;
             var fullFileName = ReportOutput.Value;
             var doContentCheck = DoContentCheck.IsSet;
+            var rawContent = Raw.IsSet;
 
-            await _analyseService.AnalyseAsync(authorization, inputData, fullFileName, doContentCheck);
+            await _analyseService.AnalyseAsync(authorization, inputData, fullFileName, doContentCheck, rawContent);
 
             return 0;
         }

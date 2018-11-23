@@ -9,5 +9,6 @@ namespace Take.BlipCLI.Models.NLPAnalyse
     {
         public string FullReportFileName { get; set; }
         public List<ReportDataLine> ReportDataLines { get; internal set; }
+        public bool WriteRawContent { get; set; }
     }
 }

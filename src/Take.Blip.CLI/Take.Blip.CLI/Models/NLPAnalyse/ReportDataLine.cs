@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Takenet.Iris.Messaging.Resources.ArtificialIntelligence;
 
 namespace Take.BlipCLI.Models.NLPAnalyse
 {
@@ -12,5 +13,6 @@ namespace Take.BlipCLI.Models.NLPAnalyse
         public double? Confidence { get; set; }
         public string Entities { get; set; }
         public string Answer { get; set; }
+        public AnalysisResponse AnalysisResponse { get; set; }
     }
 }

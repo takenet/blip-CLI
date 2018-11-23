@@ -4,6 +4,6 @@ namespace Take.BlipCLI.Services.Interfaces
 {
     public interface INLPAnalyseService
     {
-        Task AnalyseAsync(string authorization, string inputSource, string reportOutput, bool doContentCheck = false);
+        Task AnalyseAsync(string authorization, string inputSource, string reportOutput, bool doContentCheck = false, bool rawContent = false);
     }
 }

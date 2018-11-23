@@ -22,6 +22,7 @@ namespace Take.BlipCLI.Models.NLPAnalyse
         public bool DoContentCheck { get; private set; }
         public List<Intention> AllIntents { get; private set; }
         public IContentProvider ContentProvider { get; private set; }
+        public bool ShouldWriteRawContent { get; private set; }
         #endregion
 
         #region Results
@@ -41,10 +42,11 @@ namespace Take.BlipCLI.Models.NLPAnalyse
             };
         }
 
-        public static DataBlock GetInstance(int id, InputWithTags input, IBlipAIClient aiClient, IContentManagerApiClient contentClient, string reportOutput, bool doCheck, List<Intention> intents)
+        public static DataBlock GetInstance(int id, InputWithTags input, IBlipAIClient aiClient, IContentManagerApiClient contentClient, string reportOutput, bool doCheck, bool rawContent, List<Intention> intents)
         {
             var instance = GetInstance(id, input, aiClient, contentClient, reportOutput);
             instance.DoContentCheck = doCheck;
+            instance.ShouldWriteRawContent = rawContent;
             instance.AllIntents = intents;
             return instance;
         }

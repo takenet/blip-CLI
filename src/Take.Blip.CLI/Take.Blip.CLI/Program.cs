@@ -110,6 +110,7 @@ namespace Take.BlipCLI
                 nlpAnalyseHandler.Force = _force;
                 nlpAnalyseHandler.Verbose = _verbose;
                 nlpAnalyseHandler.VeryVerbose = _veryVerbose;
+                nlpAnalyseHandler.Raw = nlpAnalyseCommand.Switch("raw").HelpText("Return raw values of NLP Analyse (Intents and Entities))");
                 nlpAnalyseCommand.HelpText("Analyse some text or file using a bot IA model");
                 nlpAnalyseCommand.Handler(nlpAnalyseHandler.Run);
 

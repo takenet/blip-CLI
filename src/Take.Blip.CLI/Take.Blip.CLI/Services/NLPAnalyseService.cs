@@ -41,7 +41,7 @@ namespace Take.BlipCLI.Services
             _logger = logger;
         }
 
-        public async Task AnalyseAsync(string authorization, string inputSource, string reportOutput, bool doContentCheck = false)
+        public async Task AnalyseAsync(string authorization, string inputSource, string reportOutput, bool doContentCheck = false, bool rawContent = false)
         {
             if (string.IsNullOrEmpty(authorization))
                 throw new ArgumentNullException("You must provide the target bot (node) for this action.");
@@ -91,7 +91,7 @@ namespace Take.BlipCLI.Services
 
             _count = 0;
 
-            var inputList = await GetInputList(inputType, inputSource, client, contentClient, reportOutput, allIntents, doContentCheck);
+            var inputList = await GetInputList(inputType, inputSource, client, contentClient, reportOutput, allIntents, doContentCheck, rawContent);
             _total = inputList.Count;
             foreach (var input in inputList)
             {
@@ -163,6 +163,7 @@ namespace Take.BlipCLI.Services
                     Intent = analysis.Intentions?[0].Id,
                     Confidence = analysis.Intentions?[0].Score,
                     Entities = analysis.Entities?.ToList().ToReportString(),
+                    AnalysisResponse = dataBlock.NLPAnalysisResponse
                 };
 
                 if (content != null)
@@ -173,7 +174,8 @@ namespace Take.BlipCLI.Services
                 var report = new Report
                 {
                     ReportDataLines = new List<ReportDataLine> { resultData },
-                    FullReportFileName = dataBlock.ReportOutputFile
+                    FullReportFileName = dataBlock.ReportOutputFile,
+                    WriteRawContent = dataBlock.ShouldWriteRawContent
                 };
 
                 await _fileService.WriteAnalyseReportAsync(report, true);
@@ -195,16 +197,17 @@ namespace Take.BlipCLI.Services
             IContentManagerApiClient contentClient,
             string reportOutput,
             List<Intention> intentions,
-            bool doContentCheck)
+            bool doContentCheck,
+            bool rawContent)
         {
             switch (inputType)
             {
                 case InputType.Phrase:
-                    return new List<DataBlock> { DataBlock.GetInstance(1, InputWithTags.FromText(inputSource) , client, contentClient, reportOutput, doContentCheck, intentions) };
+                    return new List<DataBlock> { DataBlock.GetInstance(1, InputWithTags.FromText(inputSource) , client, contentClient, reportOutput, doContentCheck, rawContent, intentions) };
                 case InputType.File:
                     var inputListAsString = await _fileService.GetInputsToAnalyseAsync(inputSource);
                     return inputListAsString
-                        .Select((input, i) => DataBlock.GetInstance(i + 1, input, client, contentClient, reportOutput, doContentCheck, intentions))
+                        .Select((input, i) => DataBlock.GetInstance(i + 1, input, client, contentClient, reportOutput, doContentCheck, rawContent, intentions))
                         .ToList();
                 case InputType.Bot:
                     var botSource = inputSource.Replace(BOT_KEY_PREFIX, "").Trim();
@@ -218,7 +221,7 @@ namespace Take.BlipCLI.Services
                     }
                     _logger.LogDebug("\tIntenções carregadas!");
                     return questionListAsString
-                        .Select((input, i) => DataBlock.GetInstance(i + 1, InputWithTags.FromText(input), client, contentClient, reportOutput, doContentCheck, intentions))
+                        .Select((input, i) => DataBlock.GetInstance(i + 1, InputWithTags.FromText(input), client, contentClient, reportOutput, doContentCheck, rawContent, intentions))
                         .ToList();
                 default:
                     throw new ArgumentException($"Unexpected value {inputType}.", "inputType");
