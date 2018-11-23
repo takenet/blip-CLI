@@ -43,7 +43,7 @@ namespace Take.BlipCLI.Services
 
             if (!proceed)
                 return word;
-            
+
             switch (jitterType)
             {
                 case JitterType.MutationSwitch:
@@ -52,6 +52,8 @@ namespace Take.BlipCLI.Services
                     return MutationReplace(word);
                 case JitterType.MutationRemove:
                     return MutationRemove(word);
+                case JitterType.MutationDuplicate:
+                    return MutationDuplicate(word);
                 default:
                     return word;
             }
@@ -65,6 +67,20 @@ namespace Take.BlipCLI.Services
             foreach (var ch in word.ToCharArray())
             {
                 if (i != pos) newWord.Append(ch);
+                i++;
+            }
+            return newWord.ToString();
+        }
+
+        private string MutationDuplicate(string word)
+        {
+            var newWord = new StringBuilder();
+            var pos = _probabilityChecker.GetIntegerBetween(0, word.Length);
+            int i = 0;
+            foreach (var ch in word.ToCharArray())
+            {
+                if (i == pos) newWord.Append(ch);
+                newWord.Append(ch);
                 i++;
             }
             return newWord.ToString();
@@ -106,7 +122,7 @@ namespace Take.BlipCLI.Services
 
         private double CalculateWordJitterProbability(string word, JitterType jitterType, double probabilityScaleFactor, int maxWordSize)
         {
-            return probabilityScaleFactor * (word.Length / (double) maxWordSize);
+            return probabilityScaleFactor * (word.Length / (double)maxWordSize);
         }
     }
 }

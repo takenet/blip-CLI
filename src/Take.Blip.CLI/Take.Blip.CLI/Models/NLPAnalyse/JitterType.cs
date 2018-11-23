@@ -8,6 +8,7 @@ namespace Take.BlipCLI.Models.NLPAnalyse
     {
         MutationSwitch,
         MutationReplace,
-        MutationRemove
+        MutationRemove,
+        MutationDuplicate
     }
 }
