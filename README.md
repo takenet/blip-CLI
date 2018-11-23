@@ -106,3 +106,5 @@ It have three differents ways to use:
 - **Analyse single phrase**: `analyse -a {bot_key} -i "Test phrase!" -o D:\Path\To\Output\File.txt`
 - **Analyse file with phrases**: `analyse -a {bot_key} -i D:\Path\To\Input\File.txt -o D:\Path\To\Output\File.txt`
 - **Analyse using another chatbot model**: `analyse -a {bot_key} -i BotKey:{another_bot_ket} -o D:\Path\To\Output\File.txt`
+
+NLP Analyse command have the `--raw` parameter. It writes the raw log of NLP Analysis Response for each analyzed input inside the output report file.
