@@ -12,7 +12,7 @@ namespace Take.BlipCLI.Models.NLPAnalyse
     {
         #region Required
         public int Id { get; private set; }
-        public string Input { get; private set; }
+        public InputWithTags Input { get; private set; }
         public IBlipAIClient AIClient { get; private set; }
         public IContentManagerApiClient ContentClient { get; private set; }
         public string ReportOutputFile { get; private set; }
@@ -29,7 +29,7 @@ namespace Take.BlipCLI.Models.NLPAnalyse
         public ContentManagerContentResult ContentFromProvider { get; internal set; }
         #endregion
 
-        public static DataBlock GetInstance(int id, string input, IBlipAIClient aiClient, IContentManagerApiClient contentClient, string reportOutput)
+        public static DataBlock GetInstance(int id, InputWithTags input, IBlipAIClient aiClient, IContentManagerApiClient contentClient, string reportOutput)
         {
             return new DataBlock
             {
@@ -41,12 +41,11 @@ namespace Take.BlipCLI.Models.NLPAnalyse
             };
         }
 
-        public static DataBlock GetInstance(int id, string input, IBlipAIClient aiClient, IContentManagerApiClient contentClient, string reportOutput, bool doCheck, List<Intention> intents, IContentProvider provider )
+        public static DataBlock GetInstance(int id, InputWithTags input, IBlipAIClient aiClient, IContentManagerApiClient contentClient, string reportOutput, bool doCheck, List<Intention> intents)
         {
             var instance = GetInstance(id, input, aiClient, contentClient, reportOutput);
             instance.DoContentCheck = doCheck;
             instance.AllIntents = intents;
-            instance.ContentProvider = provider;
             return instance;
         }
 

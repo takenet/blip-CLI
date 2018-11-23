@@ -56,8 +56,6 @@ namespace Take.BlipCLI.Services
 
             _fileService.CreateDirectoryIfNotExists(reportOutput);
 
-            var bucketStorage = new BucketStorage("Key " + authorization);
-            var contentProvider = new Take.ContentProvider.ContentProvider(bucketStorage, 5);
             var client = _blipClientFactory.GetInstanceForAI(authorization);
             IContentManagerApiClient contentClient = new ContentManagerApiClient(authorization);
             var allIntents = new List<Intention>();
@@ -81,7 +79,7 @@ namespace Take.BlipCLI.Services
             var analyseBlock = new TransformBlock<DataBlock, DataBlock>((Func<DataBlock, Task<DataBlock>>)AnalyseForMetrics, options);
             var checkBlock = new TransformBlock<DataBlock, DataBlock>((Func<DataBlock, DataBlock>)CheckResponse, options);
             var contentBlock = new TransformBlock<DataBlock, DataBlock>((Func<DataBlock, Task<DataBlock>>)GetContent, options);
-            var showResultBlock = new ActionBlock<DataBlock>(BuildResult, new ExecutionDataflowBlockOptions
+            var buildResultBlock = new ActionBlock<DataBlock>(BuildResult, new ExecutionDataflowBlockOptions
             {
                 BoundedCapacity = DataflowBlockOptions.Unbounded,
                 MaxMessagesPerTask = 1
@@ -89,11 +87,11 @@ namespace Take.BlipCLI.Services
 
             analyseBlock.LinkTo(checkBlock, new DataflowLinkOptions { PropagateCompletion = true });
             checkBlock.LinkTo(contentBlock, new DataflowLinkOptions { PropagateCompletion = true });
-            contentBlock.LinkTo(showResultBlock, new DataflowLinkOptions { PropagateCompletion = true });
+            contentBlock.LinkTo(buildResultBlock, new DataflowLinkOptions { PropagateCompletion = true });
 
             _count = 0;
 
-            var inputList = await GetInputList(inputType, inputSource, client, contentClient, reportOutput, allIntents, contentProvider, doContentCheck);
+            var inputList = await GetInputList(inputType, inputSource, client, contentClient, reportOutput, allIntents, doContentCheck);
             _total = inputList.Count;
             foreach (var input in inputList)
             {
@@ -101,7 +99,7 @@ namespace Take.BlipCLI.Services
             }
 
             analyseBlock.Complete();
-            await showResultBlock.Completion;
+            await buildResultBlock.Completion;
 
             _logger.LogDebug("TERMINOU!");
 
@@ -110,7 +108,7 @@ namespace Take.BlipCLI.Services
         #region DataFlow Block Methods
         private async Task<DataBlock> AnalyseForMetrics(DataBlock dataBlock)
         {
-            var response = await dataBlock.AIClient.AnalyseForMetrics(dataBlock.Input);
+            var response = await dataBlock.AIClient.AnalyseForMetrics(dataBlock.Input.Input);
             dataBlock.NLPAnalysisResponse = response;
             return dataBlock;
         }
@@ -133,7 +131,7 @@ namespace Take.BlipCLI.Services
                 var intentId = dataBlock.NLPAnalysisResponse.Intentions?[0].Id;
                 var intentName = dataBlock.AllIntents.FirstOrDefault(i => i.Id == intentId)?.Name;
                 var entities = dataBlock.NLPAnalysisResponse.Entities?.Select(e => e.Value).ToList();
-                dataBlock.ContentFromProvider = await dataBlock.ContentClient.GetAnswerAsync(intentName, entities);
+                dataBlock.ContentFromProvider = await dataBlock.ContentClient.GetAnswerAsync(intentName, entities, dataBlock.Input.Tags);
             }
             return dataBlock;
         }
@@ -197,22 +195,20 @@ namespace Take.BlipCLI.Services
             IContentManagerApiClient contentClient,
             string reportOutput,
             List<Intention> intentions,
-            IContentProvider provider,
             bool doContentCheck)
         {
             switch (inputType)
             {
                 case InputType.Phrase:
-                    return new List<DataBlock> { DataBlock.GetInstance(1, inputSource, client, contentClient, reportOutput, doContentCheck, intentions, provider) };
+                    return new List<DataBlock> { DataBlock.GetInstance(1, InputWithTags.FromText(inputSource) , client, contentClient, reportOutput, doContentCheck, intentions) };
                 case InputType.File:
                     var inputListAsString = await _fileService.GetInputsToAnalyseAsync(inputSource);
                     return inputListAsString
-                        .Select((s, i) => DataBlock.GetInstance(i + 1, s, client, contentClient, reportOutput, doContentCheck, intentions, provider))
+                        .Select((input, i) => DataBlock.GetInstance(i + 1, input, client, contentClient, reportOutput, doContentCheck, intentions))
                         .ToList();
                 case InputType.Bot:
                     var botSource = inputSource.Replace(BOT_KEY_PREFIX, "").Trim();
                     var localClient = _blipClientFactory.GetInstanceForAI(botSource);
-                    
                     _logger.LogDebug("\tCarregando intenções do bot fonte...");
                     var allIntents = await localClient.GetAllIntentsAsync();
                     var questionListAsString = new List<string>();
@@ -222,7 +218,7 @@ namespace Take.BlipCLI.Services
                     }
                     _logger.LogDebug("\tIntenções carregadas!");
                     return questionListAsString
-                        .Select((s, i) => DataBlock.GetInstance(i + 1, s, client, contentClient, reportOutput, doContentCheck, intentions, provider))
+                        .Select((input, i) => DataBlock.GetInstance(i + 1, InputWithTags.FromText(input), client, contentClient, reportOutput, doContentCheck, intentions))
                         .ToList();
                 default:
                     throw new ArgumentException($"Unexpected value {inputType}.", "inputType");

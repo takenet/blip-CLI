@@ -8,7 +8,9 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 using Take.BlipCLI.Models;
+using Take.BlipCLI.Models.NLPAnalyse;
 using Take.BlipCLI.Services.Interfaces;
+using Take.ContentProvider.Domain.Contract.Model;
 
 namespace Take.BlipCLI.Services
 {
@@ -26,7 +28,7 @@ namespace Take.BlipCLI.Services
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Key", authorizationKey);
         }
 
-        public async Task<ContentManagerContentResult> GetAnswerAsync(string input)
+        public async Task<ContentManagerContentResult> GetAnswerAsync(string input, List<Tag> tags = null)
         {
             var encodedInput = Uri.EscapeDataString(input);
             using (var response = await _client.GetAsync($"/answer?input={encodedInput}"))
@@ -37,7 +39,7 @@ namespace Take.BlipCLI.Services
             }
         }
 
-        public async Task<ContentManagerContentResult> GetAnswerAsync(string intent, List<string> entities)
+        public async Task<ContentManagerContentResult> GetAnswerAsync(string intent, List<string> entities, List<Tag> tags = null)
         {
             try
             {
@@ -47,6 +49,12 @@ namespace Take.BlipCLI.Services
                 var uri = $"/contentproviderapi/content/test?intent={localIntent}";
                 if (localEntities.Count > 0)
                     uri = $"{uri}&entities={string.Join(',', localEntities)}";
+
+                var localTags = tags.Select(e => Uri.EscapeDataString($"{e.Key}:{e.Value}")).ToList();
+                if(tags != null && tags.Any())
+                {
+                    uri = $"{uri}&tags={string.Join(',', localTags)}";
+                }
 
                 using (var response = await _client.GetAsync(uri))
                 {

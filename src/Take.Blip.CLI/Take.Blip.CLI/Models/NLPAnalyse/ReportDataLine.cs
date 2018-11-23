@@ -7,7 +7,7 @@ namespace Take.BlipCLI.Models.NLPAnalyse
     public class ReportDataLine
     {
         public int Id { get; set; }
-        public string Input { get; set; }
+        public InputWithTags Input { get; set; }
         public string Intent { get; set; }
         public double? Confidence { get; set; }
         public string Entities { get; set; }

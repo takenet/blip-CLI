@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using Take.BlipCLI.Models.NLPAnalyse;
 
 namespace Take.BlipCLI.Services.Interfaces
 {
     public interface INLPAnalyseFileReader
     {
-        Task<List<string>> GetInputsToAnalyseAsync(string pathToFile);
+        Task<List<InputWithTags>> GetInputsToAnalyseAsync(string pathToFile);
         
     }
 }

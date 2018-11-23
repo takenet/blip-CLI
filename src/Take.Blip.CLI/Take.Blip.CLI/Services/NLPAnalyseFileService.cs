@@ -28,12 +28,12 @@ namespace Take.BlipCLI.Services
                 Directory.CreateDirectory(path);
         }
 
-        public async Task<List<string>> GetInputsToAnalyseAsync(string pathToFile)
+        public async Task<List<InputWithTags>> GetInputsToAnalyseAsync(string pathToFile)
         {
             int totalLines = 0;
             int totalInputs = 0;
             int totalDistincts = 0;
-            var inputsToAnalyse = new List<string>();
+            var inputsToAnalyse = new List<InputWithTags>();
             using (var reader = new StreamReader(pathToFile, detectEncodingFromByteOrderMarks: true))
             {
                 var line = "";
@@ -43,8 +43,9 @@ namespace Take.BlipCLI.Services
                     line = line.Trim();
                     if (string.IsNullOrWhiteSpace(line)) 
                         continue;
+                    var inputWithTags = ConvertStringToInputWithTags(line);
                     totalInputs++;
-                    inputsToAnalyse.Add(line);
+                    inputsToAnalyse.Add(inputWithTags);
                 }
             }
             inputsToAnalyse = inputsToAnalyse.Distinct().ToList();
@@ -78,11 +79,82 @@ namespace Take.BlipCLI.Services
             }
         }
 
+        private InputWithTags ConvertStringToInputWithTags(string line)
+        {
+            /* Parts:
+             * 0 - Input
+             * 1 - Tags (0 = null)
+             * 2 - Intent (0 = null)
+             * 3 - Entities (0 = null)
+             * 4 - Answer (0 = null)
+             */
+            var parts = line.Split('\t', StringSplitOptions.RemoveEmptyEntries);
+
+            var inputWithTags = new InputWithTags
+            {
+                Input = parts[0]
+            };
+
+            for (int i = 1; i < parts.Length; i++)
+            {
+                ProcessPartsToFillInputWithTags(parts, inputWithTags, i);
+            }
+
+            return inputWithTags;
+        }
+
+        private void ProcessPartsToFillInputWithTags(string[] parts, InputWithTags inputWithTags, int i)
+        {
+            switch (i)
+            {
+                case 1: // Tags
+                    if (parts[i] == "0")
+                    {
+                        inputWithTags.Tags = null;
+                    }
+                    else
+                    {
+                        inputWithTags.Tags = InputWithTags.GetTagsByString(parts[i]).ToList();
+                    }
+                    break;
+                case 2: // Intent
+                    if (parts[i] == "0")
+                    {
+                        inputWithTags.IntentExpected = null;
+                    }
+                    else
+                    {
+                        inputWithTags.IntentExpected = parts[i];
+                    }
+                    break;
+                case 3: // Entities
+                    if (parts[i] == "0")
+                    {
+                        inputWithTags.EntitiesExpected = null;
+                    }
+                    else
+                    {
+                        inputWithTags.EntitiesExpected = parts[i].Split(',').ToList();
+                    }
+                    break;
+                case 4: // Answer
+                    if (parts[i] == "0")
+                    {
+                        inputWithTags.AnswerExpected = null;
+                    }
+                    else
+                    {
+                        inputWithTags.AnswerExpected = parts[i];
+                    }
+                    break;
+            }
+        }
+
         private string AnalysisResponseToString(ReportDataLine reportDataLine)
         {
             var intention = reportDataLine.Intent;
             var entities = reportDataLine.Entities;
-            return $"{reportDataLine.Id}\t{reportDataLine.Input}\t{intention}\t{reportDataLine.Confidence:P}\t{entities}\t\"{reportDataLine.Answer}\"";
+            return $"{reportDataLine.Id}\t{reportDataLine.Input.Input}\t{intention}\t{reportDataLine.Confidence:N2}\t{entities}\t\"{reportDataLine.Answer}\"";
         }
 
         private string EntitiesToString(List<EntityResponse> entities)
