@@ -57,7 +57,7 @@ namespace Take.BlipCLI.Services
             }
             catch (Exception ex)
             {
-                throw;
+                throw ex;
             }
 
         }
