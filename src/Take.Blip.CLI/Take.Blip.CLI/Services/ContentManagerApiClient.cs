@@ -50,9 +50,9 @@ namespace Take.BlipCLI.Services
                 if (localEntities.Count > 0)
                     uri = $"{uri}&entities={string.Join(',', localEntities)}";
 
-                var localTags = tags.Select(e => Uri.EscapeDataString($"{e.Key}:{e.Value}")).ToList();
                 if(tags != null && tags.Any())
                 {
+                    var localTags = tags.Select(e => Uri.EscapeDataString($"{e.Key}:{e.Value}")).ToList();
                     uri = $"{uri}&tags={string.Join(',', localTags)}";
                 }
 
