@@ -9,5 +9,6 @@ namespace Take.BlipCLI.Services.Interfaces
     public interface IJitterService
     {
         Task<string> ApplyJitterAsync(string source, JitterType jitterType, double probabilityScaleFactor = 0.5, int maxWordSize = 15);
+        Task<string> ApplyJitterAsync(string source, JitterDistribution jitterDistribution, double probabilityScaleFactor = 0.5, int maxWordSize = 15);
     }
 }

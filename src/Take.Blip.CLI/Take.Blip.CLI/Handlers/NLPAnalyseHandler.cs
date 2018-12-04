@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Take.BlipCLI.Models;
+using Take.BlipCLI.Models.NLPAnalyse;
 using Take.BlipCLI.Services;
 using Take.BlipCLI.Services.Interfaces;
 using Takenet.Iris.Messaging.Resources.ArtificialIntelligence;
@@ -22,7 +23,7 @@ namespace Take.BlipCLI.Handlers
         public INamedParameter<string> ReportOutput { get; set; }
         public ISwitch DoContentCheck { get; set; }
         public ISwitch Raw { get; set; }
-
+        public INamedParameter<int> ApplyJitter { get; set; }
 
         public NLPAnalyseHandler(INLPAnalyseService analyseService, IInternalLogger logger) : base(logger)
         {
@@ -40,13 +41,17 @@ namespace Take.BlipCLI.Handlers
             if (!ReportOutput.IsSet)
                 throw new ArgumentNullException("You must provide the full output's report file name for this action. Use '-o' [--output] parameters");
             
-            var authorization = Authorization.Value;
-            var inputData = Input.Value;
-            var fullFileName = ReportOutput.Value;
-            var doContentCheck = DoContentCheck.IsSet;
-            var rawContent = Raw.IsSet;
+            var parameters = new AnalyseParameters
+            {
+                Authorization = Authorization.Value,
+                InputSource = Input.Value,
+                ReportOutput = ReportOutput.Value,
+                DoContentCheck = DoContentCheck.IsSet,
+                ShowRawContent = Raw.IsSet,
+                JitterSize = ApplyJitter.IsSet ? ApplyJitter.Value : 0
+            };
 
-            await _analyseService.AnalyseAsync(authorization, inputData, fullFileName, doContentCheck, rawContent);
+            await _analyseService.AnalyseAsync(parameters);
 
             return 0;
         }

@@ -101,18 +101,7 @@ namespace Take.BlipCLI
                 formatKeyCommand.HelpText("Show all valid keys for a bot");
                 formatKeyCommand.Handler(formatKeyHandler.Run);
 
-                var nlpAnalyseHandler = ServiceProvider.GetService<NLPAnalyseHandler>();
-                var nlpAnalyseCommand = app.Command("nlp-analyse").Alias("analyse");
-                nlpAnalyseHandler.Input = nlpAnalyseCommand.Parameter<string>("i").Alias("input").HelpText("Input to be analysed. Works with a single phrase or with a text file (new line separator).");
-                nlpAnalyseHandler.Authorization = nlpAnalyseCommand.Parameter<string>("a").Alias("authorization").HelpText("Bot authorization key");
-                nlpAnalyseHandler.ReportOutput = nlpAnalyseCommand.Parameter<string>("o").Alias("report").Alias("output").HelpText("Report's file fullname (path + name)");
-                nlpAnalyseHandler.DoContentCheck = nlpAnalyseCommand.Switch("c").Alias("check").HelpText("Do a content check (Avaiable for bots using Take.ContentProvider)");
-                nlpAnalyseHandler.Force = _force;
-                nlpAnalyseHandler.Verbose = _verbose;
-                nlpAnalyseHandler.VeryVerbose = _veryVerbose;
-                nlpAnalyseHandler.Raw = nlpAnalyseCommand.Switch("raw").HelpText("Return raw values of NLP Analyse (Intents and Entities))");
-                nlpAnalyseCommand.HelpText("Analyse some text or file using a bot IA model");
-                nlpAnalyseCommand.Handler(nlpAnalyseHandler.Run);
+                ConfigureNLPAnalyseHandler(app);
 
                 var exportHandler = ServiceProvider.GetService<ExportHandler>();
                 var exportCommand = app.Command("export").Alias("get");
@@ -142,6 +131,24 @@ namespace Take.BlipCLI
                 app.HelpCommand();
                 return app.Parse(args).Run();
             });
+        }
+
+        private static void ConfigureNLPAnalyseHandler(ICommandParser app)
+        {
+            var nlpAnalyseHandler = ServiceProvider.GetService<NLPAnalyseHandler>();
+            nlpAnalyseHandler.Force = _force;
+            nlpAnalyseHandler.Verbose = _verbose;
+
+            var nlpAnalyseCommand = app.Command("nlp-analyse").Alias("analyse");
+            nlpAnalyseHandler.Input = nlpAnalyseCommand.Parameter<string>("i").Alias("input").HelpText("Input to be analysed. Works with a single phrase or with a text file (new line separator).");
+            nlpAnalyseHandler.Authorization = nlpAnalyseCommand.Parameter<string>("a").Alias("authorization").HelpText("Bot authorization key");
+            nlpAnalyseHandler.ReportOutput = nlpAnalyseCommand.Parameter<string>("o").Alias("report").Alias("output").HelpText("Report's file fullname (path + name)");
+            nlpAnalyseHandler.DoContentCheck = nlpAnalyseCommand.Switch("c").Alias("check").HelpText("Do a content check (Avaiable for bots using Take.ContentProvider)");
+            nlpAnalyseHandler.VeryVerbose = _veryVerbose;
+            nlpAnalyseHandler.Raw = nlpAnalyseCommand.Switch("raw").HelpText("Return raw values of NLP Analyse (Intents and Entities))");
+            nlpAnalyseHandler.ApplyJitter = nlpAnalyseCommand.Parameter<int>("jitter").HelpText("--jitter N - Add 'N' jittered examples to input");
+            nlpAnalyseCommand.HelpText("Analyse some text or file using a bot IA model");
+            nlpAnalyseCommand.Handler(nlpAnalyseHandler.Run);
         }
 
         public static ServiceProvider GetServiceProvider()

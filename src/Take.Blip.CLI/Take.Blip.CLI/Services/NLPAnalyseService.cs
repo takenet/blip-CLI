@@ -25,6 +25,7 @@ namespace Take.BlipCLI.Services
         private const string BOT_KEY_PREFIX = "BotKey:";
         private readonly IBlipClientFactory _blipClientFactory;
         private readonly IFileManagerService _fileService;
+        private readonly IJitterService _jitterService;
         private readonly IInternalLogger _logger;
 
         private static object _locker = new object();
@@ -34,15 +35,24 @@ namespace Take.BlipCLI.Services
         public NLPAnalyseService(
             IBlipClientFactory blipClientFactory,
             IFileManagerService fileService,
+            IJitterService jitterService,
             IInternalLogger logger)
         {
             _blipClientFactory = blipClientFactory;
             _fileService = fileService;
+            _jitterService = jitterService;
             _logger = logger;
         }
 
-        public async Task AnalyseAsync(string authorization, string inputSource, string reportOutput, bool doContentCheck = false, bool rawContent = false)
+        public async Task AnalyseAsync(AnalyseParameters analyseParameters)
         {
+            var authorization = analyseParameters.Authorization;
+            var inputSource = analyseParameters.InputSource;
+            var reportOutput = analyseParameters.ReportOutput;
+            var doContentCheck = analyseParameters.DoContentCheck;
+            var rawContent = analyseParameters.ShowRawContent;
+            var jitterSize = analyseParameters.JitterSize;
+
             if (string.IsNullOrEmpty(authorization))
                 throw new ArgumentNullException("You must provide the target bot (node) for this action.");
 
@@ -91,9 +101,36 @@ namespace Take.BlipCLI.Services
 
             _count = 0;
 
-            var inputList = await GetInputList(inputType, inputSource, client, contentClient, reportOutput, allIntents, doContentCheck, rawContent);
-            _total = inputList.Count;
-            foreach (var input in inputList)
+            var dataBlockInputList = await GetInputList(inputType, inputSource, client, contentClient, reportOutput, allIntents, doContentCheck, rawContent);
+
+            
+            var jitteredInputStrings = new HashSet<string>();
+            var distribution = JitterDistribution.NewDistribution(0.5f, 0.1f, 0.3f, 0.1f);
+            foreach (var dbi in dataBlockInputList)
+            {
+                var inputText = dbi.Input.Input;
+                for (int i = 0; i < jitterSize; i++)
+                {
+                    var jitteredInput = await _jitterService.ApplyJitterAsync(inputText, distribution, 0.8f);
+                    jitteredInputStrings.Add($"{dbi.Id}_SEP_{jitteredInput}");
+                }
+            }
+
+            var dataBlockExpandedInputList = jitteredInputStrings
+                .Select((s) =>
+                {
+                    var parts = s.Split("_SEP_");
+                    return DataBlock.GetInstance(int.Parse(parts[0]), InputWithTags.FromText(parts[1]), client, contentClient, reportOutput, doContentCheck, rawContent, allIntents);
+                })
+                .ToList();
+
+            if (!dataBlockExpandedInputList.Any())
+            {
+                dataBlockExpandedInputList = dataBlockInputList;
+            }
+
+            _total = dataBlockExpandedInputList.Count;
+            foreach (var input in dataBlockExpandedInputList)
             {
                 await analyseBlock.SendAsync(input);
             }
@@ -179,7 +216,7 @@ namespace Take.BlipCLI.Services
                 };
 
                 await _fileService.WriteAnalyseReportAsync(report, true);
-                _logger.LogTrace($"\"{resultData.Input}\"\t{resultData.Intent}:{resultData.Confidence:P}\t{resultData.Entities}\t{CropText(resultData.Answer, 50)}");
+                _logger.LogTrace($"\"{resultData.Input.Input}\"\t{resultData.Intent}:{resultData.Confidence:P}\t{resultData.Entities}\t{CropText(resultData.Answer, 50)}");
             }
             catch (Exception ex)
             {

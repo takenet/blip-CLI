@@ -36,6 +36,32 @@ namespace Take.BlipCLI.Services
             return Task.FromResult(jittered.ToString().Trim());
         }
 
+        public Task<string> ApplyJitterAsync(string source, JitterDistribution jitterDistribution, double probabilityScaleFactor = 0.5, int maxWordSize = 15)
+        {
+            var num = _probabilityChecker.GetDouble();
+
+            if (num <= jitterDistribution.MutationSwitch)
+            {
+                return ApplyJitterAsync(source, JitterType.MutationSwitch, probabilityScaleFactor);
+            }
+            else if (num > jitterDistribution.MutationSwitch && num <= jitterDistribution.MutationSwitch + jitterDistribution.MutationReplace)
+            {
+                return ApplyJitterAsync(source, JitterType.MutationReplace, probabilityScaleFactor);
+            }
+            else if (num > jitterDistribution.MutationSwitch + jitterDistribution.MutationReplace && num <= jitterDistribution.MutationSwitch + jitterDistribution.MutationReplace + jitterDistribution.MutationRemove)
+            {
+                return ApplyJitterAsync(source, JitterType.MutationRemove, probabilityScaleFactor);
+            }
+            else if (num > jitterDistribution.MutationSwitch + jitterDistribution.MutationReplace + jitterDistribution.MutationRemove && num <= jitterDistribution.MutationSwitch + jitterDistribution.MutationReplace + jitterDistribution.MutationRemove + jitterDistribution.MutationDuplicate)
+            {
+                return ApplyJitterAsync(source, JitterType.MutationDuplicate, probabilityScaleFactor);
+            }
+            else
+            {
+                return ApplyJitterAsync(source, JitterType.MutationRemove, probabilityScaleFactor);
+            }
+        }
+
         private string ExecuteWordJitter(string word, JitterType jitterType, double probabilityScaleFactor, int maxWordSize)
         {
             double jitterProbability = CalculateWordJitterProbability(word, jitterType, probabilityScaleFactor, maxWordSize);
@@ -88,6 +114,11 @@ namespace Take.BlipCLI.Services
 
         private string MutationReplace(string word)
         {
+            if (word.Length < 2)
+            {
+                return word;
+            }
+
             var newWord = new StringBuilder();
             (var pos1, var pos2) = _probabilityChecker.GetTwoSequentialIntegerBetween(0, word.Length);
             var ch1 = word[pos1];
@@ -105,6 +136,11 @@ namespace Take.BlipCLI.Services
 
         private string MutationSwitch(string word)
         {
+            if (word.Length < 2)
+            {
+                return word;
+            }
+
             var newWord = new StringBuilder();
             (var pos1, var pos2) = _probabilityChecker.GetTwoSequentialIntegerBetween(0, word.Length);
             var ch1 = word[pos1];
@@ -124,5 +160,6 @@ namespace Take.BlipCLI.Services
         {
             return probabilityScaleFactor * (word.Length / (double)maxWordSize);
         }
+
     }
 }

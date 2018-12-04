@@ -1,9 +1,10 @@
 ﻿using System.Threading.Tasks;
+using Take.BlipCLI.Models.NLPAnalyse;
 
 namespace Take.BlipCLI.Services.Interfaces
 {
     public interface INLPAnalyseService
     {
-        Task AnalyseAsync(string authorization, string inputSource, string reportOutput, bool doContentCheck = false, bool rawContent = false);
+        Task AnalyseAsync(AnalyseParameters analyseParameters);
     }
 }

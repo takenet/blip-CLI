@@ -22,6 +22,11 @@ namespace Take.BlipCLI.Services
             return RANDOM_GENERATOR.NextDouble() <= probability;
         }
 
+        public double GetDouble()
+        {
+            return RANDOM_GENERATOR.NextDouble();
+        }
+
         public int GetIntegerBetween(int start, int end)
         {
             return RANDOM_GENERATOR.Next(start, end);

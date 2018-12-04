@@ -33,7 +33,8 @@ namespace Take.Blip.CLI.Tests.Features.Analyse
             var fileService = Substitute.For<IFileManagerService>();
 
             var logger = Substitute.For<IInternalLogger>();
-            var analyseService = new NLPAnalyseService(blipAIClientFactory, fileService, logger);
+            var jitter = Substitute.For<IJitterService>();
+            var analyseService = new NLPAnalyseService(blipAIClientFactory, fileService, jitter, logger);
 
             var handler = new NLPAnalyseHandler(analyseService, logger)
             {
@@ -77,7 +78,8 @@ namespace Take.Blip.CLI.Tests.Features.Analyse
             var fileService = Substitute.For<IFileManagerService>();
 
             var logger = Substitute.For<IInternalLogger>();
-            var analyseService = new NLPAnalyseService(blipAIClientFactory, fileService, logger);
+            var jitter = Substitute.For<IJitterService>();
+            var analyseService = new NLPAnalyseService(blipAIClientFactory, fileService, jitter, logger);
 
             var handler = new NLPAnalyseHandler(analyseService, logger)
             {
@@ -124,7 +126,8 @@ namespace Take.Blip.CLI.Tests.Features.Analyse
             var fileService = Substitute.For<IFileManagerService>();
 
             var logger = Substitute.For<IInternalLogger>();
-            var analyseService = new NLPAnalyseService(blipAIClientFactory, fileService, logger);
+            var jitter = Substitute.For<IJitterService>();
+            var analyseService = new NLPAnalyseService(blipAIClientFactory, fileService, jitter, logger);
 
             var handler = new NLPAnalyseHandler(analyseService, logger)
             {
@@ -134,6 +137,7 @@ namespace Take.Blip.CLI.Tests.Features.Analyse
                 Verbose = new MySwitch { IsSet = false },
                 DoContentCheck = new MySwitch { IsSet = false },
                 Raw = new MySwitch { IsSet = false },
+                ApplyJitter = new MyNamedParameter<int> { Value = 0 },
             };
 
             //Act
@@ -173,7 +177,8 @@ namespace Take.Blip.CLI.Tests.Features.Analyse
             fileService.IsFile(input).Returns(false);
 
             var logger = Substitute.For<IInternalLogger>();
-            var analyseService = new NLPAnalyseService(blipAIClientFactory, fileService, logger);
+            var jitter = Substitute.For<IJitterService>();
+            var analyseService = new NLPAnalyseService(blipAIClientFactory, fileService, jitter, logger);
 
             var handler = new NLPAnalyseHandler(analyseService, logger)
             {
@@ -184,6 +189,7 @@ namespace Take.Blip.CLI.Tests.Features.Analyse
                 VeryVerbose = new MySwitch { IsSet = false },
                 DoContentCheck = new MySwitch { IsSet = false },
                 Raw = new MySwitch { IsSet = false },
+                ApplyJitter = new MyNamedParameter<int> { Value = 0 },
             };
 
             //Act
@@ -227,7 +233,8 @@ namespace Take.Blip.CLI.Tests.Features.Analyse
             var fileService = Substitute.For<IFileManagerService>();
 
             var logger = Substitute.For<IInternalLogger>();
-            var analyseService = new NLPAnalyseService(blipAIClientFactory, fileService, logger);
+            var jitter = Substitute.For<IJitterService>();
+            var analyseService = new NLPAnalyseService(blipAIClientFactory, fileService, jitter, logger);
 
             var handler = new NLPAnalyseHandler(analyseService, logger)
             {
@@ -238,6 +245,7 @@ namespace Take.Blip.CLI.Tests.Features.Analyse
                 VeryVerbose = new MySwitch { IsSet = false },
                 DoContentCheck = new MySwitch { IsSet = false },
                 Raw = new MySwitch { IsSet = false },
+                ApplyJitter = new MyNamedParameter<int> { Value = 0 },
             };
 
             //Act
@@ -272,7 +280,8 @@ namespace Take.Blip.CLI.Tests.Features.Analyse
             fileService.GetInputsToAnalyseAsync(input).Returns(inputList.ToList());
 
             var logger = Substitute.For<IInternalLogger>();
-            var analyseService = new NLPAnalyseService(blipAIClientFactory, fileService, logger);
+            var jitter = Substitute.For<IJitterService>();
+            var analyseService = new NLPAnalyseService(blipAIClientFactory, fileService, jitter, logger);
 
             var handler = new NLPAnalyseHandler(analyseService, logger)
             {
@@ -282,6 +291,7 @@ namespace Take.Blip.CLI.Tests.Features.Analyse
                 Verbose = new MySwitch { IsSet = false },
                 DoContentCheck = new MySwitch { IsSet = false },
                 Raw = new MySwitch { IsSet = false },
+                ApplyJitter = new MyNamedParameter<int> { Value = 0 },
             };
 
             //Act

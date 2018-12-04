@@ -81,5 +81,29 @@ namespace Take.Blip.CLI.Tests.Services
                 Assert.That(test.Length == item.Length);
             }
         }
+
+        [Test]
+        public async Task Jitter_Mutation_Duplicate()
+        {
+            //Arrange
+            //var propCheck = Substitute.For<IUniformProbabilityChecker>();
+            IUniformProbabilityChecker propCheck = new UniformProbabilityChecker();
+            var jitterService = new JitterService(propCheck);
+            string test = "Oi, isso eh uma frase de teste";
+
+            //Act
+            var jitterResult = new HashSet<string>();
+            for (int i = 0; i < 100; i++)
+            {
+                jitterResult.Add(await jitterService.ApplyJitterAsync(test, JitterType.MutationDuplicate, 0.8));
+            }
+            var result = new List<string>(jitterResult);
+            //Assert
+            foreach (var item in result)
+            {
+                Assert.That(test.Length <= item.Length);
+            }
+        }
+
     }
 }
