@@ -103,12 +103,12 @@ namespace Take.BlipCLI.Services
 
             var dataBlockInputList = await GetInputList(inputType, inputSource, client, contentClient, reportOutput, allIntents, doContentCheck, rawContent);
 
-            
             var jitteredInputStrings = new HashSet<string>();
             var distribution = JitterDistribution.NewDistribution(0.5f, 0.1f, 0.3f, 0.1f);
             foreach (var dbi in dataBlockInputList)
             {
                 var inputText = dbi.Input.Input;
+                jitteredInputStrings.Add($"{dbi.Id}_SEP_{inputText}");
                 for (int i = 0; i < jitterSize; i++)
                 {
                     var jitteredInput = await _jitterService.ApplyJitterAsync(inputText, distribution, 0.8f);
@@ -240,7 +240,7 @@ namespace Take.BlipCLI.Services
             switch (inputType)
             {
                 case InputType.Phrase:
-                    return new List<DataBlock> { DataBlock.GetInstance(1, InputWithTags.FromText(inputSource) , client, contentClient, reportOutput, doContentCheck, rawContent, intentions) };
+                    return new List<DataBlock> { DataBlock.GetInstance(1, InputWithTags.FromText(inputSource), client, contentClient, reportOutput, doContentCheck, rawContent, intentions) };
                 case InputType.File:
                     var inputListAsString = await _fileService.GetInputsToAnalyseAsync(inputSource);
                     return inputListAsString
@@ -263,7 +263,7 @@ namespace Take.BlipCLI.Services
                 default:
                     throw new ArgumentException($"Unexpected value {inputType}.", "inputType");
             }
-            
+
         }
 
         private string ExtractAnswer(ContentManagerContentResult content)
