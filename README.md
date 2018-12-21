@@ -75,7 +75,7 @@ analyse -a {bot_key} -i D:\Path\To\Input\File.txt -o D:\Path\To\Output\File.txt 
 This is a handy feature for copying important information from one chatbot to another. It can be used with documents, bucket and AIModel. **Note:** The parameter `--force` is used for deleting intents, entities and answers from the target chatbot before copying. If not set, it'll be copied only the new things. The *{bot_key}* must be without the word 'Key'.
 
 ```
-copy -c document -f papagaio --fromAuthorization {bot_key} -t tucano --toAuthorization {bot_key}
+copy -c document -f {bot_key} -t {bot_key}
 ```
 ### Export
 The Export command lets you export data from a specific chatbot. As of right now, only the NLP Model can be exported where the intents, entities and answers are given in 3 CSV files. The *{bot_key}* must be without the word 'Key'.
