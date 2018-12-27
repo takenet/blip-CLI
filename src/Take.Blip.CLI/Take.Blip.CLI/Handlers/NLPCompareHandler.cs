@@ -17,6 +17,7 @@ namespace Take.BlipCLI.Handlers
     {
         private readonly IStringService _stringService;
         private readonly IBlipClientFactory _blipClientFactory;
+        private readonly ITextSimilarityServiceFactory _textSimilarityServiceFactory;
 
         public INamedParameter<string> Authorization1 { get; internal set; }
         public INamedParameter<string> Authorization2 { get; internal set; }
@@ -27,13 +28,13 @@ namespace Take.BlipCLI.Handlers
         public bool IsVerbose { get => Verbose.IsSet; }
 
         public NLPCompareHandler(
-            IStringService stringService,
             IInternalLogger logger,
-            IBlipClientFactory blipClientFactory
+            IBlipClientFactory blipClientFactory,
+            ITextSimilarityServiceFactory textSimilarityServiceFactory
             ) : base(logger)
         {
-            _stringService = stringService;
             _blipClientFactory = blipClientFactory;
+            _textSimilarityServiceFactory = textSimilarityServiceFactory;
         }
 
         public override async Task<int> RunAsync(string[] args)
@@ -50,12 +51,11 @@ namespace Take.BlipCLI.Handlers
             NLPModel bot1Model = Bot1Path.IsSet ? GetBotModelFromPath(Bot1Path.Value) : await GetBotModelFromAPI(Authorization1.Value);
             NLPModel bot2Model = Bot2Path.IsSet ? GetBotModelFromPath(Bot2Path.Value) : await GetBotModelFromAPI(Authorization2.Value);
 
-
-
+            var textSimService = _textSimilarityServiceFactory.GetServiceByType(TextSimilarityServiceType.AdaptedLevenshtein);
             var report = new List<NLPModelComparationResult>();
-            CompareIntentionsByQuestions(bot1Model, bot2Model, report);
-            CompareIntentionsByAnswers(bot1Model, bot2Model, report);
-            CompareIntentionsByName(bot1Model, bot2Model, report);
+            CompareIntentionsByQuestions(textSimService, bot1Model, bot2Model, report);
+            CompareIntentionsByAnswers(textSimService, bot1Model, bot2Model, report);
+            CompareIntentionsByName(textSimService, bot1Model, bot2Model, report);
 
             var now = DateTime.Now;
 
@@ -80,7 +80,7 @@ namespace Take.BlipCLI.Handlers
             return 0;
         }
 
-        private void CompareIntentionsByName(NLPModel bot1Model, NLPModel bot2Model, List<NLPModelComparationResult> report)
+        private void CompareIntentionsByName(ITextSimilarityService textSimilarityService, NLPModel bot1Model, NLPModel bot2Model, List<NLPModelComparationResult> report)
         {
             foreach (var item1 in bot1Model.Intents)
             {
@@ -90,12 +90,12 @@ namespace Take.BlipCLI.Handlers
                     var text2 = item2.Name;
                     var name1 = item1.Name;
                     var name2 = item2.Name;
-                    CompareTextsToReport(report, text1, text2, name1, name2, NLPModelComparationResultReasonType.Name);
+                    CompareTextsToReport(textSimilarityService, report, text1, text2, name1, name2, NLPModelComparationResultReasonType.Name);
                 }
             }
         }
 
-        private void CompareIntentionsByAnswers(NLPModel bot1Model, NLPModel bot2Model, List<NLPModelComparationResult> report)
+        private void CompareIntentionsByAnswers(ITextSimilarityService textSimilarityService, NLPModel bot1Model, NLPModel bot2Model, List<NLPModelComparationResult> report)
         {
             foreach (var item1 in bot1Model.Intents)
             {
@@ -111,14 +111,14 @@ namespace Take.BlipCLI.Handlers
                             var text2 = answer2.Value.ToString();
                             var name1 = item1.Name;
                             var name2 = item2.Name;
-                            CompareTextsToReport(report, text1, text2, name1, name2, NLPModelComparationResultReasonType.Answer);
+                            CompareTextsToReport(textSimilarityService, report, text1, text2, name1, name2, NLPModelComparationResultReasonType.Answer);
                         }
                     }
                 }
             }
         }
 
-        private void CompareIntentionsByQuestions(NLPModel bot1Model, NLPModel bot2Model, List<NLPModelComparationResult> report)
+        private void CompareIntentionsByQuestions(ITextSimilarityService textSimilarityService, NLPModel bot1Model, NLPModel bot2Model, List<NLPModelComparationResult> report)
         {
             foreach (var item1 in bot1Model.Intents)
             {
@@ -134,18 +134,18 @@ namespace Take.BlipCLI.Handlers
                             var text2 = question2.Text;
                             var name1 = item1.Name;
                             var name2 = item2.Name;
-                            CompareTextsToReport(report, text1, text2, name1, name2, NLPModelComparationResultReasonType.Question);
+                            CompareTextsToReport(textSimilarityService, report, text1, text2, name1, name2, NLPModelComparationResultReasonType.Question);
                         }
                     }
                 }
             }
         }
 
-        private void CompareTextsToReport(List<NLPModelComparationResult> report, string text1, string text2, string key1, string key2, NLPModelComparationResultReasonType criterion)
+        private void CompareTextsToReport(ITextSimilarityService textSimilarityService, List<NLPModelComparationResult> report, string text1, string text2, string key1, string key2, NLPModelComparationResultReasonType criterion)
         {
-            int distance = _stringService.LevenshteinDistance(text1, text2);
-            int minimunLeveshteinDistance = CalculateMinimumLeveshteinDistance(text1, text2);
-            if (distance <= minimunLeveshteinDistance)
+            float distance = textSimilarityService.CalculateDistance(text1, text2);
+            float minimunDistance = textSimilarityService.CalculateMinimumDistance(text1, text2);
+            if (distance <= minimunDistance)
             {
                 var result = report.FirstOrDefault(r => r.CheckKey(key1, key2));
                 if (result == default(NLPModelComparationResult))
@@ -169,15 +169,11 @@ namespace Take.BlipCLI.Handlers
                     });
                     reason = result.Reasons.First(r => r.Reason == criterion);
                 }
-                reason.Examples.Add($"Dist(\"{text1}\",\"{text2}\") = {distance}, min = {minimunLeveshteinDistance}");
+                reason.Examples.Add($"Dist(\"{text1}\",\"{text2}\") = {distance}, min = {minimunDistance}");
             }
         }
 
-        private int CalculateMinimumLeveshteinDistance(string v1, string v2)
-        {
-            int smallerStringSize = Math.Min(v1.Length, v2.Length);
-            return (int)Math.Max(1, 2 * Math.Log(smallerStringSize));
-        }
+
 
         private async Task<NLPModel> GetBotModelFromAPI(string authKey)
         {
@@ -301,7 +297,8 @@ namespace Take.BlipCLI.Handlers
     public enum ComparisonMethod
     {
         Exact,
-        Levenshtein
+        Levenshtein,
+        JaroWinglerAndConsine
     }
 
 }

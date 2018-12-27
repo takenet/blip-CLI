@@ -160,6 +160,7 @@ namespace Take.BlipCLI
         public static IServiceCollection GetServiceCollection()
         {
             var typeResolver = RegisterBlipTypes();
+             
             return new ServiceCollection()
                             .AddSingleton<IStringService, StringService>()
                             .AddSingleton<IBlipClientFactory, BlipClientFactory>()
@@ -175,6 +176,7 @@ namespace Take.BlipCLI
                             .AddSingleton<IInternalLogger, BlipCliLogger>()
                             .AddSingleton<IUniformProbabilityChecker, UniformProbabilityChecker>()
                             .AddSingleton<IJitterService, JitterService>()
+                            .AddSingleton<ITextSimilarityServiceFactory, TextSimilarityServiceFactory>()
                             .AddSingleton<NLPCompareHandler>()
                             .AddSingleton<CopyHandler>()
                             .AddSingleton<ExportHandler>()
@@ -184,6 +186,8 @@ namespace Take.BlipCLI
                             .AddSingleton<NLPImportHandler>()
                             .AddSingleton<PingHandler>()
                             .AddSingleton<BlipConfigurationHandler>()
+                            .AddSingleton<AdaptedLevenshteinTextSimilarityService>()
+                            .AddSingleton<JaroWinglerAndConsineTextSimilarityService>()
                             .AddSingleton<IDocumentTypeResolver>(typeResolver)
                             ;
         }
