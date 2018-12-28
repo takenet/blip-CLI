@@ -6,7 +6,7 @@ namespace Take.BlipCLI.Services.Interfaces
 {
     public interface ITextSimilarityService
     {
-        float CalculateDistance(string text1, string text2);
-        float CalculateMinimumDistance(string text1, string text2);
+        double CalculateDistance(string text1, string text2);
+        double CalculateMinimumDistance(string text1, string text2);
     }
 }

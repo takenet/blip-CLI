@@ -21,7 +21,7 @@ namespace Take.BlipCLI.Services
                 case TextSimilarityServiceType.AdaptedLevenshtein:
                     return (AdaptedLevenshteinTextSimilarityService)_serviceProvider.GetService(typeof(AdaptedLevenshteinTextSimilarityService));
                 case TextSimilarityServiceType.JaroWinglerAndConsine:
-                    return (JaroWinglerAndConsineTextSimilarityService)_serviceProvider.GetService(typeof(JaroWinglerAndConsineTextSimilarityService));
+                    return (JaroWinklerAndConsineTextSimilarityService)_serviceProvider.GetService(typeof(JaroWinklerAndConsineTextSimilarityService));
                 default:
                     throw new ArgumentException($"Invalid parameter value {type}", nameof(type));
             }

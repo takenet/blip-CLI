@@ -15,7 +15,6 @@ namespace Take.BlipCLI.Handlers
 {
     public class NLPCompareHandler : HandlerAsync
     {
-        private readonly IStringService _stringService;
         private readonly IBlipClientFactory _blipClientFactory;
         private readonly ITextSimilarityServiceFactory _textSimilarityServiceFactory;
 
@@ -143,8 +142,8 @@ namespace Take.BlipCLI.Handlers
 
         private void CompareTextsToReport(ITextSimilarityService textSimilarityService, List<NLPModelComparationResult> report, string text1, string text2, string key1, string key2, NLPModelComparationResultReasonType criterion)
         {
-            float distance = textSimilarityService.CalculateDistance(text1, text2);
-            float minimunDistance = textSimilarityService.CalculateMinimumDistance(text1, text2);
+            var distance = textSimilarityService.CalculateDistance(text1, text2);
+            var minimunDistance = textSimilarityService.CalculateMinimumDistance(text1, text2);
             if (distance <= minimunDistance)
             {
                 var result = report.FirstOrDefault(r => r.CheckKey(key1, key2));

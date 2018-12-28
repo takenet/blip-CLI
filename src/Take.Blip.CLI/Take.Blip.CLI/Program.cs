@@ -122,7 +122,7 @@ namespace Take.BlipCLI
                 compareHandler.Authorization2 = compareCommand.Parameter<string>("a2").Alias("authorization2").Alias("second").HelpText("Authorization key of second bot");
                 compareHandler.Bot2Path = compareCommand.Parameter<string>("p2").Alias("path2").Alias("secondpath").HelpText("Path of second bot containing exported model");
                 compareHandler.OutputFilePath = compareCommand.Parameter<string>("o").Alias("output").Alias("path").HelpText("Output file path");
-                compareHandler.Method = compareCommand.Parameter<ComparisonMethod>("m").Alias("method").HelpText("Comparison method (exact, levenshtein)").ParseUsing(compareHandler.CustomMethodParser);
+                compareHandler.Method = compareCommand.Parameter<ComparisonMethod>("m").Alias("method").HelpText($"Comparison method. Examples: \'{compareHandler.GetTypesListAsString<ComparisonMethod>()}\'").ParseUsing(compareHandler.CustomMethodParser);
                 compareHandler.Verbose = _verbose;
                 compareHandler.VeryVerbose = _veryVerbose;
                 compareCommand.HelpText("Compare two knowledgebases");
@@ -187,7 +187,7 @@ namespace Take.BlipCLI
                             .AddSingleton<PingHandler>()
                             .AddSingleton<BlipConfigurationHandler>()
                             .AddSingleton<AdaptedLevenshteinTextSimilarityService>()
-                            .AddSingleton<JaroWinglerAndConsineTextSimilarityService>()
+                            .AddSingleton<JaroWinklerAndConsineTextSimilarityService>()
                             .AddSingleton<IDocumentTypeResolver>(typeResolver)
                             ;
         }
