@@ -10,6 +10,8 @@ using Take.BlipCLI.Handlers;
 using Take.BlipCLI.Models;
 using Take.BlipCLI.Services;
 using Take.BlipCLI.Services.Interfaces;
+using Take.BlipCLI.Services.TextSimilarity;
+using Take.BlipCLI.Services.TextSimilarity.Interfaces;
 using Takenet.Iris.Messaging.Resources.ArtificialIntelligence;
 
 namespace Take.BlipCLI
@@ -188,6 +190,7 @@ namespace Take.BlipCLI
                             .AddSingleton<BlipConfigurationHandler>()
                             .AddSingleton<AdaptedLevenshteinTextSimilarityService>()
                             .AddSingleton<JaroWinklerAndConsineTextSimilarityService>()
+                            .AddSingleton<ExactTextSimilarityService>()
                             .AddSingleton<IDocumentTypeResolver>(typeResolver)
                             ;
         }

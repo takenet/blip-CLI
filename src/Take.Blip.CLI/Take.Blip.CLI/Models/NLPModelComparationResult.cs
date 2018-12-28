@@ -18,13 +18,26 @@ namespace Take.BlipCLI.Models
 
     public class NLPModelComparationResultReason
     {
-        public NLPModelComparationResultReasonType Reason { get; set; }
-        public List<string> Examples { get; set; }
+        public NLPModelComparationType Reason { get; set; }
+        public List<NLPModelComparationResultReasonExample> Examples { get; set; }
     }
 
-    public enum NLPModelComparationResultReasonType
+    public class NLPModelComparationResultReasonExample
+    {
+        public string Text { get; set; }
+        public string Key1 { get; set; }
+        public string Key2 { get; set; }
+
+        internal bool CheckKey(string text1, string text2)
+        {
+            return (Key1.Equals(text1) && Key2.Equals(text2)) || (Key1.Equals(text2) && Key2.Equals(text1));
+        }
+    }
+
+    public enum NLPModelComparationType
     {
         Question,
+        QuestionInSameIntent,
         Answer,
         Name,
         Value,

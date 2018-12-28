@@ -6,9 +6,11 @@ using System.Text;
 using System.Threading.Tasks;
 using ITGlobal.CommandLine;
 using Lime.Messaging.Contents;
+using Microsoft.Extensions.Logging;
 using Take.BlipCLI.Models;
 using Take.BlipCLI.Services;
 using Take.BlipCLI.Services.Interfaces;
+using Take.BlipCLI.Services.TextSimilarity.Interfaces;
 using Takenet.Iris.Messaging.Resources.ArtificialIntelligence;
 
 namespace Take.BlipCLI.Handlers
@@ -41,21 +43,31 @@ namespace Take.BlipCLI.Handlers
             if (!Authorization1.IsSet && !Bot1Path.IsSet)
                 throw new ArgumentNullException("You must provide a first bot parameter for this action. Use '--a1' [--first] (authorizationKey) or '--p1' [--path1] (path to an exported model) parameters");
 
+            bool internalComparison = false;
             if (!Authorization2.IsSet && !Bot2Path.IsSet)
-                throw new ArgumentNullException("You must provide a second bot parameter for this action. Use '--a2' [--second] (authorizationKey) or '--p2' [--path2] (path to an exported model) parameters");
+            {
+                _logger.LogWarning("Comparing model with itsef. If you want to compare between models, you must provide a second bot parameter. Use '--a2' [--second] (authorizationKey) or '--p2' [--path2] (path to an exported model) parameters");
+                internalComparison = true;
+                //throw new ArgumentNullException("You must provide a second bot parameter for this action. Use '--a2' [--second] (authorizationKey) or '--p2' [--path2] (path to an exported model) parameters");
+            }
 
             if (!OutputFilePath.IsSet)
                 throw new ArgumentNullException("You must provide output file path parameter for this action. Use -o [--output] parameter.");
 
             NLPModel bot1Model = Bot1Path.IsSet ? GetBotModelFromPath(Bot1Path.Value) : await GetBotModelFromAPI(Authorization1.Value);
-            NLPModel bot2Model = Bot2Path.IsSet ? GetBotModelFromPath(Bot2Path.Value) : await GetBotModelFromAPI(Authorization2.Value);
+            NLPModel bot2Model = internalComparison ? bot1Model : (Bot2Path.IsSet ? GetBotModelFromPath(Bot2Path.Value) : await GetBotModelFromAPI(Authorization2.Value));
 
-            var textSimService = _textSimilarityServiceFactory.GetServiceByType(TextSimilarityServiceType.AdaptedLevenshtein);
+            var textSimService = _textSimilarityServiceFactory.GetServiceByType(Method.Value);
+
             var report = new List<NLPModelComparationResult>();
-            CompareIntentionsByQuestions(textSimService, bot1Model, bot2Model, report);
-            CompareIntentionsByAnswers(textSimService, bot1Model, bot2Model, report);
-            CompareIntentionsByName(textSimService, bot1Model, bot2Model, report);
+            _logger.LogInformation("Comparing questions");
+            CompareIntentionsByQuestions(textSimService, bot1Model, bot2Model, report, internalComparison);
+            _logger.LogInformation("Comparing answers");
+            CompareIntentionsByAnswers(textSimService, bot1Model, bot2Model, report, internalComparison);
+            _logger.LogInformation("Comparing names");
+            CompareIntentionsByName(textSimService, bot1Model, bot2Model, report, internalComparison);
 
+            _logger.LogInformation("Writing report");
             var now = DateTime.Now;
 
             var fileFullName = $"report_{now.ToString("yyyyMMdd_hhmm")}.txt";
@@ -64,37 +76,49 @@ namespace Take.BlipCLI.Handlers
             {
                 foreach (var result in report)
                 {
-                    sw.WriteLine($"Intention \"{result.Element1}\" is close to \"{result.Element2}\"");
+                    sw.WriteLine($"Maybe intention \"{result.Element1}\" is close to intention \"{result.Element2}\"");
                     sw.WriteLine($"Because: ");
                     foreach (var reason in result.Reasons)
                     {
                         foreach (var example in reason.Examples)
                         {
-                            sw.WriteLine($"\t{Enum.GetName(typeof(NLPModelComparationResultReasonType), reason.Reason)}:\t{example}");
+                            sw.WriteLine($"\t{Enum.GetName(typeof(NLPModelComparationType), reason.Reason)}:\t{example.Text}");
                         }
                     }
                 }
             }
-
+            _logger.LogInformation("Finish");
             return 0;
         }
 
-        private void CompareIntentionsByName(ITextSimilarityService textSimilarityService, NLPModel bot1Model, NLPModel bot2Model, List<NLPModelComparationResult> report)
+        private void CompareIntentionsByName(
+            ITextSimilarityService textSimilarityService,
+            NLPModel bot1Model,
+            NLPModel bot2Model,
+            List<NLPModelComparationResult> report,
+            bool internalComparison)
         {
             foreach (var item1 in bot1Model.Intents)
             {
                 foreach (var item2 in bot2Model.Intents)
                 {
+
                     var text1 = item1.Name;
                     var text2 = item2.Name;
                     var name1 = item1.Name;
                     var name2 = item2.Name;
-                    CompareTextsToReport(textSimilarityService, report, text1, text2, name1, name2, NLPModelComparationResultReasonType.Name);
+                    if (internalComparison && name1.Equals(name2)) continue;
+                    CompareTextsToReport(textSimilarityService, report, text1, text2, name1, name2, NLPModelComparationType.Name);
                 }
             }
         }
 
-        private void CompareIntentionsByAnswers(ITextSimilarityService textSimilarityService, NLPModel bot1Model, NLPModel bot2Model, List<NLPModelComparationResult> report)
+        private void CompareIntentionsByAnswers(
+            ITextSimilarityService textSimilarityService,
+            NLPModel bot1Model,
+            NLPModel bot2Model,
+            List<NLPModelComparationResult> report,
+            bool internalComparison)
         {
             foreach (var item1 in bot1Model.Intents)
             {
@@ -102,6 +126,7 @@ namespace Take.BlipCLI.Handlers
                 foreach (var item2 in bot2Model.Intents)
                 {
                     if (item2.Answers == null) continue;
+                    if (internalComparison && item1.Name.Equals(item2.Name)) continue;
                     foreach (var answer1 in item1.Answers)
                     {
                         foreach (var answer2 in item2.Answers)
@@ -110,15 +135,33 @@ namespace Take.BlipCLI.Handlers
                             var text2 = answer2.Value.ToString();
                             var name1 = item1.Name;
                             var name2 = item2.Name;
-                            CompareTextsToReport(textSimilarityService, report, text1, text2, name1, name2, NLPModelComparationResultReasonType.Answer);
+                            CompareTextsToReport(textSimilarityService, report, text1, text2, name1, name2, NLPModelComparationType.Answer);
                         }
                     }
                 }
             }
         }
 
-        private void CompareIntentionsByQuestions(ITextSimilarityService textSimilarityService, NLPModel bot1Model, NLPModel bot2Model, List<NLPModelComparationResult> report)
+        private void CompareIntentionsByQuestions(
+            ITextSimilarityService textSimilarityService,
+            NLPModel bot1Model,
+            NLPModel bot2Model,
+            List<NLPModelComparationResult> report,
+            bool internalComparison)
         {
+            int count = 0;
+            foreach (var item1 in bot1Model.Intents)
+            {
+                if (item1.Questions == null) continue;
+                foreach (var item2 in bot2Model.Intents)
+                {
+                    if (item2.Questions == null) continue;
+                    count += item1.Questions.Length * item2.Questions.Length;
+                }
+            }
+            _logger.LogDebug($"{count} question pairs to analyse.");
+            int analyzed = 0;
+            int slot = count < 1000 ? 100 : count / 20;
             foreach (var item1 in bot1Model.Intents)
             {
                 if (item1.Questions == null) continue;
@@ -129,21 +172,32 @@ namespace Take.BlipCLI.Handlers
                     {
                         foreach (var question2 in item2.Questions)
                         {
+                            analyzed++;
+                            if(analyzed % slot == 0) { _logger.LogDebug($"{analyzed}/{count} analysed."); }
                             var text1 = question1.Text;
                             var text2 = question2.Text;
                             var name1 = item1.Name;
                             var name2 = item2.Name;
-                            CompareTextsToReport(textSimilarityService, report, text1, text2, name1, name2, NLPModelComparationResultReasonType.Question);
+                            if (internalComparison && text1.Equals(text2)) continue;
+                            CompareTextsToReport(textSimilarityService, report, text1, text2, name1, name2,
+                                internalComparison && item1.Name == item2.Name ?
+                                NLPModelComparationType.QuestionInSameIntent :
+                                NLPModelComparationType.Question);
                         }
                     }
                 }
             }
         }
 
-        private void CompareTextsToReport(ITextSimilarityService textSimilarityService, List<NLPModelComparationResult> report, string text1, string text2, string key1, string key2, NLPModelComparationResultReasonType criterion)
+        private void CompareTextsToReport(
+            ITextSimilarityService textSimilarityService,
+            List<NLPModelComparationResult> report,
+            string text1, string text2,
+            string key1, string key2,
+            NLPModelComparationType criterion)
         {
             var distance = textSimilarityService.CalculateDistance(text1, text2);
-            var minimunDistance = textSimilarityService.CalculateMinimumDistance(text1, text2);
+            var minimunDistance = textSimilarityService.CalculateMinimumDistance(text1, text2, criterion);
             if (distance <= minimunDistance)
             {
                 var result = report.FirstOrDefault(r => r.CheckKey(key1, key2));
@@ -164,11 +218,19 @@ namespace Take.BlipCLI.Handlers
                     result.Reasons.Add(new NLPModelComparationResultReason
                     {
                         Reason = criterion,
-                        Examples = new List<string>()
+                        Examples = new List<NLPModelComparationResultReasonExample>()
                     });
                     reason = result.Reasons.First(r => r.Reason == criterion);
                 }
-                reason.Examples.Add($"Dist(\"{text1}\",\"{text2}\") = {distance}, min = {minimunDistance}");
+                if (!reason.Examples.Any(e => e.CheckKey(text1, text2)))
+                {
+                    reason.Examples.Add(new NLPModelComparationResultReasonExample
+                    {
+                        Key1 = text1,
+                        Key2 = text2,
+                        Text = $"Dist(\"{text1}\",\"{text2}\") = {distance}, min = {minimunDistance}"
+                    });
+                }
             }
         }
 
@@ -297,7 +359,7 @@ namespace Take.BlipCLI.Handlers
     {
         Exact,
         Levenshtein,
-        JaroWinglerAndConsine
+        JaroWinklerAndConsine
     }
 
 }
