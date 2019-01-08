@@ -76,13 +76,13 @@ namespace Take.BlipCLI.Handlers
             {
                 foreach (var result in report)
                 {
-                    sw.WriteLine($"Maybe intention \"{result.Element1}\" is close to intention \"{result.Element2}\"");
-                    sw.WriteLine($"Because: ");
+                    //sw.WriteLine($"Maybe intention \"{result.Element1}\" is close to intention \"{result.Element2}\"");
+                    //sw.WriteLine($"Because: ");
                     foreach (var reason in result.Reasons)
                     {
                         foreach (var example in reason.Examples)
                         {
-                            sw.WriteLine($"\t{Enum.GetName(typeof(NLPModelComparationType), reason.Reason)}:\t{example.Text}");
+                            sw.WriteLine($"{result.Element1}\t{result.Element2}\t{Enum.GetName(typeof(NLPModelComparationType), reason.Reason)}\t{example.Key1}\t{example.Key2}\t{example.Distance}\t{example.MinDistance}");
                         }
                     }
                 }
@@ -228,6 +228,8 @@ namespace Take.BlipCLI.Handlers
                     {
                         Key1 = text1,
                         Key2 = text2,
+                        Distance = distance,
+                        MinDistance = minimunDistance,
                         Text = $"Dist(\"{text1}\",\"{text2}\") = {distance}, min = {minimunDistance}"
                     });
                 }

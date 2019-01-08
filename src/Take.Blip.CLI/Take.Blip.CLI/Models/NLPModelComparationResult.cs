@@ -27,7 +27,9 @@ namespace Take.BlipCLI.Models
         public string Text { get; set; }
         public string Key1 { get; set; }
         public string Key2 { get; set; }
-
+        public double Distance { get; set; }
+        public double MinDistance { get; set; }
+        
         internal bool CheckKey(string text1, string text2)
         {
             return (Key1.Equals(text1) && Key2.Equals(text2)) || (Key1.Equals(text2) && Key2.Equals(text1));
